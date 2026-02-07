@@ -33,7 +33,6 @@ public class SubmitFeedBackUI extends JFrame {
 
         mainPanel.add(new ClientHeaderPanel(), BorderLayout.NORTH);
 
-
         JScrollPane scrollPane = new JScrollPane(createContentPanel());
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
