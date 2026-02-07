@@ -173,7 +173,7 @@ public class Login extends JFrame {
     }
 
 
-    class PanelCover extends JPanel {
+    static class PanelCover extends JPanel {
         public PanelCover() {
             setLayout(new GridBagLayout());
 
