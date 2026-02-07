@@ -28,6 +28,7 @@ public class SubmitFeedBackUI extends JFrame {
         setLocationRelativeTo(null);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
+
         mainPanel.setBackground(BG_COLOR);
 
         mainPanel.add(new ClientHeaderPanel(), BorderLayout.NORTH);
