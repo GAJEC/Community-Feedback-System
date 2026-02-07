@@ -1,11 +1,11 @@
 package client.view;
-
 import client.view.components.IconInputField;
 import client.view.components.RoundedButton;
 
+import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import javax.swing.ImageIcon;
 
 public class Login extends JFrame {
 
@@ -16,9 +16,11 @@ public class Login extends JFrame {
         setSize(1200, 800);
         setLocationRelativeTo(null);
 
+        // Main Container
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBackground(Color.WHITE);
 
+        // --- MOUSE DRAG LOGIC ---
         final Point[] mouseClickPoint = {null};
         mainPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent e) {
@@ -36,6 +38,7 @@ public class Login extends JFrame {
 
         GridBagConstraints gbc = new GridBagConstraints();
 
+        // --- CLOSE BUTTON (TOP RIGHT) ---
         JButton closeBtn = createCloseButton();
         gbc.gridx = 1;
         gbc.gridy = 0;
@@ -45,17 +48,19 @@ public class Login extends JFrame {
         gbc.insets = new Insets(10, 0, 0, 10);
         mainPanel.add(closeBtn, gbc);
 
+        // --- LEFT PANEL (COVER) ---
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.gridheight = 2;
+        gbc.gridheight = 2; // Span both rows
         gbc.weightx = 0.4;
         gbc.weighty = 1.0;
         mainPanel.add(new PanelCover(), gbc);
 
+        // --- RIGHT PANEL (LOGIN FORM) ---
         gbc.gridx = 1;
-        gbc.gridy = 1;
+        gbc.gridy = 1; // Positioned below the close button's row
         gbc.gridheight = 1;
         gbc.weightx = 0.6;
         gbc.weighty = 1.0;
@@ -67,7 +72,7 @@ public class Login extends JFrame {
     private JButton createCloseButton() {
         JButton closeBtn = new JButton("✕");
         closeBtn.setFont(new Font("SansSerif", Font.BOLD, 18));
-        closeBtn.setForeground(new Color(0, 80, 80));
+        closeBtn.setForeground(new Color(0, 80, 80)); // Matching your theme
         closeBtn.setContentAreaFilled(false);
         closeBtn.setBorderPainted(false);
         closeBtn.setFocusPainted(false);
@@ -75,6 +80,7 @@ public class Login extends JFrame {
 
         closeBtn.addActionListener(e -> System.exit(0));
 
+        // Optional: Add a hover effect
         closeBtn.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent e) {
                 closeBtn.setForeground(Color.RED);
@@ -105,19 +111,37 @@ public class Login extends JFrame {
         Icon usernameIcon = getScaledIcon("res/assets/username_icon.png", iconSize, iconSize);
         Icon passwordIcon = getScaledIcon("res/assets/password_icon.png", iconSize, iconSize);
 
+
+
         IconInputField username =
                 new IconInputField(usernameIcon, "Username",  false);
 
         IconInputField passField =
                 new IconInputField(passwordIcon, "Password", true);
 
-       
+
         RoundedButton btnLogin = new RoundedButton("SIGN IN", 30); // 30 is the roundness
+        Color primaryColor = new Color(0, 80, 80);
+        Color hoverColor = new Color(0, 120, 120); // A slightly lighter teal
 
         btnLogin.setBackground(new Color(0, 80, 80));
         btnLogin.setForeground(Color.WHITE);
-       btnLogin.setMaximumSize(new Dimension(250,45));
+        btnLogin.setMaximumSize(new Dimension(250,45));
         btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        btnLogin.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                btnLogin.setBackground(hoverColor);
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                btnLogin.setBackground(primaryColor);
+            }
+        });
+
+
 
 
 
@@ -147,6 +171,7 @@ public class Login extends JFrame {
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> new Login().setVisible(true));
     }
+
 
     class PanelCover extends JPanel {
         public PanelCover() {
