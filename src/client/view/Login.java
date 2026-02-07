@@ -6,9 +6,11 @@ import client.view.components.RoundedButton;
 import common.User;
 
 import java.awt.*;
+import java.net.URL;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.ImageIcon;
+
 
 import static common.Config.CONFIG_DEBUG;
 
@@ -16,6 +18,16 @@ public class Login extends JFrame {
     private final LoginController controller;
 
     public Login(ClientConnection connection) {
+        URL iconURL = Login.class.getResource("/assets/app_icon.png");
+        if (iconURL == null) {
+            iconURL = Login.class.getResource("/assets/app_icon.png");
+        }
+
+        if (iconURL != null) {
+            this.setIconImage(new ImageIcon(iconURL).getImage());
+        } else {
+            System.err.println("Could not find app_icon.png");
+        }
         this.controller = new LoginController(connection);
         setTitle("Login UI");
         setUndecorated(true);
@@ -23,11 +35,11 @@ public class Login extends JFrame {
         setSize(1200, 800);
         setLocationRelativeTo(null);
 
-        // Main Container
+
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBackground(Color.WHITE);
 
-        // --- MOUSE DRAG LOGIC ---
+
         final Point[] mouseClickPoint = {null};
         mainPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent e) {
@@ -45,7 +57,7 @@ public class Login extends JFrame {
 
         GridBagConstraints gbc = new GridBagConstraints();
 
-        // --- CLOSE BUTTON (TOP RIGHT) ---
+
         JButton closeBtn = createCloseButton();
         gbc.gridx = 1;
         gbc.gridy = 0;
@@ -55,19 +67,19 @@ public class Login extends JFrame {
         gbc.insets = new Insets(10, 0, 0, 10);
         mainPanel.add(closeBtn, gbc);
 
-        // --- LEFT PANEL (COVER) ---
+
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.gridheight = 2; // Span both rows
+        gbc.gridheight = 2;
         gbc.weightx = 0.4;
         gbc.weighty = 1.0;
         mainPanel.add(new PanelCover(), gbc);
 
-        // --- RIGHT PANEL (LOGIN FORM) ---
+
         gbc.gridx = 1;
-        gbc.gridy = 1; // Positioned below the close button's row
+        gbc.gridy = 1;
         gbc.gridheight = 1;
         gbc.weightx = 0.6;
         gbc.weighty = 1.0;
@@ -87,11 +99,12 @@ public class Login extends JFrame {
 
         closeBtn.addActionListener(e -> System.exit(0));
 
-        // Optional: Add a hover effect
+
         closeBtn.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent e) {
                 closeBtn.setForeground(Color.RED);
             }
+
             public void mouseExited(java.awt.event.MouseEvent e) {
                 closeBtn.setForeground(new Color(0, 80, 80));
             }
@@ -99,6 +112,7 @@ public class Login extends JFrame {
 
         return closeBtn;
     }
+
     private JPanel createLoginForm() {
         JPanel form = new JPanel();
         form.setBackground(Color.WHITE);
@@ -111,17 +125,15 @@ public class Login extends JFrame {
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 
-
         int iconSize = 20;
 
 
-        Icon usernameIcon = getScaledIcon("res/assets/username_icon.png", iconSize, iconSize);
-        Icon passwordIcon = getScaledIcon("res/assets/password_icon.png", iconSize, iconSize);
-
+        Icon usernameIcon = getScaledIcon("/assets/username_icon.png", iconSize, iconSize);
+        Icon passwordIcon = getScaledIcon("/assets/password_icon.png", iconSize, iconSize);
 
 
         IconInputField username =
-                new IconInputField(usernameIcon, "Username",  false);
+                new IconInputField(usernameIcon, "Username", false);
 
         IconInputField passField =
                 new IconInputField(passwordIcon, "Password", true);
@@ -133,7 +145,7 @@ public class Login extends JFrame {
 
         btnLogin.setBackground(new Color(0, 80, 80));
         btnLogin.setForeground(Color.WHITE);
-        btnLogin.setMaximumSize(new Dimension(250,45));
+        btnLogin.setMaximumSize(new Dimension(250, 45));
         btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         btnLogin.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -151,18 +163,18 @@ public class Login extends JFrame {
         btnLogin.addActionListener(e -> {
             String usernameText = username.getText();
             String passwordText = passField.getText();
-            
+
             if (usernameText.isEmpty() || passwordText.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please fill in all fields", "Login Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
+
             if (!controller.isConnected()) {
                 JOptionPane.showMessageDialog(this, "Connecting to server...", "Info", JOptionPane.INFORMATION_MESSAGE);
             }
-            
+
             User receivedUser = controller.getResponseUser(usernameText, passwordText);
-            
+
             if (receivedUser != null) {
                 JOptionPane.showMessageDialog(this, "Login successful!\nReceived: " + receivedUser, "Success", JOptionPane.INFORMATION_MESSAGE);
             } else {
@@ -184,14 +196,19 @@ public class Login extends JFrame {
     }
 
     private ImageIcon getScaledIcon(String path, int width, int height) {
-        ImageIcon srcIcon = new ImageIcon(path);
+        // This ensures it looks in the classpath resources
+        URL imgURL = getClass().getResource(path);
+        if (imgURL == null) {
+            System.err.println("Couldn't find file: " + path);
+            return null;
+        }
+
+        ImageIcon srcIcon = new ImageIcon(imgURL);
         Image srcImg = srcIcon.getImage();
-
-
         Image scaledImg = srcImg.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-
         return new ImageIcon(scaledImg);
     }
+
 
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
@@ -204,37 +221,51 @@ public class Login extends JFrame {
     }
 
 
-    static class PanelCover extends JPanel {
+    class PanelCover extends JPanel {
         public PanelCover() {
             setLayout(new GridBagLayout());
+            GridBagConstraints c = new GridBagConstraints();
+            c.insets = new Insets(5, 10, 5, 10); // Spacing between elements
 
+
+            ImageIcon logoIcon = getScaledIcon("/assets/logo_icon.png", 300, 300);
+            JLabel logoLabel = new JLabel(logoIcon);
+
+            c.gridy = 0;
+            c.insets= new Insets(-10,0,0,0);
+            add(logoLabel, c);
 
 
             JLabel title = new JLabel("Welcome to Community Feedback!");
             title.setFont(new Font("SansSerif", Font.BOLD, 30));
             title.setForeground(Color.WHITE);
 
+            c.gridy = 1;
+            c.insets= new Insets(-150,0,0,0);
+            add(title, c);
+
+
             JLabel desc = new JLabel("Keep connected with us");
-            desc.setFont(new Font("SansSerif", Font.PLAIN, 15));
+            desc.setFont(new Font("SansSerif", Font.PLAIN, 20));
             desc.setForeground(Color.WHITE);
 
-            GridBagConstraints c = new GridBagConstraints();
-            c.gridy = 0;
-            add(title, c);
-            c.gridy = 1;
+            c.gridy = 2;
+            c.insets = new Insets(-100, 0, 0, 0);
             add(desc, c);
         }
 
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g;
+
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
             GradientPaint gra = new GradientPaint(
                     0, 0, new Color(0, 80, 80),
-                    0, getHeight(), new Color(0, 80, 80)
+                    0, getHeight(), new Color(0, 120, 120)
             );
             g2.setPaint(gra);
             g2.fillRect(0, 0, getWidth(), getHeight());
         }
     }
 }
-

@@ -2,6 +2,7 @@ package client;
 
 import client.model.ClientConnection;
 import client.model.ConnectionListener;
+import client.view.Loading;
 import client.view.Login;
 import common.User;
 
@@ -34,8 +35,11 @@ public class Client {
         connection.connectAsync();
         
         SwingUtilities.invokeLater(() -> {
-            Login loginView = new Login(connection);
-            loginView.setVisible(true);
+//            Login loginView = new Login(connection);
+//            loginView.setVisible(true);
+
+            Loading loadingView = new Loading(connection);
+            loadingView.launch();
         });
     }
 
