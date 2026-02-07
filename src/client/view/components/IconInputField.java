@@ -63,6 +63,13 @@ public class IconInputField extends JPanel {
 
         add(iconLabel, BorderLayout.WEST);
         add(field, BorderLayout.CENTER);
+    }
 
+    public String getText() {
+        String text = field.getText();
+        if (text.equals(placeholder)) {
+            return "";
+        }
+        return text;
     }
 }

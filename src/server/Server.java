@@ -1,33 +1,41 @@
 package server;
-import common.Users;
-import org.xml.sax.SAXException;
-import server.components.XMLHandler;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+import static common.Config.SOCKET_PORT;
 
 public class Server {
-    public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException, InterruptedException {
+    private static int clientCounter = 0;
 
-        int CurrentID;
-        //Sample implementation
-        XMLHandler<Users> xml = new XMLHandler<>(Users.class, "res/database.xml", "user");
-        CurrentID = xml.getCurrentLength("user");
+    public static void main(String[] args) {
+        System.out.println("Community Feedback System");
+        
+        try (ServerSocket serverSocket = new ServerSocket(SOCKET_PORT)) {
+            System.out.println("Listening to " + SOCKET_PORT);
 
-        //Create
-        xml.Store(new Users(CurrentID, "Gereme", "Mary Heights"));
+            while (true) {
+                try{
+                    Socket clientSocket = serverSocket.accept();
+                    clientCounter++;
 
-        //Read
-        System.out.println("Created: " + xml.Read("" + CurrentID));
+                    ClientHandler handler = new ClientHandler(clientSocket, clientCounter);
+                    handler.start();
 
-        //Update
-        xml.Update(String.valueOf(CurrentID), new Users(CurrentID, "Merege", "Heights"));
-        System.out.println("Updated: " + xml.Read("" + CurrentID));
-
-        Thread.sleep(6000);
-
-        //Delete
-        xml.Delete(String.valueOf(CurrentID));
-        System.out.println("Deleted: " + xml.Read("" + CurrentID));
+                    System.out.println("Total clients served: " + clientCounter);
+                }catch (IOException e) {
+                    System.err.println("Connection lost or stream closed: " + e.getMessage());
+                    break;
+                } catch (Exception e) {
+                    System.err.println("Server error: " + e.getMessage());
+                }
+            }
+            
+        } catch (IOException e) {
+            System.err.println("Server error: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
