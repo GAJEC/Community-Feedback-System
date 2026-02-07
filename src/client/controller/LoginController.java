@@ -4,6 +4,8 @@ import client.model.ClientConnection;
 import client.model.Login;
 import common.User;
 
+import javax.swing.*;
+
 public class LoginController {
     private final ClientConnection connection;
     private final Login loginModel;
@@ -14,26 +16,32 @@ public class LoginController {
     }
 
 // Chill first
-//    public boolean handleLogin(String username, String password) {
-//        loginModel.setUsername(username);
-//        loginModel.setPassword(password);
-//
-//        if (!loginModel.isValid()) {
-//            return false;
-//        }
-//
-//        if (!connection.isConnected()) {
-//            if (!connection.connect()) {
-//                return false;
-//            }
-//        }
-//
-//        User user = new User(1, username, password, username, "");
-//        connection.sendUser(user);
-//
-//        Object response = connection.receive();
-//        return response instanceof User;
-//    }
+    public boolean handleLogin(String username, String password) {
+        loginModel.setUsername(username);
+        loginModel.setPassword(password);
+
+        if (!loginModel.isValid()) {
+            return false;
+        }
+
+        if (!connection.isConnected()) {
+            if (!connection.connect()) {
+                return false;
+            }
+        }
+
+        // Check if meron karga fields
+        if (!loginModel.isValid()) {
+            JOptionPane.showMessageDialog(null, "Please fill in all fields", "Login Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        User user = new User(0, username, password, username, "");
+        connection.sendUser(user);
+
+        Object response = connection.receive();
+        return response instanceof User;
+    }
 
     public User getResponseUser(String username, String password) {
         loginModel.setUsername(username);

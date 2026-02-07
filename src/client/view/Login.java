@@ -164,22 +164,33 @@ public class Login extends JFrame {
             String usernameText = username.getText();
             String passwordText = passField.getText();
 
-            if (usernameText.isEmpty() || passwordText.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please fill in all fields", "Login Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
+            // Kunin nya ung handler sa controller tas andun ung checker kung tama or mali
+            boolean success = controller.handleLogin(usernameText, passwordText);
 
-            if (!controller.isConnected()) {
-                JOptionPane.showMessageDialog(this, "Connecting to server...", "Info", JOptionPane.INFORMATION_MESSAGE);
-            }
+            JOptionPane.showMessageDialog(
+                    this, // dito mag popup
+                    success ? "Login successful!" : "Login failed.", // misij
+                    success ? "Success" : "Login Error", // tite
+                    success ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE // para error may X
+            );
 
-            User receivedUser = controller.getResponseUser(usernameText, passwordText);
-
-            if (receivedUser != null) {
-                JOptionPane.showMessageDialog(this, "Login successful!\nReceived: " + receivedUser, "Success", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this, "Login failed. Check server connection.", "Login Error", JOptionPane.ERROR_MESSAGE);
-            }
+            // Yung dati
+//            if (usernameText.isEmpty() || passwordText.isEmpty()) {
+//                JOptionPane.showMessageDialog(this, "Please fill in all fields", "Login Error", JOptionPane.ERROR_MESSAGE);
+//                return;
+//            }
+//
+//            if (!controller.isConnected()) {
+//                JOptionPane.showMessageDialog(this, "Connecting to server...", "Info", JOptionPane.INFORMATION_MESSAGE);
+//            }
+//
+//            User receivedUser = controller.getResponseUser(usernameText, passwordText);
+//
+//            if (receivedUser != null) {
+//                JOptionPane.showMessageDialog(this, "Login successful!\nReceived: " + receivedUser, "Success", JOptionPane.INFORMATION_MESSAGE);
+//            } else {
+//                JOptionPane.showMessageDialog(this, "Login failed. Check server connection.", "Login Error", JOptionPane.ERROR_MESSAGE);
+//            }
         });
 
         form.add(Box.createVerticalGlue());
