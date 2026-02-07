@@ -311,7 +311,6 @@ public class XMLHandler<T> {
         for (int i = list.getLength() - 1; i >= 0; i--) {
             Node node = list.item(i);
 
-
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element) node;
                 if (element.getAttribute("id").equals(id)) {

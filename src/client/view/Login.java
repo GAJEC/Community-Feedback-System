@@ -1,15 +1,22 @@
 package client.view;
+import client.controller.LoginController;
+import client.model.ClientConnection;
 import client.view.components.IconInputField;
 import client.view.components.RoundedButton;
+import common.User;
 
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.ImageIcon;
 
-public class Login extends JFrame {
+import static common.Config.CONFIG_DEBUG;
 
-    public Login() {
+public class Login extends JFrame {
+    private final LoginController controller;
+
+    public Login(ClientConnection connection) {
+        this.controller = new LoginController(connection);
         setTitle("Login UI");
         setUndecorated(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -141,9 +148,27 @@ public class Login extends JFrame {
             }
         });
 
-
-
-
+        btnLogin.addActionListener(e -> {
+            String usernameText = username.getText();
+            String passwordText = passField.getText();
+            
+            if (usernameText.isEmpty() || passwordText.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please fill in all fields", "Login Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            if (!controller.isConnected()) {
+                JOptionPane.showMessageDialog(this, "Connecting to server...", "Info", JOptionPane.INFORMATION_MESSAGE);
+            }
+            
+            User receivedUser = controller.getResponseUser(usernameText, passwordText);
+            
+            if (receivedUser != null) {
+                JOptionPane.showMessageDialog(this, "Login successful!\nReceived: " + receivedUser, "Success", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Login failed. Check server connection.", "Login Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
         form.add(Box.createVerticalGlue());
         form.add(title);
@@ -169,7 +194,13 @@ public class Login extends JFrame {
     }
 
     public static void main(String[] args) {
-        EventQueue.invokeLater(() -> new Login().setVisible(true));
+        EventQueue.invokeLater(() -> {
+            ClientConnection testConnection = new ClientConnection();
+            if (CONFIG_DEBUG) {
+                System.out.println("[DEBUG MODE] Connecting to localhost...");
+            }
+            new Login(testConnection).setVisible(true);
+        });
     }
 
 
