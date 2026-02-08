@@ -6,7 +6,6 @@ import java.net.URL;
 
 public class AdminHeaderPanel extends JPanel {
 
-
     private static final Color HEADER_COLOR = new Color(0, 80, 80);
     private static final Color NAV_COLOR = new Color(255, 255, 255);
     private static final Color ACTIVE_TEXT = new Color(0, 102, 102);

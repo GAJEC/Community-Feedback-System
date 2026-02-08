@@ -4,33 +4,45 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 public class User implements Serializable {
-    private static final long serialVersionUID = 1L;
     int attr_id;
 
     // Types are (0 - admin, 1 - Officials, 2 - Residents)
     int attr_type;
+    String username;
+    String password;
+
     String name;
     String address;
     String[] contact;
 
-    String username;
-    String password;
+
 
     public User(String username, String password){
+        this.attr_id = 0;
+        this.attr_type = 0;
         this.username = username;
         this.password = password;
+        this.name = null;
+        this.address = null;
+        this.contact = null;
     }
 
     public User(int id, String username, String password, String name, String address) {
         this.attr_id = id;
+        this.attr_type = 0;
+        this.username = username;
+        this.password = password;
         this.name = name;
         this.address = address;
+        this.contact = null;
     }
 
     public User(int id, String username, String password, String name, String address, String[] contact) {
-        this.name = name;
         this.attr_id = id;
-        this.attr_type = 2;
+        this.attr_type = 0;
+        this.username = username;
+        this.password = password;
+        this.name = name;
         this.address = address;
         this.contact = contact;
     }
@@ -38,6 +50,8 @@ public class User implements Serializable {
     public User(int id, int type, String username, String password, String name, String address, String[] contact) {
         this.attr_id = id;
         this.attr_type = type;
+        this.username = username;
+        this.password = password;
         this.name = name;
         this.address = address;
         this.contact = contact;
@@ -104,6 +118,8 @@ public class User implements Serializable {
         return "Users{" +
                 "attr_id=" + attr_id +
                 ", attr_type=" + attr_type +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
                 ", name='" + name + '\'' +
                 ", address='" + address + '\'' +
                 ", contact=" + Arrays.toString(contact) +

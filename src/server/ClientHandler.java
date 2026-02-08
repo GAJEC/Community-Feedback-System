@@ -1,8 +1,10 @@
 package server;
 
 import common.User;
-import server.actions.Login;
+import org.xml.sax.SAXException;
+import server.actions.LoginActions;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.Socket;
 
@@ -36,7 +38,7 @@ public class ClientHandler extends Thread {
                             System.out.println("Received login request from Client " + clientId);
                         }
 
-                        User response = Login.handleLogin(u, clientId);
+                        Object[] response = LoginActions.handleLogin(u, clientId);
                         out.writeObject(response);
                         out.flush();
                     }
@@ -50,6 +52,8 @@ public class ClientHandler extends Thread {
 
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Client " + clientId + " disconnected");
+        } catch (ParserConfigurationException | SAXException e) {
+            throw new RuntimeException(e);
         } finally {
             try {
                 if (in != null) in.close();

@@ -1,15 +1,16 @@
-package client.view;
+package client.view.residents;
 
 import client.view.components.ClientHeaderPanel;
+import common.User;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 
-public class ClientViewFeedback extends JFrame {
+public class ResidentViewFeedback extends JFrame {
 
-    public ClientViewFeedback() { // Main panel of the feedback ui
+    public ResidentViewFeedback(User user) {
         setTitle("Community Feedback System");
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
         setSize((int) (d.width * 0.8), (int) (d.height * 0.85));
@@ -19,7 +20,7 @@ public class ClientViewFeedback extends JFrame {
         JPanel mainLayout = new JPanel(new BorderLayout());
         mainLayout.setBackground(new Color(240, 242, 245));
 
-        mainLayout.add(new ClientHeaderPanel(), BorderLayout.NORTH);
+        mainLayout.add(new ClientHeaderPanel(user), BorderLayout.NORTH);
 
         mainLayout.add(createFeedContentPanel(), BorderLayout.CENTER);
 
@@ -27,7 +28,7 @@ public class ClientViewFeedback extends JFrame {
         setVisible(true);
     }
 
-    private JPanel createFeedContentPanel() { // panel for feedback list and the announcement widget
+    private JPanel createFeedContentPanel() {
         JPanel container = new JPanel(new BorderLayout(20, 0));
         container.setOpaque(false);
         container.setBorder(BorderFactory.createEmptyBorder(15, 40, 15, 40));
@@ -308,5 +309,5 @@ public class ClientViewFeedback extends JFrame {
         return b;
     }
 
-    public static void main(String[] args) { SwingUtilities.invokeLater(ClientViewFeedback::new); }
+    public static void main(String[] args) { SwingUtilities.invokeLater(() -> new ResidentDashboard(true, new User("test", "test123"))); }
 }

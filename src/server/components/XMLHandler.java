@@ -174,15 +174,29 @@ public class XMLHandler<T> {
     }
 
     /** Read
-     * To read our target user by id
+     * To search our target user by id
      * @param id the target user
      * @return Object
      */
-    public T Read(String id) {
+    public T ReadbyId(String id) {
         NodeList list = doc.getElementsByTagName(tagName);
         for (int i = 0; i < list.getLength(); i++) {
             Element el = (Element) list.item(i);
             if (el.getAttribute("id").equals(id)) return map(el);
+        }
+        return null;
+    }
+
+    /** Read
+     * To search our target user by username
+     * @param username the target user
+     * @return Object
+     */
+    public T ReadbyUsername(String username){
+        NodeList list = doc.getElementsByTagName(tagName);
+        for (int i = 0; i < list.getLength(); i++) {
+            Element el = (Element) list.item(i);
+            if (getElementText(el, "username").equalsIgnoreCase(username)) return map(el);
         }
         return null;
     }
@@ -240,11 +254,15 @@ public class XMLHandler<T> {
      * @return Object kase nga tinatama ngani naten yung datatype
      */
     private Object convert(String val, Class<?> type) {
-        if (val == null) return null;
+        if (val == null || val.isEmpty()) {
+            if (type == String[].class) return new String[0];
+            if (type == int.class || type == Integer.class) return 0;
+            return val;
+        }
 
         // Kung gusto nyo magdagdag pa ng datatype pwede naman
         if (type == String[].class) return new String[]{val};
-        if (type == int.class || type == Integer.class) return Integer.parseInt(val.isEmpty() ? "0" : val);
+        if (type == int.class || type == Integer.class) return Integer.parseInt(val);
 
         return val;
     }

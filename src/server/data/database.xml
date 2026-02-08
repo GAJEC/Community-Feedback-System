@@ -1,0 +1,8 @@
+<dataset>
+    <user id="0" type="0">
+        <name>System Administrator</name>
+        <address>Municipal Hall, IT Dept.</address>
+        <username>admin</username>
+        <password>admin123</password>
+    </user>
+</dataset>

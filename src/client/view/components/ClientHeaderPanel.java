@@ -1,5 +1,8 @@
 package client.view.components;
 
+import client.view.residents.ResidentViewFeedback;
+import common.User;
+
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
@@ -14,8 +17,10 @@ public class ClientHeaderPanel extends JPanel {
 
     public JButton profileButton;
     public JButton logoutButton;
+    private User user;
 
-    public ClientHeaderPanel() {
+    public ClientHeaderPanel(User user) {
+        this.user = user;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(HEADER_COLOR);
 
@@ -62,7 +67,8 @@ public class ClientHeaderPanel extends JPanel {
         JPanel rightPnl = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 30));
         rightPnl.setOpaque(false);
 
-        profileButton = new RoundedButton("Alan Glen Escobar Jr.", 30, new Color(255,255,255,40));
+        String displayName = (user != null && user.getName() != null) ? user.getName() : "User";
+        profileButton = new RoundedButton(displayName, 30, new Color(255,255,255,40));
         profileButton.setPreferredSize(new Dimension(200,40));
 
         logoutButton = new RoundedButton("Logout", 20, LOGOUT_RED);
@@ -93,8 +99,8 @@ public class ClientHeaderPanel extends JPanel {
         headerPanel.add(rightPnl, BorderLayout.EAST);
         add(headerPanel);
     }
-    JButton viewBtn;
-    JButton submitBtn;
+    public JButton viewBtn;
+    public JButton submitBtn;
     // ================= NAV BAR =================
     private void buildDashboard() {
         JPanel navBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 10));
@@ -109,9 +115,6 @@ public class ClientHeaderPanel extends JPanel {
         viewBtn = new JButton("View Feedbacks");
         submitBtn = new JButton("Submit Feedback");
 
-        styleTab(viewBtn, true);
-        styleTab(submitBtn, false);
-
         navBar.add(viewBtn);
         navBar.add(submitBtn);
 
@@ -119,7 +122,7 @@ public class ClientHeaderPanel extends JPanel {
     }
 
 
-    private void styleTab(JButton btn, boolean active){
+    public void styleTab(JButton btn, boolean active){
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setContentAreaFilled(false);
         btn.setBorderPainted(false);

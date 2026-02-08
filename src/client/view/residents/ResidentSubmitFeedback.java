@@ -1,4 +1,7 @@
-package client.view.components;
+package client.view.residents;
+
+import client.view.components.ClientHeaderPanel;
+import common.User;
 
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
@@ -7,7 +10,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import java.awt.*;
 
-public class ClientSubmitFeedback extends JFrame {
+public class ResidentSubmitFeedback extends JFrame {
 
     // Colors
     private static final Color BG_COLOR = new Color(240, 242, 245);
@@ -16,7 +19,7 @@ public class ClientSubmitFeedback extends JFrame {
     private static final Color DANGER_RED = new Color(220, 53, 69);
     private static final Color USER_BOX_BG = new Color(248, 250, 252);
 
-    public ClientSubmitFeedback() {
+    public ResidentSubmitFeedback(User user) {
         setTitle("Community Feedback");
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
         setSize((int) (d.width * 0.8), (int) (d.height * 0.85));
@@ -28,7 +31,7 @@ public class ClientSubmitFeedback extends JFrame {
 
         mainPanel.setBackground(BG_COLOR);
 
-        mainPanel.add(new ClientHeaderPanel(), BorderLayout.NORTH);
+        mainPanel.add(new ClientHeaderPanel(user), BorderLayout.NORTH);
 
         JScrollPane scrollPane = new JScrollPane(createContentPanel());
         scrollPane.setBorder(null);
@@ -316,6 +319,6 @@ public class ClientSubmitFeedback extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(ClientSubmitFeedback::new);
+        SwingUtilities.invokeLater(() -> new ResidentDashboard(false, new User("testuser", "password")));
     }
 }

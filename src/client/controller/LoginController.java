@@ -1,45 +1,49 @@
 package client.controller;
 
 import client.model.ClientConnection;
-import client.model.Login;
+import client.model.LoginModel;
 import common.User;
 
-import javax.swing.*;
+import java.util.Arrays;
 
 public class LoginController {
     private final ClientConnection connection;
-    private final Login loginModel;
+    private final LoginModel loginModel;
 
     public LoginController(ClientConnection connection) {
         this.connection = connection;
-        this.loginModel = new Login();
+        this.loginModel = new LoginModel();
     }
 
-    public boolean handleLogin(String username, String password) {
+    public Object[] handleLogin(String username, String password) {
         loginModel.setUsername(username);
         loginModel.setPassword(password);
 
         if (!loginModel.isValid()) {
-            return false;
+            return new Object[]{"400", "Missing Fields!", null};
         }
 
         if (!connection.isConnected()) {
             if (!connection.connect()) {
-                return false;
+                return new Object[]{"500", "Connection Failed!", null};
             }
-        }
-
-        // Check if meron karga fields
-        if (!loginModel.isValid()) {
-            JOptionPane.showMessageDialog(null, "Please fill in all fields", "Login Error", JOptionPane.ERROR_MESSAGE);
-            return false;
         }
 
         User user = new User(username, password);
         connection.sendUser(user);
 
         Object response = connection.receive();
-        return response instanceof User;
+
+        if (response instanceof Object[]) {
+            return (Object[]) response;
+        }
+
+        if (response instanceof String[]) {
+            String[] status = (String[]) response;
+            return new Object[]{status[0], status.length > 1 ? status[1] : "Unknown error", null};
+        }
+
+        return new Object[]{"500", "Unknown Response", null};
     }
 
     public User getResponseUser(String username, String password) {
@@ -66,7 +70,7 @@ public class LoginController {
         return null;
     }
 
-    public Login getLoginModel() {
+    public LoginModel getLoginModel() {
         return loginModel;
     }
 
