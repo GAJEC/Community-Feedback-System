@@ -44,6 +44,7 @@ public class ClientHeaderPanel extends JPanel {
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
         textPanel.setOpaque(false);
 
+
         JLabel title = new JLabel("Community Feedback System");
         title.setFont(new Font("Segoe UI", Font.BOLD, 22));
         title.setForeground(Color.WHITE);
@@ -58,8 +59,7 @@ public class ClientHeaderPanel extends JPanel {
         leftPnl.add(textPanel);
         headerPanel.add(leftPnl, BorderLayout.WEST);
 
-        // --- Right Side (Buttons) ---
-        JPanel rightPnl = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 45));
+        JPanel rightPnl = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 30));
         rightPnl.setOpaque(false);
 
         profileButton = new RoundedButton("Alan Glen Escobar Jr.", 30, new Color(255,255,255,40));
@@ -67,6 +67,25 @@ public class ClientHeaderPanel extends JPanel {
 
         logoutButton = new RoundedButton("Logout", 20, LOGOUT_RED);
         logoutButton.setPreferredSize(new Dimension(100,40));
+
+        try {
+            URL logoutIconURL = getClass().getResource("/assets/profile_icon.png");
+            if (logoutIconURL != null) {
+                Image img = new ImageIcon(logoutIconURL).getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH);
+                profileButton.setIcon(new ImageIcon(img));
+                profileButton.setIconTextGap(2);
+            }
+        } catch (Exception ignored) {}
+
+
+        try {
+            URL logoutIconURL = getClass().getResource("/assets/logout_icon.png");
+            if (logoutIconURL != null) {
+                Image img = new ImageIcon(logoutIconURL).getImage().getScaledInstance(18, 18, Image.SCALE_SMOOTH);
+                logoutButton.setIcon(new ImageIcon(img));
+                logoutButton.setIconTextGap(8);
+            }
+        } catch (Exception ignored) {}
 
         rightPnl.add(profileButton);
         rightPnl.add(logoutButton);
@@ -78,7 +97,7 @@ public class ClientHeaderPanel extends JPanel {
     JButton submitBtn;
     // ================= NAV BAR =================
     private void buildDashboard() {
-        JPanel navBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 0));
+        JPanel navBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 10));
         navBar.setBackground(NAV_COLOR);
         // Ensure the nav bar has enough height
         navBar.setPreferredSize(new Dimension(1000, 50));
@@ -90,17 +109,14 @@ public class ClientHeaderPanel extends JPanel {
         viewBtn = new JButton("View Feedbacks");
         submitBtn = new JButton("Submit Feedback");
 
-        styleTab(viewBtn, false);
-        styleTab(submitBtn, true);
+        styleTab(viewBtn, true);
+        styleTab(submitBtn, false);
 
         navBar.add(viewBtn);
         navBar.add(submitBtn);
 
         add(navBar);
     }
-
-
-
 
 
     private void styleTab(JButton btn, boolean active){

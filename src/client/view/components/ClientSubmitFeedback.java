@@ -1,6 +1,4 @@
-package client.view;
-
-import client.view.components.ClientHeaderPanel;
+package client.view.components;
 
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
@@ -8,9 +6,8 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
 
-public class SubmitFeedBackUI extends JFrame {
+public class ClientSubmitFeedback extends JFrame {
 
     // Colors
     private static final Color BG_COLOR = new Color(240, 242, 245);
@@ -19,7 +16,7 @@ public class SubmitFeedBackUI extends JFrame {
     private static final Color DANGER_RED = new Color(220, 53, 69);
     private static final Color USER_BOX_BG = new Color(248, 250, 252);
 
-    public SubmitFeedBackUI() {
+    public ClientSubmitFeedback() {
         setTitle("Community Feedback");
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
         setSize((int) (d.width * 0.8), (int) (d.height * 0.85));
@@ -319,6 +316,6 @@ public class SubmitFeedBackUI extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(SubmitFeedBackUI::new);
+        SwingUtilities.invokeLater(ClientSubmitFeedback::new);
     }
 }
