@@ -21,7 +21,7 @@ public class Loading extends JWindow {
         setSize(600, 600);
         setLocationRelativeTo(null);
 
-        java.net.URL imgURL = getClass().getResource("assets/logo_icon.png");
+        java.net.URL imgURL = getClass().getResource("/assets/logo_icon.png");
         if (imgURL != null) {
             Image originalImage = new ImageIcon(imgURL).getImage();
             logoImage = originalImage.getScaledInstance(500, 500, Image.SCALE_SMOOTH);
