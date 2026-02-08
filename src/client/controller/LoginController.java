@@ -15,7 +15,6 @@ public class LoginController {
         this.loginModel = new Login();
     }
 
-// Chill first
     public boolean handleLogin(String username, String password) {
         loginModel.setUsername(username);
         loginModel.setPassword(password);
@@ -36,7 +35,7 @@ public class LoginController {
             return false;
         }
 
-        User user = new User(0, username, password, username, "");
+        User user = new User(username, password);
         connection.sendUser(user);
 
         Object response = connection.receive();

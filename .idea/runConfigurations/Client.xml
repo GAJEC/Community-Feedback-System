@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Client" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="client.Client" />
+    <module name="Community-Feedback-System" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Server" run_configuration_type="Application" />
+    </method>
+  </configuration>
+</component>
