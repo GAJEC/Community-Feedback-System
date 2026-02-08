@@ -1,9 +1,12 @@
 package client.view.residents;
 
 import client.view.components.ClientHeaderPanel;
+import client.view.residents.ResidentViewDetails;
 import common.User;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
@@ -250,6 +253,7 @@ public class ResidentViewFeedback extends JFrame {
                 public void mouseEntered(MouseEvent e) { detailsBtn.setForeground(new Color(0, 50, 150)); }
                 public void mouseExited(MouseEvent e) { detailsBtn.setForeground(new Color(0, 102, 204)); }
             });
+
 
             gbc.gridx = 1; gbc.gridy = 1;
             gbc.anchor = GridBagConstraints.SOUTHEAST;
