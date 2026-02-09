@@ -12,8 +12,8 @@ public class Colors {
 
     // BUTTON COLORS
     public static final Color BTN_SUBMIT   = new Color(46, 134, 193);  // Dark Blue
-    public static final Color BTN_VIEW     = new Color(34, 153, 84);   // Dark Green
-    public static final Color BTN_TEXT     = Color.WHITE;
+    public static final Color GRAY     = new Color(193, 193, 193);   // Dark Green
+    public static final Color WHITE     = Color.WHITE;
 
     // TEXT COLORS
     public static final Color HEADER_TEXT  = Color.DARK_GRAY;
