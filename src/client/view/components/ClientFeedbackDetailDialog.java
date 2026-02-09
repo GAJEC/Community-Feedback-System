@@ -1,4 +1,4 @@
-package client.view.residents;
+package client.view.components;
 
 
 import javax.swing.*;
@@ -6,27 +6,25 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
 
-public class ResidentViewDetails extends JDialog {
+
+public class ClientFeedbackDetailDialog extends JDialog {
     private static final Color background = Color.WHITE;
     private static final Color cardBackground = new Color(249, 250, 251);
     private static final Color darkTeal = new Color(0, 102, 102);
 
-    private String feedbackID = "FB-2026-001";
 
-    public ResidentViewDetails(Frame frame) {
+    public ClientFeedbackDetailDialog(Frame frame) {
         super(frame, "Feedback Details", true);
         setSize(850, 780);
         setUndecorated(true);
         setLocationRelativeTo(null);
         setBackground(new Color(0, 0, 0, 0));
 
-
         RoundedPanel main = new RoundedPanel(30, background);
         main.setLayout(new BorderLayout());
-        main.setStroke( new Color(0, 102, 102), 2.5f);
+        main.setStroke( new Color(192, 192, 192), 1.5f);
 
-
-        RoundedPanel headerRow = new RoundedPanel(30, darkTeal);
+        RoundedPanel headerRow = new RoundedPanel(15, darkTeal);
         headerRow.setLayout(new BorderLayout());
         headerRow.setBorder(new EmptyBorder(25, 30, 25, 30));
         headerRow.setPreferredSize(new Dimension(850, 160));
@@ -40,40 +38,62 @@ public class ResidentViewDetails extends JDialog {
         badges.add(new roundedStatusCategory("IN PROGRESS", new Color(255, 255, 255, 60), Color.WHITE));
         badges.add(new roundedStatusCategory("Infrastructure", new Color(255, 255, 255, 60), Color.WHITE));
 
-        JButton closeBtn = new JButton("X");
-        closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        closeBtn.setForeground(Color.WHITE);
+
+        JButton closeBtn = new JButton("✕");
+        closeBtn.setFont(new Font("SansSerif", Font.BOLD, 18));
+        closeBtn.setForeground(new Color(255, 255, 255));
         closeBtn.setContentAreaFilled(false);
         closeBtn.setBorderPainted(false);
         closeBtn.setFocusPainted(false);
+        closeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         closeBtn.addActionListener(e -> dispose());
+
+
+        closeBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                closeBtn.setForeground(Color.RED);
+            }
+
+
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                closeBtn.setForeground(new Color(255, 255, 255));
+            }
+        });
+
 
         topHeaderRow.add(badges, BorderLayout.WEST);
         topHeaderRow.add(closeBtn, BorderLayout.EAST);
+
 
         JPanel titlePanel = new JPanel();
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
         titlePanel.setOpaque(false);
         titlePanel.setBorder(new EmptyBorder(15, 0, 0, 0));
 
+
         JLabel title = new JLabel("Feedback Details");
         title.setFont(new Font("Segoe UI", Font.BOLD, 32));
         title.setForeground(Color.WHITE);
 
-        JLabel idLabel = new JLabel("ID: " + feedbackID);
+
+        JLabel idLabel = new JLabel("ID: ");
         idLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10));
         idLabel.setForeground(new Color(255, 255, 255, 180));
+
 
         titlePanel.add(title);
         titlePanel.add(idLabel);
 
+
         headerRow.add(topHeaderRow, BorderLayout.NORTH);
         headerRow.add(titlePanel, BorderLayout.SOUTH);
+
 
         JPanel bodyContainer = new JPanel();
         bodyContainer.setLayout(new BoxLayout(bodyContainer, BoxLayout.Y_AXIS));
         bodyContainer.setOpaque(false);
         bodyContainer.setBorder(new EmptyBorder(20, 30, 25, 30)); // Reduced top/bottom padding
+
 
         JPanel grid = new JPanel(new GridLayout(2, 2, 15, 15));
         grid.setOpaque(false);
@@ -82,11 +102,13 @@ public class ResidentViewDetails extends JDialog {
         grid.add(detailCard("Submitted On", "Feb 3, 2026", "05:56 PM"));
         grid.add(detailCard("Support", "13 upvotes", "High Priority"));
 
+
         JPanel gridWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         gridWrapper.setOpaque(false);
         gridWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
         gridWrapper.add(grid);
         gridWrapper.setMaximumSize(new Dimension(800, 190));
+
 
         bodyContainer.add(gridWrapper);
         bodyContainer.add(Box.createVerticalStrut(20));
@@ -94,7 +116,7 @@ public class ResidentViewDetails extends JDialog {
         // Feedback Content
         JLabel contentLabel = new JLabel("Feedback Content");
         contentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        contentLabel.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 16));
+        contentLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 18));
         bodyContainer.add(contentLabel);
         bodyContainer.add(Box.createVerticalStrut(8));
 
@@ -102,6 +124,7 @@ public class ResidentViewDetails extends JDialog {
         styleTextArea(contentArea);
 
         RoundedPanel contentCard = new RoundedPanel(15, cardBackground);
+        contentCard.setStroke( new Color(192, 192, 192), 1.0f);
         contentCard.setLayout(new BorderLayout());
         contentCard.setBorder(new EmptyBorder(15, 15, 15, 15));
         contentCard.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -113,7 +136,7 @@ public class ResidentViewDetails extends JDialog {
 
         // Official Response
         JLabel responseLabel = new JLabel("Official Response");
-        responseLabel.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 16));
+        responseLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 18));
         responseLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         bodyContainer.add(responseLabel);
         bodyContainer.add(Box.createVerticalStrut(8));
@@ -165,6 +188,7 @@ public class ResidentViewDetails extends JDialog {
     private JPanel detailCard(String title, String main, String sub) {
         RoundedPanel card = new RoundedPanel(15, cardBackground);
         card.setLayout(new BorderLayout());
+        card.setStroke( new Color(192, 192, 192), 1.2f);
         card.setBorder(new EmptyBorder(12, 15, 12, 15));
         card.setPreferredSize(new Dimension(375, 80)); // Tighter cards
         card.setMaximumSize(new Dimension(375, 80));
@@ -180,20 +204,24 @@ public class ResidentViewDetails extends JDialog {
         JLabel m = new JLabel(main);
         m.setFont(new Font("Segoe UI", Font.BOLD, 15));
 
+
         JLabel s = new JLabel(sub);
         s.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         s.setForeground(new Color(148, 163, 184));
+
 
         txt.add(t); txt.add(m); txt.add(s);
         card.add(txt, BorderLayout.CENTER);
         return card;
     }
 
+
     static class RoundedPanel extends JPanel {
         private final int r;
         private final Color c;
         private Color sCol = new Color(241, 245, 249);
         private float sWidth = 1.0f;
+
 
         RoundedPanel(int radius, Color color) {
             r = radius;
@@ -237,3 +265,4 @@ public class ResidentViewDetails extends JDialog {
         }
     }
 }
+
