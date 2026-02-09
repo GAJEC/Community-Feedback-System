@@ -2,8 +2,10 @@ package client.view.components;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
- public class RoundedButton extends JButton {
+public class RoundedButton extends JButton {
     private int radius;
 
     public RoundedButton(String label, int radius) {
@@ -13,6 +15,26 @@ import java.awt.*;
         setFocusPainted(false);
         setBorderPainted(false);
     }
+
+     public static RoundedButton create(String text, int radius, Color primary, Color hover) {
+         RoundedButton btn = new RoundedButton(text, radius);
+         btn.setBackground(primary);
+         btn.setForeground(Color.WHITE);
+
+         btn.addMouseListener(new MouseAdapter() {
+             @Override
+             public void mouseEntered(MouseEvent e) {
+                 btn.setBackground(hover);
+             }
+
+             @Override
+             public void mouseExited(MouseEvent e) {
+                 btn.setBackground(primary);
+             }
+         });
+
+         return btn;
+     }
 
     @Override
     protected void paintComponent(Graphics g) {

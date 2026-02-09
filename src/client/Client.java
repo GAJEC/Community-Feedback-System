@@ -2,9 +2,7 @@ package client;
 
 import client.model.ClientConnection;
 import client.model.ConnectionListener;
-import client.view.Loading;
-import client.view.Login;
-import common.User;
+import client.view.auth.Loading;
 
 import javax.swing.*;
 

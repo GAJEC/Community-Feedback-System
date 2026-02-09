@@ -1,4 +1,4 @@
-package client.view;
+package client.view.auth;
 import client.controller.LoginController;
 import client.model.ClientConnection;
 import client.view.components.IconInputField;
@@ -7,7 +7,6 @@ import common.User;
 
 import java.awt.*;
 import java.net.URL;
-import java.util.Arrays;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.ImageIcon;

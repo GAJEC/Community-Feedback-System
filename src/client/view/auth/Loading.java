@@ -1,4 +1,4 @@
-package client.view;
+package client.view.auth;
 
 import client.model.ClientConnection;
 
@@ -83,7 +83,7 @@ public class Loading extends JWindow {
             dispose();
             EventQueue.invokeLater(() -> {
                 try {
-                    new Login(connection).setVisible(true);
+                    new NewLogin(connection).setVisible(true);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
