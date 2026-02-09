@@ -1,5 +1,6 @@
 package client.view.residents;
 
+import client.view.components.DropShadowBorder;
 import client.view.components.FeedbackSubmitPopUp;
 import client.view.components.ClientHeaderPanel;
 import client.view.components.HintTextField;
@@ -20,7 +21,7 @@ import java.awt.geom.RoundRectangle2D;
 public class ResidentDashboard extends JFrame {
 
     private static final Color BG_COLOR = new Color(240, 242, 245);
-    private static final Color CARD_SHADOW = new Color(200, 200, 200);
+    public static final Color CARD_SHADOW = new Color(200, 200, 200);
     private static final Color PRIMARY_TEAL = new Color(0, 100, 100);
     private static final Color DANGER_RED = new Color(220, 53, 69);
     private static final Color USER_BOX_BG = new Color(248, 250, 252);
@@ -407,22 +408,6 @@ public class ResidentDashboard extends JFrame {
         combo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         combo.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
         return combo;
-    }
-
-    static class DropShadowBorder extends AbstractBorder {
-        private final int padding;
-        public DropShadowBorder(int padding) { this.padding = padding; }
-        @Override
-        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(CARD_SHADOW);
-            g2.drawRoundRect(x, y, width - 1, height - 1, 15, 15);
-            g2.drawRoundRect(x + 1, y + 1, width - 2, height - 2, 15, 15);
-            g2.dispose();
-        }
-        @Override
-        public Insets getBorderInsets(Component c) { return new Insets(padding, padding, padding, padding); }
     }
 
     static class RoundedBorder extends AbstractBorder {
