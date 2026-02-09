@@ -31,7 +31,18 @@ public class LogoutPopUp extends JDialog {
         RoundedButton yesBtn = new RoundedButton("Logout", 15, LOGOUT_COLOR, Color.WHITE);
         RoundedButton noBtn = new RoundedButton("Cancel", 15, new Color(241, 245, 249), TEXT_COLOR);
 
-        yesBtn.addActionListener(e -> System.exit(0)); // Or your logout logic
+        yesBtn.addActionListener(e -> {
+            // 1. Close Logout Dialog
+            dispose();
+
+            // Close the dashboard
+            if (parent != null) {
+                parent.dispose();
+            }
+            // Open Login Screen
+            client.model.ClientConnection connection = new client.model.ClientConnection();
+            new client.view.auth.NewLogin(connection).setVisible(true);
+        });
         noBtn.addActionListener(e -> dispose());
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));

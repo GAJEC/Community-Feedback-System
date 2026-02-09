@@ -13,6 +13,8 @@ import common.User;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import static common.Config.CONFIG_DEBUG;
 
@@ -168,16 +170,31 @@ public class NewLogin extends JFrame {
             });
 
             add(btnLogin);
-            add(Box.createVerticalStrut(10));
+            add(Box.createVerticalStrut(5));
 
-            RoundedButton goRegister = RoundedButton.create("REGISTER", 30, Colors.SECONDARY, Colors.TERTIARY);
-            goRegister.setMaximumSize(new Dimension(250, 45));
+            JLabel goRegister = new JLabel("How to Register");
+            goRegister.setFont(new Font("SansSerif", Font.PLAIN, 12));
+            goRegister.setForeground(new Color(0, 100, 100));
+            goRegister.setCursor(new Cursor(Cursor.HAND_CURSOR));
             goRegister.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            goRegister.addActionListener(e -> {
-                JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
-                if (topFrame instanceof NewLogin loginFrame) {
-                    loginFrame.showRegisterPanel();
+            goRegister.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent e) {
+                    JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(LoginForm.this);
+                    if (topFrame instanceof NewLogin loginFrame) {
+                        loginFrame.showRegisterPanel();
+                    }
+                }
+
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent e) {
+                    goRegister.setForeground(new Color(0, 150, 150));
+                }
+
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent e) {
+                    goRegister.setForeground(new Color(0, 100, 100));
                 }
             });
 

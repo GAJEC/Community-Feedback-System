@@ -94,17 +94,9 @@ public class ClientHeaderPanel extends JPanel {
             }
         } catch (Exception ignored) {}
 
-        logoutButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                logoutButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        LogoutPopUp logoutDialog = new LogoutPopUp((JFrame) SwingUtilities.getWindowAncestor(headerPanel));
-                        logoutDialog.setVisible(true);
-                    }
-                });
-            }
+        logoutButton.addActionListener(e -> {
+            JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(headerPanel);
+            new LogoutPopUp(frame).setVisible(true);
         });
 
         rightPnl.add(profileButton);
