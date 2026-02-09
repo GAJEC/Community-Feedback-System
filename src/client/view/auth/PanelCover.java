@@ -1,5 +1,6 @@
 package client.view.auth;
 
+import client.view.strings.Colors;
 import client.view.strings.Images;
 
 import javax.swing.*;
@@ -10,7 +11,7 @@ public class PanelCover extends JPanel {
     public PanelCover() {
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(5, 10, 5, 10); // Spacing between elements
+        c.insets = new Insets(5, 10, 5, 10);
 
 
         JLabel logo = new JLabel(Images.scaledLogo(300, 300));
@@ -24,7 +25,7 @@ public class PanelCover extends JPanel {
         title.setForeground(Color.WHITE);
 
         c.gridy = 1;
-        c.insets= new Insets(-150,0,0,0);
+        c.insets= new Insets(-150,60,0,60);
         add(title, c);
 
 
@@ -42,10 +43,7 @@ public class PanelCover extends JPanel {
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        GradientPaint gra = new GradientPaint(
-                0, 0, new Color(0, 80, 80),
-                0, getHeight(), new Color(0, 120, 120)
-        );
+        GradientPaint gra = new GradientPaint(0, 0, Colors.PRIMARY, 0, getHeight(), Colors.SECONDARY);
         g2.setPaint(gra);
         g2.fillRect(0, 0, getWidth(), getHeight());
     }

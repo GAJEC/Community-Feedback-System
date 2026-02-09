@@ -3,6 +3,7 @@ package client.view.auth;
 import client.controller.LoginController;
 import client.view.components.IconInputField;
 import client.view.components.RoundedButton;
+import client.view.strings.Colors;
 import client.view.strings.Images;
 import common.User;
 
@@ -40,7 +41,7 @@ public class LoginForm extends JPanel {
         add(password);
         add(Box.createVerticalStrut(25));
 
-        RoundedButton btnLogin = createButton("SIGN IN", new Color(0, 80, 80), new Color(0, 120, 120));
+        RoundedButton btnLogin = createButton("SIGN IN", Colors.PRIMARY, Colors.SECONDARY);
         btnLogin.setMaximumSize(new Dimension(250, 45));
         btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -60,7 +61,7 @@ public class LoginForm extends JPanel {
         add(btnLogin);
         add(Box.createVerticalStrut(10));
 
-        RoundedButton goRegister = createButton("HOW TO REGISTER", new Color(0, 120, 120), new Color(0, 150, 150));
+        RoundedButton goRegister = createButton("HOW TO REGISTER", Colors.SECONDARY, Colors.TERTIARY);
         goRegister.setMaximumSize(new Dimension(250, 45));
         goRegister.setAlignmentX(Component.CENTER_ALIGNMENT);
 

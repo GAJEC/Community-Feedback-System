@@ -33,15 +33,19 @@ public class NewLogin extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
 
         // Close button
-        gbc.gridx = 1; gbc.gridy = 0;
+        gbc.gridx = 1;
+        gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.FIRST_LINE_END;
         gbc.insets = new Insets(0, 0, 0, 10);
         root.add(new CloseButton(this), gbc);
 
         // Left panel logo
         gbc.fill = GridBagConstraints.BOTH;
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.gridheight = 2; gbc.weightx = 0.4; gbc.weighty = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridheight = 2;
+        gbc.weightx = 0.4;
+        gbc.weighty = 1;
         root.add(new PanelCover(), gbc);
 
         // Right panel card
@@ -54,8 +58,11 @@ public class NewLogin extends JFrame {
         formPanel.add(loginForm, "login");
         formPanel.add(registerInfo, "register");
 
-        gbc.gridx = 1; gbc.gridy = 1;
-        gbc.gridheight = 1; gbc.weightx = 0.6; gbc.weighty = 1;
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.gridheight = 1;
+        gbc.weightx = 0.6;
+        gbc.weighty = 1;
         gbc.fill = GridBagConstraints.BOTH;
         root.add(formPanel, gbc);
 

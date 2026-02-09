@@ -28,6 +28,7 @@ public class RegisterInfoPanel extends JPanel {
                         "</ol>" +
                         "</html>"
         );
+
         info.setFont(new Font("SansSerif", Font.PLAIN, 18));
         info.setAlignmentX(CENTER_ALIGNMENT);
         add(info);
