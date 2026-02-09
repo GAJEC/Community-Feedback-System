@@ -297,7 +297,7 @@ public class StatusModifierDialog extends JDialog {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            new StatusModifierDialog(null, "Pending", "Sample report: The street light on 5th Avenue is flickering constantly, causing distraction to drivers at night.").setVisible(true);
+            new StatusModifierDialog(null, "Pending", "Sample report: Si Edgard matapos makipag inuman, nanggulo dito sa Bawang Street. Itinulog niya po sa kalsada. Sana maaksyoanan agad..").setVisible(true);
         });
     }
 }
