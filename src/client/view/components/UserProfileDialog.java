@@ -132,7 +132,6 @@ public class UserProfileDialog extends JDialog {
     private JPanel createContent() {
         JPanel content = new JPanel();
         content.setBackground(Color.WHITE);
-        // Adjusted the bottom padding (10) if you want it closer to the edge
         content.setBorder(new EmptyBorder(25, 25, 15, 25));
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
