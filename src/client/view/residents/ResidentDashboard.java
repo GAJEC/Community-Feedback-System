@@ -1,6 +1,7 @@
 package client.view.residents;
 
 import client.view.components.ClientHeaderPanel;
+import client.view.components.HintTextField;
 import common.User;
 
 import javax.swing.*;
@@ -182,7 +183,7 @@ public class ResidentDashboard extends JFrame {
         searchContainer.setOpaque(false);
         JLabel searchLabel = new JLabel("🔍 Search");
         searchLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        JTextField searchField = new JTextField("Search feedbacks...");
+        JTextField searchField = new HintTextField("Search feedbacks...");
         searchField.setPreferredSize(new Dimension(0, 35));
         searchContainer.add(searchLabel, BorderLayout.NORTH);
         searchContainer.add(searchField, BorderLayout.CENTER);
