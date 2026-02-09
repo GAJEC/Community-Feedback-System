@@ -1,5 +1,6 @@
 package client.view.residents;
 
+import client.view.components.FeedbackSubmitPopUp;
 import client.view.components.ClientHeaderPanel;
 import client.view.components.HintTextField;
 import common.User;
@@ -10,6 +11,8 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
@@ -44,6 +47,7 @@ public class ResidentDashboard extends JFrame {
 
         header.viewBtn.addActionListener(e -> switchToView());
         header.submitBtn.addActionListener(e -> switchToSubmit());
+
 
         header.styleTab(header.viewBtn, viewMode);
         header.styleTab(header.submitBtn, !viewMode);
@@ -309,6 +313,16 @@ public class ResidentDashboard extends JFrame {
 
         cancelBtn.setPreferredSize(new Dimension(120, 40));
         submitBtn.setPreferredSize(new Dimension(180, 40));
+
+        submitBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                FeedbackSubmitPopUp dialog = new FeedbackSubmitPopUp(ResidentDashboard.this);
+                dialog.setLocationRelativeTo(ResidentDashboard.this);
+                dialog.setVisible(true);
+                switchToView();
+            }
+        });
 
         buttonPanel.add(cancelBtn);
         buttonPanel.add(submitBtn);

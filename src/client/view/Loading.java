@@ -8,8 +8,6 @@ import java.awt.*;
 import static common.Config.CONFIG_DEBUG;
 
 public class Loading extends JWindow {
-
-
     private float alpha = 0f;
     private Image logoImage;
     private boolean fadingOut = false;

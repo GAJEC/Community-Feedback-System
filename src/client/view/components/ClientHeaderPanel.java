@@ -1,10 +1,11 @@
 package client.view.components;
 
-import client.view.residents.ResidentViewFeedback;
 import common.User;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.net.URL;
 
 public class ClientHeaderPanel extends JPanel {
@@ -92,6 +93,19 @@ public class ClientHeaderPanel extends JPanel {
                 logoutButton.setIconTextGap(8);
             }
         } catch (Exception ignored) {}
+
+        logoutButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                logoutButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        LogoutPopUp logoutDialog = new LogoutPopUp((JFrame) SwingUtilities.getWindowAncestor(headerPanel));
+                        logoutDialog.setVisible(true);
+                    }
+                });
+            }
+        });
 
         rightPnl.add(profileButton);
         rightPnl.add(logoutButton);
