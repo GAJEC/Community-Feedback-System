@@ -3,11 +3,13 @@ package common;
 import java.io.Serializable;
 import java.util.Arrays;
 
+// Ginamit naten Serializable para mapasa naten yung User object sa network connection (Kase gumagamit tayo ng ObjectOutputStream and ObjectInputStream)
 public class User implements Serializable {
     int attr_id;
 
     // Types are (0 - admin, 1 - Officials, 2 - Residents)
     int attr_type;
+
     String username;
     String password;
 

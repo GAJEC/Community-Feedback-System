@@ -1,6 +1,9 @@
 package client.view.auth;
 
+import client.controller.LoginController;
 import client.model.ClientConnection;
+import client.utils.CredentialManager;
+import common.User;
 
 import javax.swing.*;
 import java.awt.*;
@@ -68,14 +71,47 @@ public class Loading extends JWindow {
         new InitializationTask().execute();
     }
 
-    private class InitializationTask extends SwingWorker<Void, Void> {
+    private class InitializationTask extends SwingWorker<Object[], Void> {
         @Override
-        protected Void doInBackground() throws Exception {
+        protected Object[] doInBackground() throws Exception {
+            String[] credentials = CredentialManager.loadCredentials();
+            User loggedInUser = null;
+
+            if (credentials != null && credentials.length == 2) {
+                try {
+                    LoginController controller = new LoginController(connection);
+                    Object[] loginResult = controller.handleLogin(credentials[0], credentials[1]);
+
+                    if (loginResult != null && loginResult.length >= 3) {
+                        String statusCode = (String) loginResult[0];
+                        if ("200".equals(statusCode) && loginResult[2] instanceof User) {
+                            loggedInUser = (User) loginResult[2];
+                            if (CONFIG_DEBUG) {
+                                System.out.println("[AUTO-LOGIN] Successfully logged in as: " + loggedInUser.getUsername());
+                            }
+                        } else {
+                            if (CONFIG_DEBUG) {
+                                System.out.println("[AUTO-LOGIN] Failed: " + loginResult[1]);
+                            }
+                            CredentialManager.deleteCredentials();
+                            credentials = null;
+                        }
+                    }
+                } catch (Exception e) {
+                    if (CONFIG_DEBUG) {
+                        System.err.println("[AUTO-LOGIN] Error: " + e.getMessage());
+                    }
+                    CredentialManager.deleteCredentials();
+                    credentials = null;
+                }
+            }
+
             Thread.sleep(3200);
 
             fadingOut = true;
-            Thread.sleep(500); // Wait for fade-out to complete
-            return null;
+            Thread.sleep(500);
+
+            return new Object[]{credentials, loggedInUser};
         }
 
         @Override
@@ -83,9 +119,37 @@ public class Loading extends JWindow {
             dispose();
             EventQueue.invokeLater(() -> {
                 try {
-                    new NewLogin(connection).setVisible(true);
+                    Object[] result = get();
+                    User loggedInUser = (User) result[1];
+
+                    if (loggedInUser != null) {
+                        int userType = loggedInUser.getAttr_type();
+
+                        switch (userType) {
+                            case 0:
+                                new client.view.residents.ResidentDashboard(true, loggedInUser);
+                                break;
+//                            case 1: // Barangay Official
+//                                new client.view.brgyofficials.BrgyOfficialDashboard(true, loggedInUser);
+//                                break;
+                            case 2: // Resident
+                                new client.view.residents.ResidentDashboard(true, loggedInUser);
+                                break;
+                            default: // Other
+                                if (CONFIG_DEBUG) {
+                                    System.out.println("[AUTO-LOGIN] Unknown user type: " + userType);
+                                }
+                                new client.view.residents.ResidentDashboard(true, loggedInUser);
+                                break;
+                        }
+                    } else {
+                        new NewLogin(connection).setVisible(true);
+                    }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    if (CONFIG_DEBUG) {
+                        e.printStackTrace();
+                    }
+                    new NewLogin(connection).setVisible(true);
                 }
             });
         }

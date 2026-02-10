@@ -3,7 +3,6 @@ package server.actions;
 import common.User;
 import org.xml.sax.SAXException;
 import server.components.XMLHandler;
-
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 
@@ -18,7 +17,7 @@ public class LoginActions {
         if (user.getPassword().isEmpty()) {
             return new Object[]{"400", "Password is not given!", null};
         }
-        User ResultUser = Login.ReadbyUsername(user.getUsername());
+        User ResultUser = Login.Read("username", user.getUsername());
 
         if(ResultUser == null){
             return new Object[]{"400", "Account not found", null};

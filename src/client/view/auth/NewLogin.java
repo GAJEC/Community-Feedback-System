@@ -2,6 +2,7 @@ package client.view.auth;
 
 import client.controller.LoginController;
 import client.model.ClientConnection;
+import client.utils.CredentialManager;
 import client.view.components.CloseButton;
 import client.view.components.DraggablePanel;
 import client.view.components.IconInputField;
@@ -175,6 +176,12 @@ public class NewLogin extends JFrame {
                 User loggedInUser = (User) result[2];
 
                 if (success && loggedInUser != null) {
+                    if (rememberMe.isSelected()) {
+                        CredentialManager.saveCredentials(username.getText(), password.getText());
+                    } else {
+                        CredentialManager.deleteCredentials();
+                    }
+
                     SwingUtilities.getWindowAncestor(this).dispose();
                     new client.view.residents.ResidentDashboard(true, loggedInUser);
                 } else {
