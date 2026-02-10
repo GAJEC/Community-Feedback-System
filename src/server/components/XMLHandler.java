@@ -174,31 +174,49 @@ public class XMLHandler<T> {
     }
 
     /** Read
-     * To search our target user by id
-     * @param id the target user
-     * @return Object
+     * Generic read method to search by field name and value
+     * @param fieldName The field name to search by ("name", "id", "username")
+     * @param value The value to match (can be String, int, or any Object)
+     * @return Object or null
      */
-    public T ReadbyId(String id) {
+    public T Read(String fieldName, Object value) {
+        if (value == null) return null;
+
         NodeList list = doc.getElementsByTagName(tagName);
+        String searchValue = value.toString();
+
         for (int i = 0; i < list.getLength(); i++) {
             Element el = (Element) list.item(i);
-            if (el.getAttribute("id").equals(id)) return map(el);
+
+            // Check if it's an attribute field (attr_*)
+            String attrValue = el.getAttribute(fieldName);
+            if (!attrValue.isEmpty() && attrValue.equals(searchValue)) {
+                return map(el);
+            }
+
+            // Check if it's a child element
+            String elementValue = getElementText(el, fieldName);
+            if (!elementValue.isEmpty() && elementValue.equalsIgnoreCase(searchValue)) {
+                return map(el);
+            }
         }
         return null;
     }
 
-    /** Read
-     * To search our target user by username
-     * @param username the target user
-     * @return Object
+    /** Read All
+     * Retrieve all entries from the XML
+     * @return Array of all objects
      */
-    public T ReadbyUsername(String username){
+    public T[] ReadAll() {
         NodeList list = doc.getElementsByTagName(tagName);
+        @SuppressWarnings("unchecked")
+        T[] result = (T[]) java.lang.reflect.Array.newInstance(clazz, list.getLength());
+
         for (int i = 0; i < list.getLength(); i++) {
             Element el = (Element) list.item(i);
-            if (getElementText(el, "username").equalsIgnoreCase(username)) return map(el);
+            result[i] = map(el);
         }
-        return null;
+        return result;
     }
 
     /** Read
@@ -240,7 +258,7 @@ public class XMLHandler<T> {
      * To get the child of a Tag, example diba <TAG>JOSH</TAG> edi JOSH
      * @param element The whole Element (e.g Boi <user><name>Josh</name><address>SLU</address></user>)
      * @param tag Yung tag na hinahanap naten
-     * @return
+     * @return String
      */
     private String getElementText(Element element, String tag) {
         NodeList node = element.getElementsByTagName(tag);
@@ -267,20 +285,37 @@ public class XMLHandler<T> {
         return val;
     }
 
-    /**
-     * To update a user,
-     * @param idValue
-     * @param obj
+    /** Update
+     * Generic update method to update by any field name
+     * @param searchField The field name to search by (e.g., "id", "username", "name")
+     * @param searchValue The value to match
+     * @param obj The updated object
+     * @return boolean
      */
-    public void Update(String idValue, T obj) {
+    public boolean Update(String searchField, Object searchValue, T obj) {
+        if (searchValue == null) return false;
+
         try {
             NodeList list = doc.getElementsByTagName(tagName);
-            boolean found = false;
+            String searchStr = searchValue.toString();
 
             for (int i = 0; i < list.getLength(); i++) {
                 Element element = (Element) list.item(i);
+                boolean match = false;
 
-                if (element.getAttribute("id").equals(idValue)) {
+                String attrValue = element.getAttribute(searchField);
+                if (!attrValue.isEmpty() && attrValue.equals(searchStr)) {
+                    match = true;
+                }
+
+                if (!match) {
+                    String elementValue = getElementText(element, searchField);
+                    if (!elementValue.isEmpty() && elementValue.equalsIgnoreCase(searchStr)) {
+                        match = true;
+                    }
+                }
+
+                if (match) {
                     Field[] fields = clazz.getDeclaredFields();
 
                     for (Field field : fields) {
@@ -302,43 +337,61 @@ public class XMLHandler<T> {
                             }
                         }
                     }
-                    found = true;
-                    break;
+
+                    saveToXML();
+                    return true;
                 }
             }
-            if (found) {
-                saveToXML();
-                System.out.println("Saved bobo");
-            }
+            return false;
 
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
     }
 
-
     /** Delete
-     * To delete a data by specific ID
-     * @param tagName The RootName of Target
-     * @param id The target's id
+     * Generic delete method to delete by field name
+     * @param searchField The field name to search by ("id", "username")
+     * @param searchValue The value to match
+     * @return boolean
      */
-    public void Delete(String tagName, String id) {
-        NodeList list = doc.getElementsByTagName(tagName);
+    public boolean Delete(String searchField, Object searchValue) {
+        if (searchValue == null) return false;
 
-        // Iterate backwards to avoid index shifting issues when deleting
+        NodeList list = doc.getElementsByTagName(tagName);
+        String searchStr = searchValue.toString();
+        boolean deleted = false;
+
         for (int i = list.getLength() - 1; i >= 0; i--) {
             Node node = list.item(i);
 
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element) node;
-                if (element.getAttribute("id").equals(id)) {
+                boolean match = false;
+
+                String attrValue = element.getAttribute(searchField);
+                if (!attrValue.isEmpty() && attrValue.equals(searchStr)) {
+                    match = true;
+                }
+
+                if (!match) {
+                    String elementValue = getElementText(element, searchField);
+                    if (!elementValue.isEmpty() && elementValue.equalsIgnoreCase(searchStr)) {
+                        match = true;
+                    }
+                }
+
+                if (match) {
                     node.getParentNode().removeChild(node);
+                    deleted = true;
                 }
             }
         }
-        saveToXML();
-    }
-    public void Delete(String id){
-        Delete(tagName, id);
+
+        if (deleted) {
+            saveToXML();
+        }
+        return deleted;
     }
 }
