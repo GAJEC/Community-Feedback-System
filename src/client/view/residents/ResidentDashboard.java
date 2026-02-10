@@ -14,6 +14,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.net.URL;
 
 public class ResidentDashboard extends JFrame {
 
@@ -31,11 +32,26 @@ public class ResidentDashboard extends JFrame {
         this.isViewMode = viewMode;
         this.user = user;
         setTitle("Community Feedback System");
+        
+        try {
+            URL iconURL = getClass().getResource("/res/assets/app_icon.png");
+            if (iconURL == null) {
+                iconURL = getClass().getResource("/assets/app_icon.png");
+            }
+
+            if (iconURL != null) {
+                this.setIconImage(new ImageIcon(iconURL).getImage());
+            }
+        } catch (Exception e) {
+            System.err.println("Could not load app icon: " + e.getMessage());
+        }
+
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
         setSize((int) (d.width * 0.8), (int) (d.height * 0.85));
         setMinimumSize(new Dimension(900, 750));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+
 
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(BG_COLOR);
