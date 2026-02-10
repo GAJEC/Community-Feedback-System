@@ -1,9 +1,6 @@
 package client.view.residents;
 
-import client.view.components.DropShadowBorder;
-import client.view.components.FeedbackSubmitPopUp;
-import client.view.components.ClientHeaderPanel;
-import client.view.components.HintTextField;
+import client.view.components.*;
 import common.User;
 
 import javax.swing.*;
@@ -44,6 +41,7 @@ public class ResidentDashboard extends JFrame {
         mainPanel.setBackground(BG_COLOR);
 
         ClientHeaderPanel header = new ClientHeaderPanel(user);
+        header.setAlignmentX(Component.LEFT_ALIGNMENT);
         mainPanel.add(header, BorderLayout.NORTH);
 
         header.viewBtn.addActionListener(e -> switchToView());
@@ -229,9 +227,9 @@ public class ResidentDashboard extends JFrame {
     }
 
     private JPanel createSubmitFeedbackPanel() {
-        JPanel wrapper = new JPanel(new GridBagLayout());
+        JPanel wrapper = new JPanel(new BorderLayout(20, 0));
         wrapper.setBackground(BG_COLOR);
-        wrapper.setBorder(new EmptyBorder(40, 0, 40, 0));
+        wrapper.setBorder(new EmptyBorder(15, 40, 15, 40));
 
         JPanel card = new JPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
@@ -556,6 +554,15 @@ public class ResidentDashboard extends JFrame {
             detailsBtn.addMouseListener(new MouseAdapter() {
                 public void mouseEntered(MouseEvent e) { detailsBtn.setForeground(new Color(0, 50, 150)); }
                 public void mouseExited(MouseEvent e) { detailsBtn.setForeground(new Color(0, 102, 204)); }
+            });
+
+            detailsBtn.addActionListener(e -> {
+                Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(detailsBtn);
+
+                if (parentWindow instanceof Frame) {
+                    ClientFeedbackDetailDialog dialog = new ClientFeedbackDetailDialog((Frame) parentWindow);
+                    dialog.setVisible(true);
+                }
             });
 
             gbc.gridx = 1; gbc.gridy = 1;
