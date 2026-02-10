@@ -148,7 +148,22 @@ public class NewLogin extends JFrame {
             add(username);
             add(Box.createVerticalStrut(15));
             add(password);
-            add(Box.createVerticalStrut(25));
+            add(Box.createVerticalStrut(10));
+
+            JPanel rememberMePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            rememberMePanel.setBackground(Color.WHITE);
+            rememberMePanel.setMaximumSize(new Dimension(400, 30));
+
+            JCheckBox rememberMe = new JCheckBox("Remember me");
+            rememberMe.setBackground(Color.WHITE);
+            rememberMe.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            rememberMe.setForeground(Color.GRAY);
+            rememberMe.setFocusPainted(false);
+            rememberMe.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            rememberMePanel.add(rememberMe);
+            add(rememberMePanel);
+
+            add(Box.createVerticalStrut(15));
 
             RoundedButton btnLogin = RoundedButton.create("SIGN IN", 30, Colors.PRIMARY, Colors.SECONDARY);
             btnLogin.setMaximumSize(new Dimension(250, 45));
