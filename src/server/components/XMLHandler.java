@@ -18,6 +18,9 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
 
 public class XMLHandler<T> {
     private final String filePath;
@@ -132,6 +135,31 @@ public class XMLHandler<T> {
 
     // CRUD bois
 
+    private String valueToString(Object value) {
+        if (value == null) return "";
+        
+        if (value instanceof String[]) {
+            String[] arr = (String[]) value;
+            return String.join(",", arr);
+        }
+        if (value instanceof int[]) {
+            int[] arr = (int[]) value;
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < arr.length; i++) {
+                if (i > 0) sb.append(",");
+                sb.append(arr[i]);
+            }
+            return sb.toString();
+        }
+        
+        if (value instanceof Date) {
+            SimpleDateFormat format = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
+            return format.format((Date) value);
+        }
+        
+        return value.toString();
+    }
+
     /** Create
      * To store a data on our XML.
      * @param tagName The tagName(Root) of our storing object
@@ -149,7 +177,7 @@ public class XMLHandler<T> {
                 field.setAccessible(true);
                 String fieldName = field.getName();
                 Object value = field.get(o);
-                String valueStr = (value != null) ? value.toString() : "";
+                String valueStr = valueToString(value);
 
                 if (fieldName.startsWith("attr_")) {
                     if (!valueStr.isEmpty()) {
@@ -188,13 +216,11 @@ public class XMLHandler<T> {
         for (int i = 0; i < list.getLength(); i++) {
             Element el = (Element) list.item(i);
 
-            // Check if it's an attribute field (attr_*)
             String attrValue = el.getAttribute(fieldName);
             if (!attrValue.isEmpty() && attrValue.equals(searchValue)) {
                 return map(el);
             }
 
-            // Check if it's a child element
             String elementValue = getElementText(el, fieldName);
             if (!elementValue.isEmpty() && elementValue.equalsIgnoreCase(searchValue)) {
                 return map(el);
@@ -274,13 +300,46 @@ public class XMLHandler<T> {
     private Object convert(String val, Class<?> type) {
         if (val == null || val.isEmpty()) {
             if (type == String[].class) return new String[0];
+            if (type == int[].class) return new int[0];
             if (type == int.class || type == Integer.class) return 0;
+            if (type == Date.class) return new Date();
             return val;
         }
 
         // Kung gusto nyo magdagdag pa ng datatype pwede naman
         if (type == String[].class) return new String[]{val};
+        if (type == int[].class) {
+            String[] parts = val.contains(",") ? val.split(",") : new String[]{val};
+            int[] result = new int[parts.length];
+            for (int i = 0; i < parts.length; i++) {
+                try {
+                    result[i] = Integer.parseInt(parts[i].trim());
+                } catch (NumberFormatException e) {
+                    result[i] = 0;
+                }
+            }
+            return result;
+        }
         if (type == int.class || type == Integer.class) return Integer.parseInt(val);
+        if (type == Date.class) {
+            try {
+                SimpleDateFormat[] formats = {
+                    new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy"),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
+                    new SimpleDateFormat("yyyy-MM-dd"),
+                    new SimpleDateFormat("MMM dd, yyyy")
+                };
+                for (SimpleDateFormat format : formats) {
+                    try {
+                        return format.parse(val);
+                    } catch (Exception ignored) {
+                    }
+                }
+                return new Date();
+            } catch (Exception e) {
+                return new Date();
+            }
+        }
 
         return val;
     }
@@ -394,4 +453,5 @@ public class XMLHandler<T> {
         }
         return deleted;
     }
+
 }

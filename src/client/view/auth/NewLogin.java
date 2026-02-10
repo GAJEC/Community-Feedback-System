@@ -60,7 +60,7 @@ public class NewLogin extends JFrame {
         formLayout = new CardLayout();
         formPanel = new JPanel(formLayout);
 
-        LoginForm loginForm = new LoginForm(controller);
+        LoginForm loginForm = new LoginForm(controller, connection);
         RegisterInfoPanel registerInfo = new RegisterInfoPanel();
 
         formPanel.add(loginForm, "login");
@@ -123,7 +123,7 @@ public class NewLogin extends JFrame {
     }
 
     public static class LoginForm extends JPanel {
-        public LoginForm(LoginController controller) {
+        public LoginForm(LoginController controller, ClientConnection connection) {
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setBackground(Color.WHITE);
             setBorder(new EmptyBorder(40, 50, 50, 50));
@@ -183,7 +183,7 @@ public class NewLogin extends JFrame {
                     }
 
                     SwingUtilities.getWindowAncestor(this).dispose();
-                    new client.view.residents.ResidentDashboard(true, loggedInUser);
+                    new client.view.residents.ResidentDashboard(true, loggedInUser, connection);
                 } else {
                     JOptionPane.showMessageDialog(this, "Login failed: " + result[1], "Login Error", JOptionPane.ERROR_MESSAGE);
                 }

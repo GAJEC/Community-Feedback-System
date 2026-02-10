@@ -1,7 +1,9 @@
 package server;
 
+import common.Feedbacks;
 import common.User;
 import org.xml.sax.SAXException;
+import server.actions.FeedbackActions;
 import server.actions.LoginActions;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -42,9 +44,28 @@ public class ClientHandler extends Thread {
                         out.writeObject(response);
                         out.flush();
                     }
-//                    case Feedback f -> {
-//                        System.out.println("Received feedback: " + f.getMessage());
-//                    }
+                    case Feedbacks f -> {
+                        if(CONFIG_DEBUG){
+                            System.out.println("Received feedback submission from Client " + clientId);
+                        }
+
+                        Object[] response = FeedbackActions.handleFeedbackSubmission(f, clientId);
+                        out.writeObject(response);
+                        out.flush();
+                    }
+                    case String s -> {
+                        if ("GET_FEEDBACKS".equals(s)) {
+                            if(CONFIG_DEBUG){
+                                System.out.println("Received GET_FEEDBACKS request from Client " + clientId);
+                            }
+                            
+                            Object[] response = FeedbackActions.getAllFeedbacks();
+                            out.writeObject(response);
+                            out.flush();
+                        } else {
+                            System.out.println("Received unknown string command: " + s);
+                        }
+                    }
                     case null -> System.out.println("Received a null object");
                     default -> System.out.println("Received unknown type: " + received.getClass().getName());
                 }

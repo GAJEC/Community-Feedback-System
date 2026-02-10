@@ -1,5 +1,12 @@
 package client.view.residents;
 
+import client.controller.FeedbackController;
+import client.model.ClientConnection;
+import client.view.components.DropShadowBorder;
+import client.view.components.FeedbackSubmitPopUp;
+import client.view.components.ClientHeaderPanel;
+import client.view.components.HintTextField;
+import common.Feedbacks;
 import client.view.components.*;
 import common.User;
 
@@ -14,6 +21,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 import java.net.URL;
 
 public class ResidentDashboard extends JFrame {
@@ -27,12 +37,22 @@ public class ResidentDashboard extends JFrame {
     private JPanel contentContainer;
     private boolean isViewMode;
     private User user;
+    private FeedbackController feedbackController;
+    private Map<Integer, User> userCache = new HashMap<>();
 
-    public ResidentDashboard(boolean viewMode, User user) {
+    private RoundedTextField titleField;
+    private JComboBox<String> categoryBox;
+    private RoundedTextField locationField;
+    private JTextArea descArea;
+
+    public ResidentDashboard(boolean viewMode, User user, ClientConnection connection) {
+        this.feedbackController = new FeedbackController(connection);
+        // Cache the logged-in user
+        userCache.put(user.getAttr_id(), user);
         this.isViewMode = viewMode;
         this.user = user;
         setTitle("Community Feedback System");
-        
+
         try {
             URL iconURL = getClass().getResource("/res/assets/app_icon.png");
             if (iconURL == null) {
@@ -137,17 +157,8 @@ public class ResidentDashboard extends JFrame {
         listPanel.setOpaque(false);
 
         listPanel.add(Box.createVerticalStrut(5));
-        listPanel.add(new FeedbackCard("IN PROGRESS", "Infrastructure", "Deep pothole at the intersection of 5th Ave and Rizal St. causing heavy traffic.", "5th Avenue", "Feb 5, 2026", "Carlos Tecson", 45));
-        listPanel.add(Box.createVerticalStrut(8));
-        listPanel.add(new FeedbackCard("PENDING", "Health Services", "The health center is currently out of stock for basic flu vaccines.", "District Health Office", "Feb 4, 2026", "Elena Cruz", 82));
-        listPanel.add(Box.createVerticalStrut(8));
-        listPanel.add(new FeedbackCard("RESOLVED", "Environment", "Illegal dumping of waste near the riverside. Requesting immediate cleanup.", "Riverside Drive", "Feb 3, 2026", "Roberto Gomez", 120));
-        listPanel.add(Box.createVerticalStrut(8));
-        listPanel.add(new FeedbackCard("IN PROGRESS", "Public Safety", "Street lights are flickering or completely dead along the main highway.", "Maharlika Highway", "Feb 2, 2026", "Jenina Santos", 34));
-        listPanel.add(Box.createVerticalStrut(8));
-        listPanel.add(new FeedbackCard("PENDING", "Utilities", "Water supply has been low-pressure for the past 48 hours in Block 7.", "Greenview Subd.", "Feb 1, 2026", "Mark Anthony", 15));
-        listPanel.add(Box.createVerticalStrut(8));
-        listPanel.add(new FeedbackCard("RESOLVED", "Waste Management", "Garbage truck missed the collection schedule last Tuesday.", "Purok 4, Brgy. Central", "Jan 30, 2026", "Liza Maza", 56));
+
+        loadFeedbacks(listPanel);
 
         JScrollPane scroll = new JScrollPane(listPanel);
         scroll.setBorder(null);
@@ -269,11 +280,11 @@ public class ResidentDashboard extends JFrame {
         separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
         separator.setForeground(new Color(230, 230, 230));
 
-        RoundedTextField titleField = new RoundedTextField(20);
+        titleField = new RoundedTextField(20);
         JPanel titlePanel = createFieldPanel("Issue Title", titleField);
 
         String[] categories = {"Event Suggestion", "Missing Person", "Noise Complaint", "Infrastructure", "Other"};
-        JComboBox<String> categoryBox = new JComboBox<>(categories);
+        categoryBox = new JComboBox<>(categories);
         categoryBox.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         categoryBox.setBackground(Color.WHITE);
         categoryBox.setFocusable(false);
@@ -297,10 +308,10 @@ public class ResidentDashboard extends JFrame {
 
         JPanel categoryPanel = createFieldPanel("Category", categoryWrapper);
 
-        RoundedTextField locationField = new RoundedTextField(20);
+        locationField = new RoundedTextField(20);
         JPanel locationPanel = createFieldPanel("Location / Landmark", locationField);
 
-        JTextArea descArea = new JTextArea(8, 20);
+        descArea = new JTextArea(8, 20);
         descArea.setLineWrap(true);
         descArea.setWrapStyleWord(true);
         descArea.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -332,11 +343,12 @@ public class ResidentDashboard extends JFrame {
         submitBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                FeedbackSubmitPopUp dialog = new FeedbackSubmitPopUp(ResidentDashboard.this);
-                dialog.setLocationRelativeTo(ResidentDashboard.this);
-                dialog.setVisible(true);
-                switchToView();
+                handleFeedbackSubmit();
             }
+        });
+
+        cancelBtn.addActionListener(e -> {
+            clearForm();
         });
 
         buttonPanel.add(cancelBtn);
@@ -413,6 +425,123 @@ public class ResidentDashboard extends JFrame {
         panel.add(label, BorderLayout.NORTH);
         panel.add(component, BorderLayout.CENTER);
         return panel;
+    }
+
+    private void handleFeedbackSubmit() {
+        String title = titleField.getText().trim();
+        String category = (String) categoryBox.getSelectedItem();
+        String location = locationField.getText().trim();
+        String description = descArea.getText().trim();
+
+        if (title.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "Please enter a title for your feedback.",
+                "Validation Error",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (location.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "Please enter a location.",
+                "Validation Error",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (description.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "Please provide a detailed description.",
+                "Validation Error",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String fullContent = title + "\n\n" + description;
+
+        Object[] response = feedbackController.submitFeedback(
+            user.getAttr_id(),
+            category,
+            title,
+            location,
+            fullContent
+        );
+
+        String statusCode = (String) response[0];
+        String message = (String) response[1];
+
+        if ("200".equals(statusCode)) {
+            FeedbackSubmitPopUp dialog = new FeedbackSubmitPopUp(ResidentDashboard.this);
+            dialog.setLocationRelativeTo(ResidentDashboard.this);
+            dialog.setVisible(true);
+
+            clearForm();
+            switchToView();
+        } else {
+            JOptionPane.showMessageDialog(this,
+                message,
+                "Submission Failed",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void clearForm() {
+        if (titleField != null) titleField.setText("");
+        if (categoryBox != null) categoryBox.setSelectedIndex(0);
+        if (locationField != null) locationField.setText("");
+        if (descArea != null) descArea.setText("");
+    }
+
+    private void loadFeedbacks(JPanel listPanel) {
+        Object[] response = feedbackController.getAllFeedbacks();
+        String statusCode = (String) response[0];
+        String message = (String) response[1];
+
+        if ("200".equals(statusCode) && response[2] != null) {
+            Feedbacks[] feedbacks = (Feedbacks[]) response[2];
+
+            if (feedbacks.length == 0) {
+                JLabel noDataLabel = new JLabel("No feedbacks available yet. Be the first to submit!");
+                noDataLabel.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+                noDataLabel.setForeground(Color.GRAY);
+                noDataLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                listPanel.add(noDataLabel);
+            } else {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy");
+
+                for (Feedbacks feedback : feedbacks) {
+                    String status = feedback.getAttr_status()[0];
+                    String category = feedback.getCategories() != null && feedback.getCategories().length > 0
+                        ? feedback.getCategories()[0] : "General";
+                    String content = feedback.getContent();
+                    String location = feedback.getLocation();
+                    String date = dateFormat.format(feedback.getIssued_date());
+
+                    String authorName = getUserName(feedback.getIssued_by());
+
+                    int upvotes = feedback.getAttr_upvote() != null ? feedback.getAttr_upvote().length : 0;
+                    int downvotes = feedback.getAttr_downvote() != null ? feedback.getAttr_downvote().length : 0;
+                    int totalVotes = upvotes - downvotes;
+
+                    listPanel.add(new FeedbackCard(status, category, content, location, date, authorName, totalVotes));
+                    listPanel.add(Box.createVerticalStrut(8));
+                }
+            }
+        } else {
+            JLabel errorLabel = new JLabel("Error loading feedbacks: " + message);
+            errorLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            errorLabel.setForeground(Color.RED);
+            errorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            listPanel.add(errorLabel);
+        }
+    }
+
+    private String getUserName(int userId) {
+        if (userCache.containsKey(userId)) {
+            User cachedUser = userCache.get(userId);
+            return cachedUser.getName() != null ? cachedUser.getName() : "User #" + userId;
+        }
+        return "User #" + userId;
     }
 
     private JComboBox<String> dropdownBox(String[] items) {
@@ -659,6 +788,10 @@ public class ResidentDashboard extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new ResidentDashboard(true, new User("testuser", "password")));
+        SwingUtilities.invokeLater(() -> {
+            ClientConnection testConnection = new ClientConnection();
+            testConnection.connect();
+            new ResidentDashboard(true, new User("testuser", "password"), testConnection);
+        });
     }
 }

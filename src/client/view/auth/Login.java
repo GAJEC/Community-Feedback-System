@@ -16,8 +16,10 @@ import static common.Config.CONFIG_DEBUG;
 
 public class Login extends JFrame {
     private final LoginController controller;
+    private final ClientConnection connection;
 
     public Login(ClientConnection connection) {
+        this.connection = connection;
         URL iconURL = Login.class.getResource("/assets/app_icon.png");
         if (iconURL == null) {
             iconURL = Login.class.getResource("/assets/app_icon.png");
@@ -169,7 +171,7 @@ public class Login extends JFrame {
 
             if (success && loggedInUser != null) {
                 dispose();
-                SwingUtilities.invokeLater(() -> new client.view.residents.ResidentDashboard(true, loggedInUser));
+                SwingUtilities.invokeLater(() -> new client.view.residents.ResidentDashboard(true, loggedInUser, connection));
             } else {
                 JOptionPane.showMessageDialog(
                         this,
