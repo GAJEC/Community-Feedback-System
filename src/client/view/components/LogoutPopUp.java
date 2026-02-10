@@ -1,5 +1,7 @@
 package client.view.components;
 
+import client.utils.CredentialManager;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -31,7 +33,10 @@ public class LogoutPopUp extends JDialog {
         RoundedButton yesBtn = new RoundedButton("Logout", 15, LOGOUT_COLOR, Color.WHITE);
         RoundedButton noBtn = new RoundedButton("Cancel", 15, new Color(241, 245, 249), TEXT_COLOR);
 
-        yesBtn.addActionListener(e -> System.exit(0)); // Or your logout logic
+        yesBtn.addActionListener(e -> {
+            CredentialManager.deleteCredentials();
+            System.exit(0);
+        });
         noBtn.addActionListener(e -> dispose());
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
