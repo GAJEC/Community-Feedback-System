@@ -1,5 +1,6 @@
 package client.view.components;
 
+import client.view.strings.Colors;
 import common.User;
 
 import javax.swing.*;
@@ -11,10 +12,10 @@ import java.net.URL;
 public class ClientHeaderPanel extends JPanel {
 
     // Colors
-    private static final Color HEADER_COLOR = new Color(0, 80, 80);
-    private static final Color NAV_COLOR = new Color(255, 255, 255);
-    private static final Color ACTIVE_TEXT = new Color(0, 102, 102);
-    private static final Color LOGOUT_RED = new Color(180, 40, 40);
+    private static final Color HEADER_COLOR = Colors.PRIMARY;
+    private static final Color NAV_COLOR = Colors.WHITE;
+    private static final Color ACTIVE_TEXT = Colors.SECONDARY;
+    private static final Color LOGOUT_RED = Colors.RED_BUTTON;
 
     public JButton profileButton;
     public JButton logoutButton;

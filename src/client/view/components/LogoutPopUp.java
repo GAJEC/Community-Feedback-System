@@ -1,6 +1,6 @@
 package client.view.components;
 
-import client.utils.CredentialManager;
+import client.view.auth.Login;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -43,7 +43,7 @@ public class LogoutPopUp extends JDialog {
             }
             // Open Login Screen
             client.model.ClientConnection connection = new client.model.ClientConnection();
-            new client.view.auth.NewLogin(connection).setVisible(true);
+            new Login(connection).setVisible(true);
         });
         noBtn.addActionListener(e -> dispose());
 

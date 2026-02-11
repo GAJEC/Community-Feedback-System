@@ -1,5 +1,6 @@
 package client.view.brgyofficials;
 import client.view.components.*;
+import client.view.components.Button;
 import common.User;
 
 import javax.swing.*;
@@ -194,7 +195,7 @@ public class BrgyOfficialDashboard extends JFrame {
             JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
             actions.setOpaque(false);
 
-            RoundedButton addNotesBtn = RoundedButton.create("Add internal notes", 12, new Color(100, 100, 100), new Color(80, 80, 80));
+            Button addNotesBtn = Button.createRounded("Add internal notes", 12, new Color(100, 100, 100), new Color(80, 80, 80));
             addNotesBtn.setPreferredSize(new Dimension(160, 32));
             addNotesBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
 

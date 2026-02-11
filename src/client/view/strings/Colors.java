@@ -3,18 +3,30 @@ import java.awt.Color;
 
 public class Colors {
 
+    // Main Theme
     public static final Color PRIMARY = new Color(0,80,80);
     public static final Color SECONDARY = new Color(0, 120, 120);
     public static final Color TERTIARY = new Color(0, 150, 150);
-    // PANEL BACKGROUNDS
-    public static final Color PANEL_SUBMIT = new Color(220, 235, 252); // Soft Blue
-    public static final Color PANEL_VIEW   = new Color(240, 255, 240); // Soft Green
 
-    // BUTTON COLORS
-    public static final Color BTN_SUBMIT   = new Color(46, 134, 193);  // Dark Blue
-    public static final Color GRAY     = new Color(193, 193, 193);   // Dark Green
-    public static final Color WHITE     = Color.WHITE;
+    // Common
+    public static final Color WHITE =  new Color(255, 255, 255);
+    public static final Color RED = new Color(255, 0, 0);
+    public static final Color GREEN = new Color(0, 255, 0);
+    public static final Color BLUE = new Color(0, 0, 255);
+    public static final Color YELLOW = new Color(255, 255, 0);
+    public static final Color MAGENTA = new Color(255, 0, 255);
+    public static final Color CYAN = new Color(0, 255, 255);
+    public static final Color LIGHT_GRAY = new Color(161, 161, 161);
 
-    // TEXT COLORS
-    public static final Color HEADER_TEXT  = Color.DARK_GRAY;
+    // Button Colors
+    public static final Color RED_BUTTON = new Color(180, 40, 40);
+
+    // Text Colors
+    public static final Color NORMAL_TEXT = new Color(0, 0, 0);
+    public static final Color SUB_TEXT = new Color(128, 128, 128);
+    public static final Color VIEW_DETAILS = new Color(0, 0, 255);
+
+    // Tag Colors
+    public static final  Color CATEGORY = new Color(255, 255, 255);
+    public static final  Color STATUS = new Color(255, 255, 255);
 }

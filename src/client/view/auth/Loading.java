@@ -143,13 +143,13 @@ public class Loading extends JWindow {
                                 break;
                         }
                     } else {
-                        new NewLogin(connection).setVisible(true);
+                        new Login(connection).setVisible(true);
                     }
                 } catch (Exception e) {
                     if (CONFIG_DEBUG) {
                         e.printStackTrace();
                     }
-                    new NewLogin(connection).setVisible(true);
+                    new Login(connection).setVisible(true);
                 }
             });
         }
