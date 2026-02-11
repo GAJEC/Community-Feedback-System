@@ -18,6 +18,9 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
 
 public class XMLHandler<T> {
     private final String filePath;
@@ -132,6 +135,31 @@ public class XMLHandler<T> {
 
     // CRUD bois
 
+    private String valueToString(Object value) {
+        if (value == null) return "";
+        
+        if (value instanceof String[]) {
+            String[] arr = (String[]) value;
+            return String.join(",", arr);
+        }
+        if (value instanceof int[]) {
+            int[] arr = (int[]) value;
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < arr.length; i++) {
+                if (i > 0) sb.append(",");
+                sb.append(arr[i]);
+            }
+            return sb.toString();
+        }
+        
+        if (value instanceof Date) {
+            SimpleDateFormat format = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
+            return format.format((Date) value);
+        }
+        
+        return value.toString();
+    }
+
     /** Create
      * To store a data on our XML.
      * @param tagName The tagName(Root) of our storing object
@@ -149,7 +177,7 @@ public class XMLHandler<T> {
                 field.setAccessible(true);
                 String fieldName = field.getName();
                 Object value = field.get(o);
-                String valueStr = (value != null) ? value.toString() : "";
+                String valueStr = valueToString(value);
 
                 if (fieldName.startsWith("attr_")) {
                     if (!valueStr.isEmpty()) {
@@ -174,31 +202,47 @@ public class XMLHandler<T> {
     }
 
     /** Read
-     * To search our target user by id
-     * @param id the target user
-     * @return Object
+     * Generic read method to search by field name and value
+     * @param fieldName The field name to search by ("name", "id", "username")
+     * @param value The value to match (can be String, int, or any Object)
+     * @return Object or null
      */
-    public T ReadbyId(String id) {
+    public T Read(String fieldName, Object value) {
+        if (value == null) return null;
+
         NodeList list = doc.getElementsByTagName(tagName);
+        String searchValue = value.toString();
+
         for (int i = 0; i < list.getLength(); i++) {
             Element el = (Element) list.item(i);
-            if (el.getAttribute("id").equals(id)) return map(el);
+
+            String attrValue = el.getAttribute(fieldName);
+            if (!attrValue.isEmpty() && attrValue.equals(searchValue)) {
+                return map(el);
+            }
+
+            String elementValue = getElementText(el, fieldName);
+            if (!elementValue.isEmpty() && elementValue.equalsIgnoreCase(searchValue)) {
+                return map(el);
+            }
         }
         return null;
     }
 
-    /** Read
-     * To search our target user by username
-     * @param username the target user
-     * @return Object
+    /** Read All
+     * Retrieve all entries from the XML
+     * @return Array of all objects
      */
-    public T ReadbyUsername(String username){
+    public T[] ReadAll() {
         NodeList list = doc.getElementsByTagName(tagName);
+        @SuppressWarnings("unchecked")
+        T[] result = (T[]) java.lang.reflect.Array.newInstance(clazz, list.getLength());
+
         for (int i = 0; i < list.getLength(); i++) {
             Element el = (Element) list.item(i);
-            if (getElementText(el, "username").equalsIgnoreCase(username)) return map(el);
+            result[i] = map(el);
         }
-        return null;
+        return result;
     }
 
     /** Read
@@ -240,7 +284,7 @@ public class XMLHandler<T> {
      * To get the child of a Tag, example diba <TAG>JOSH</TAG> edi JOSH
      * @param element The whole Element (e.g Boi <user><name>Josh</name><address>SLU</address></user>)
      * @param tag Yung tag na hinahanap naten
-     * @return
+     * @return String
      */
     private String getElementText(Element element, String tag) {
         NodeList node = element.getElementsByTagName(tag);
@@ -256,31 +300,81 @@ public class XMLHandler<T> {
     private Object convert(String val, Class<?> type) {
         if (val == null || val.isEmpty()) {
             if (type == String[].class) return new String[0];
+            if (type == int[].class) return new int[0];
             if (type == int.class || type == Integer.class) return 0;
+            if (type == Date.class) return new Date();
             return val;
         }
 
         // Kung gusto nyo magdagdag pa ng datatype pwede naman
         if (type == String[].class) return new String[]{val};
+        if (type == int[].class) {
+            String[] parts = val.contains(",") ? val.split(",") : new String[]{val};
+            int[] result = new int[parts.length];
+            for (int i = 0; i < parts.length; i++) {
+                try {
+                    result[i] = Integer.parseInt(parts[i].trim());
+                } catch (NumberFormatException e) {
+                    result[i] = 0;
+                }
+            }
+            return result;
+        }
         if (type == int.class || type == Integer.class) return Integer.parseInt(val);
+        if (type == Date.class) {
+            try {
+                SimpleDateFormat[] formats = {
+                    new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy"),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
+                    new SimpleDateFormat("yyyy-MM-dd"),
+                    new SimpleDateFormat("MMM dd, yyyy")
+                };
+                for (SimpleDateFormat format : formats) {
+                    try {
+                        return format.parse(val);
+                    } catch (Exception ignored) {
+                    }
+                }
+                return new Date();
+            } catch (Exception e) {
+                return new Date();
+            }
+        }
 
         return val;
     }
 
-    /**
-     * To update a user,
-     * @param idValue
-     * @param obj
+    /** Update
+     * Generic update method to update by any field name
+     * @param searchField The field name to search by (e.g., "id", "username", "name")
+     * @param searchValue The value to match
+     * @param obj The updated object
+     * @return boolean
      */
-    public void Update(String idValue, T obj) {
+    public boolean Update(String searchField, Object searchValue, T obj) {
+        if (searchValue == null) return false;
+
         try {
             NodeList list = doc.getElementsByTagName(tagName);
-            boolean found = false;
+            String searchStr = searchValue.toString();
 
             for (int i = 0; i < list.getLength(); i++) {
                 Element element = (Element) list.item(i);
+                boolean match = false;
 
-                if (element.getAttribute("id").equals(idValue)) {
+                String attrValue = element.getAttribute(searchField);
+                if (!attrValue.isEmpty() && attrValue.equals(searchStr)) {
+                    match = true;
+                }
+
+                if (!match) {
+                    String elementValue = getElementText(element, searchField);
+                    if (!elementValue.isEmpty() && elementValue.equalsIgnoreCase(searchStr)) {
+                        match = true;
+                    }
+                }
+
+                if (match) {
                     Field[] fields = clazz.getDeclaredFields();
 
                     for (Field field : fields) {
@@ -302,43 +396,62 @@ public class XMLHandler<T> {
                             }
                         }
                     }
-                    found = true;
-                    break;
+
+                    saveToXML();
+                    return true;
                 }
             }
-            if (found) {
-                saveToXML();
-                System.out.println("Saved bobo");
-            }
+            return false;
 
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
     }
 
-
     /** Delete
-     * To delete a data by specific ID
-     * @param tagName The RootName of Target
-     * @param id The target's id
+     * Generic delete method to delete by field name
+     * @param searchField The field name to search by ("id", "username")
+     * @param searchValue The value to match
+     * @return boolean
      */
-    public void Delete(String tagName, String id) {
-        NodeList list = doc.getElementsByTagName(tagName);
+    public boolean Delete(String searchField, Object searchValue) {
+        if (searchValue == null) return false;
 
-        // Iterate backwards to avoid index shifting issues when deleting
+        NodeList list = doc.getElementsByTagName(tagName);
+        String searchStr = searchValue.toString();
+        boolean deleted = false;
+
         for (int i = list.getLength() - 1; i >= 0; i--) {
             Node node = list.item(i);
 
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element) node;
-                if (element.getAttribute("id").equals(id)) {
+                boolean match = false;
+
+                String attrValue = element.getAttribute(searchField);
+                if (!attrValue.isEmpty() && attrValue.equals(searchStr)) {
+                    match = true;
+                }
+
+                if (!match) {
+                    String elementValue = getElementText(element, searchField);
+                    if (!elementValue.isEmpty() && elementValue.equalsIgnoreCase(searchStr)) {
+                        match = true;
+                    }
+                }
+
+                if (match) {
                     node.getParentNode().removeChild(node);
+                    deleted = true;
                 }
             }
         }
-        saveToXML();
+
+        if (deleted) {
+            saveToXML();
+        }
+        return deleted;
     }
-    public void Delete(String id){
-        Delete(tagName, id);
-    }
+
 }

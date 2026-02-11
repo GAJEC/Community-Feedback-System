@@ -1,5 +1,6 @@
 package client.model;
 
+import common.Feedbacks;
 import common.User;
 
 import java.io.*;
@@ -63,6 +64,40 @@ public class ClientConnection {
             }
         } catch (IOException e) {
             System.err.println("Error sending user: " + e.getMessage());
+        }
+    }
+
+    public void sendFeedback(Feedbacks feedback) {
+        if (!connected) {
+            System.err.println("Not connected to server");
+            return;
+        }
+        
+        try {
+            out.writeObject(feedback);
+            out.flush();
+            if(CONFIG_DEBUG){
+                System.out.println("Sent feedback: " + feedback);
+            }
+        } catch (IOException e) {
+            System.err.println("Error sending feedback: " + e.getMessage());
+        }
+    }
+
+    public void sendRequest(String request) {
+        if (!connected) {
+            System.err.println("Not connected to server");
+            return;
+        }
+        
+        try {
+            out.writeObject(request);
+            out.flush();
+            if(CONFIG_DEBUG){
+                System.out.println("Sent request: " + request);
+            }
+        } catch (IOException e) {
+            System.err.println("Error sending request: " + e.getMessage());
         }
     }
 

@@ -4,8 +4,6 @@ import client.model.ClientConnection;
 import client.model.LoginModel;
 import common.User;
 
-import java.util.Arrays;
-
 public class LoginController {
     private final ClientConnection connection;
     private final LoginModel loginModel;

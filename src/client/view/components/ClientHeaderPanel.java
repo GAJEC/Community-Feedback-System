@@ -23,6 +23,7 @@ public class ClientHeaderPanel extends JPanel {
     public ClientHeaderPanel(User user) {
         this.user = user;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        this.setAlignmentX(Component.LEFT_ALIGNMENT);
         setBackground(HEADER_COLOR);
 
         buildHeader();
@@ -31,6 +32,7 @@ public class ClientHeaderPanel extends JPanel {
 
     private void buildHeader() {
         JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         headerPanel.setBackground(HEADER_COLOR);
         headerPanel.setPreferredSize(new Dimension(1000, 100));
         headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
@@ -44,7 +46,8 @@ public class ClientHeaderPanel extends JPanel {
                 Image logo = new ImageIcon(logoURL).getImage().getScaledInstance(100, 90, Image.SCALE_SMOOTH);
                 leftPnl.add(new JLabel(new ImageIcon(logo)));
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         JPanel textPanel = new JPanel();
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
@@ -57,7 +60,7 @@ public class ClientHeaderPanel extends JPanel {
 
         JLabel tagline = new JLabel("Your Voice. Our Community. Real Change");
         tagline.setFont(new Font("Segoe UI", Font.ITALIC, 14));
-        tagline.setForeground(new Color(255,255,255,180));
+        tagline.setForeground(new Color(255, 255, 255, 180));
 
         textPanel.add(title);
         textPanel.add(tagline);
@@ -69,11 +72,11 @@ public class ClientHeaderPanel extends JPanel {
         rightPnl.setOpaque(false);
 
         String displayName = (user != null && user.getName() != null) ? user.getName() : "User";
-        profileButton = new RoundedButton(displayName, 30, new Color(255,255,255,40));
-        profileButton.setPreferredSize(new Dimension(200,40));
+        profileButton = new RoundedButton(displayName, 30, new Color(255, 255, 255, 40));
+        profileButton.setPreferredSize(new Dimension(200, 40));
 
         logoutButton = new RoundedButton("Logout", 20, LOGOUT_RED);
-        logoutButton.setPreferredSize(new Dimension(100,40));
+        logoutButton.setPreferredSize(new Dimension(100, 40));
 
         try {
             URL logoutIconURL = getClass().getResource("/assets/profile_icon.png");
@@ -82,7 +85,8 @@ public class ClientHeaderPanel extends JPanel {
                 profileButton.setIcon(new ImageIcon(img));
                 profileButton.setIconTextGap(2);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
 
         try {
@@ -92,12 +96,16 @@ public class ClientHeaderPanel extends JPanel {
                 logoutButton.setIcon(new ImageIcon(img));
                 logoutButton.setIconTextGap(8);
             }
-        } catch (Exception ignored) {}
-
-        logoutButton.addActionListener(e -> {
-            JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(headerPanel);
-            new LogoutPopUp(frame).setVisible(true);
-        });
+        } catch (Exception ignored) {
+        }
+        logoutButton.addActionListener(new ActionListener() { // REMOVE THIS LINE
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    LogoutPopUp logoutDialog = new LogoutPopUp((JFrame) SwingUtilities.getWindowAncestor(headerPanel));
+                    logoutDialog.setVisible(true);
+                }
+            });
+        ;
 
         rightPnl.add(profileButton);
         rightPnl.add(logoutButton);
@@ -110,16 +118,17 @@ public class ClientHeaderPanel extends JPanel {
     // ================= NAV BAR =================
     private void buildDashboard() {
         JPanel navBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 10));
+        navBar.setAlignmentX(Component.LEFT_ALIGNMENT);
         navBar.setBackground(NAV_COLOR);
-        // Ensure the nav bar has enough height
-        navBar.setPreferredSize(new Dimension(1000, 50));
         navBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        navBar.setPreferredSize(new Dimension(1000, 50));
 
-        // Add a bottom border for visual separation
         navBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
 
         viewBtn = new JButton("View Feedbacks");
         submitBtn = new JButton("Submit Feedback");
+
+
 
         navBar.add(viewBtn);
         navBar.add(submitBtn);
@@ -127,18 +136,20 @@ public class ClientHeaderPanel extends JPanel {
         add(navBar);
     }
 
-
-    public void styleTab(JButton btn, boolean active){
+    // Utility method to style nav buttons
+    public void styleTab(JButton btn, boolean active) {
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setForeground(active ? ACTIVE_TEXT : Color.GRAY);
 
-        if(active) {
+        btn.setBorderPainted(true);
+
+        if (active) {
             btn.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, ACTIVE_TEXT));
-            btn.setBorderPainted(true);
+        } else {
+            btn.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, new Color(0,0,0,0)));
         }
     }
 

@@ -2,6 +2,7 @@ package client.view.auth;
 
 import client.controller.LoginController;
 import client.model.ClientConnection;
+import client.utils.CredentialManager;
 import client.view.components.CloseButton;
 import client.view.components.DraggablePanel;
 import client.view.components.IconInputField;
@@ -61,7 +62,7 @@ public class NewLogin extends JFrame {
         formLayout = new CardLayout();
         formPanel = new JPanel(formLayout);
 
-        LoginForm loginForm = new LoginForm(controller);
+        LoginForm loginForm = new LoginForm(controller, connection);
         RegisterInfoPanel registerInfo = new RegisterInfoPanel();
 
         formPanel.add(loginForm, "login");
@@ -124,7 +125,7 @@ public class NewLogin extends JFrame {
     }
 
     public static class LoginForm extends JPanel {
-        public LoginForm(LoginController controller) {
+        public LoginForm(LoginController controller, ClientConnection connection) {
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setBackground(Color.WHITE);
             setBorder(new EmptyBorder(40, 50, 50, 50));
@@ -150,7 +151,22 @@ public class NewLogin extends JFrame {
             add(username);
             add(Box.createVerticalStrut(15));
             add(password);
-            add(Box.createVerticalStrut(25));
+            add(Box.createVerticalStrut(10));
+
+            JPanel rememberMePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            rememberMePanel.setBackground(Color.WHITE);
+            rememberMePanel.setMaximumSize(new Dimension(400, 30));
+
+            JCheckBox rememberMe = new JCheckBox("Remember me");
+            rememberMe.setBackground(Color.WHITE);
+            rememberMe.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            rememberMe.setForeground(Color.GRAY);
+            rememberMe.setFocusPainted(false);
+            rememberMe.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            rememberMePanel.add(rememberMe);
+            add(rememberMePanel);
+
+            add(Box.createVerticalStrut(15));
 
             RoundedButton btnLogin = RoundedButton.create("SIGN IN", 30, Colors.PRIMARY, Colors.SECONDARY);
             btnLogin.setMaximumSize(new Dimension(250, 45));
@@ -162,8 +178,14 @@ public class NewLogin extends JFrame {
                 User loggedInUser = (User) result[2];
 
                 if (success && loggedInUser != null) {
+                    if (rememberMe.isSelected()) {
+                        CredentialManager.saveCredentials(username.getText(), password.getText());
+                    } else {
+                        CredentialManager.deleteCredentials();
+                    }
+
                     SwingUtilities.getWindowAncestor(this).dispose();
-                    new client.view.residents.ResidentDashboard(true, loggedInUser);
+                    new client.view.residents.ResidentDashboard(true, loggedInUser, connection);
                 } else {
                     JOptionPane.showMessageDialog(this, "Login failed: " + result[1], "Login Error", JOptionPane.ERROR_MESSAGE);
                 }

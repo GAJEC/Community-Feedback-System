@@ -1,5 +1,7 @@
 package client.view.components;
 
+import client.utils.CredentialManager;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
