@@ -8,12 +8,11 @@ public class SummaryAdminDashboard extends JFrame {
 
 
     private final Color bgLight = new Color(245, 246, 250);
-    private final Color logoColor = new Color(0, 80, 80);
     private final Color purple = new Color(145, 30, 235);
     private final Color blue = new Color(25, 118, 210);
     private final Color green = new Color(0, 200, 83);
     private final Color orange = new Color(255, 109, 0);
-    private final Color navGray = new Color(150, 150, 150);
+   
 
     public SummaryAdminDashboard() {
 
