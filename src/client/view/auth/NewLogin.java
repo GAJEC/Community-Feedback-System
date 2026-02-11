@@ -91,7 +91,7 @@ public class NewLogin extends JFrame {
 
             JLabel logo = new JLabel(Images.scaledLogo(300, 300));
             c.gridy = 0;
-            c.insets= new Insets(-5,0,0,0);
+            c.insets= new Insets(-5,0,25,0);
             add(logo, c);
 
 
