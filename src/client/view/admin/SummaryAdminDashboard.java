@@ -6,13 +6,11 @@ import java.awt.geom.RoundRectangle2D;
 
 public class SummaryAdminDashboard extends JFrame {
 
-
     private final Color bgLight = new Color(245, 246, 250);
     private final Color purple = new Color(145, 30, 235);
     private final Color blue = new Color(25, 118, 210);
     private final Color green = new Color(0, 200, 83);
     private final Color orange = new Color(255, 109, 0);
-   
 
     public SummaryAdminDashboard() {
 
@@ -506,24 +504,7 @@ public class SummaryAdminDashboard extends JFrame {
         return card;
     }
 
-
-
-
-
-    private Icon createBulletIcon(Color color) {
-        return new Icon() {
-            @Override public void paintIcon(Component c, Graphics g, int x, int y) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(color);
-                g2.fillOval(x + 5, y + 14, 6, 6);
-                g2.dispose();
-            }
-            @Override public int getIconWidth() { return 20; }
-            @Override public int getIconHeight() { return 30; }
-        };
-    }
-
+    
 
 
     private JPanel createLabeledProgress(String label, int val, Color col, String text) {
