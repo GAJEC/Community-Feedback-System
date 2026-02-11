@@ -26,6 +26,7 @@ public class BrgyOfficialHeaderPanel extends JPanel {
 
     public BrgyOfficialHeaderPanel(User user) {
         this.user = user;
+        this.currentActiveTab = "View Feedbacks";
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(HEADER_COLOR);
 
@@ -129,22 +130,37 @@ public class BrgyOfficialHeaderPanel extends JPanel {
         navBar.add(postAnnouncementBtn);
 
         add(navBar);
+
+        viewFeedbackBtn.addActionListener(e -> setActiveTab("View Feedbacks"));
+        manageFeedbackBtn.addActionListener(e -> setActiveTab("Manage Feedback"));
+        statsBtn.addActionListener(e -> setActiveTab("Statistics"));
+        postAnnouncementBtn.addActionListener(e -> setActiveTab("Post Announcement"));
     }
 
-    private void styleTab(JButton btn, boolean active) {
+    private void setActiveTab(String tabName) {
+        currentActiveTab = tabName;
+
+        styleTab(viewFeedbackBtn, "View Feedbacks".equals(currentActiveTab));
+        styleTab(manageFeedbackBtn, "Manage Feedback".equals(currentActiveTab));
+        styleTab(statsBtn, "Statistics".equals(currentActiveTab));
+        styleTab(postAnnouncementBtn, "Post Announcement".equals(currentActiveTab));
+
+        repaint();
+    }
+
+    public void styleTab(JButton btn, boolean active) {
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        // Active vs Inactive colors
         btn.setForeground(active ? ACTIVE_TEXT : Color.GRAY);
 
+        btn.setBorderPainted(true);
+
         if (active) {
-            // Green underline for the active tab
             btn.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, ACTIVE_TEXT));
-            btn.setBorderPainted(true);
+        } else {
+            btn.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, new Color(0,0,0,0)));
         }
     }
 }
