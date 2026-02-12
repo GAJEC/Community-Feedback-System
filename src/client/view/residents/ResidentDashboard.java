@@ -6,9 +6,11 @@ import client.view.components.DropShadowBorder;
 import client.view.components.FeedbackSubmitPopUp;
 import client.view.components.ClientHeaderPanel;
 import client.view.components.HintTextField;
+import common.BroadcastMessage;
 import common.Feedbacks;
 import client.view.components.*;
 import common.User;
+import common.VoteRequest;
 
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
@@ -38,7 +40,9 @@ public class ResidentDashboard extends JFrame {
     private boolean isViewMode;
     private User user;
     private FeedbackController feedbackController;
+    private ClientConnection connection;
     private Map<Integer, User> userCache = new HashMap<>();
+    private Map<Integer, FeedbackCard> feedbackCards = new HashMap<>();
 
     private RoundedTextField titleField;
     private JComboBox<String> categoryBox;
@@ -46,11 +50,14 @@ public class ResidentDashboard extends JFrame {
     private JTextArea descArea;
 
     public ResidentDashboard(boolean viewMode, User user, ClientConnection connection) {
+        this.connection = connection;
         this.feedbackController = new FeedbackController(connection);
         // Cache the logged-in user
         userCache.put(user.getAttr_id(), user);
         this.isViewMode = viewMode;
         this.user = user;
+        
+        connection.setBroadcastListener(this::handleBroadcast);
         setTitle("Community Feedback System");
 
         try {
@@ -100,6 +107,41 @@ public class ResidentDashboard extends JFrame {
         }
         
         setVisible(true);
+    }
+
+    private void handleBroadcast(BroadcastMessage message) {
+        SwingUtilities.invokeLater(() -> {
+            switch (message.getType()) {
+                case VOTE_UPDATE:
+                    if (message.getData() instanceof Feedbacks) {
+                        Feedbacks updatedFeedback = (Feedbacks) message.getData();
+                        updateFeedbackCard(updatedFeedback);
+                    }
+                    break;
+                case NEW_FEEDBACK:
+                    if (isViewMode) {
+                        refreshFeedbackList();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        });
+    }
+
+    private void updateFeedbackCard(Feedbacks feedback) {
+        FeedbackCard card = feedbackCards.get(feedback.getAttr_id());
+        if (card != null) {
+            card.updateVotes(feedback);
+        } else {
+            System.out.println("[Update] Card not found for feedback #" + feedback.getAttr_id());
+        }
+    }
+
+    private void refreshFeedbackList() {
+        if (isViewMode) {
+            loadViewContent();
+        }
     }
 
     private void switchToView() {
@@ -493,6 +535,7 @@ public class ResidentDashboard extends JFrame {
     }
 
     private void loadFeedbacks(JPanel listPanel) {
+        feedbackCards.clear();
         Object[] response = feedbackController.getAllFeedbacks();
         String statusCode = (String) response[0];
         String message = (String) response[1];
@@ -510,7 +553,10 @@ public class ResidentDashboard extends JFrame {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy");
 
                 for (Feedbacks feedback : feedbacks) {
-                    String status = feedback.getAttr_status()[0];
+                    String[] statuses = feedback.getAttr_status();
+                    String status = (statuses != null && statuses.length > 0 && statuses[0] != null && !statuses[0].trim().isEmpty())
+                            ? statuses[0]
+                            : "Pending";
                     String category = feedback.getCategories() != null && feedback.getCategories().length > 0
                         ? feedback.getCategories()[0] : "General";
                     String content = feedback.getContent();
@@ -519,11 +565,9 @@ public class ResidentDashboard extends JFrame {
 
                     String authorName = getUserName(feedback.getIssued_by());
 
-                    int upvotes = feedback.getAttr_upvote() != null ? feedback.getAttr_upvote().length : 0;
-                    int downvotes = feedback.getAttr_downvote() != null ? feedback.getAttr_downvote().length : 0;
-                    int totalVotes = upvotes - downvotes;
-
-                    listPanel.add(new FeedbackCard(status, category, content, location, date, authorName, totalVotes));
+                    FeedbackCard card = new FeedbackCard(feedback, status, category, content, location, date, authorName);
+                    feedbackCards.put(feedback.getAttr_id(), card);
+                    listPanel.add(card);
                     listPanel.add(Box.createVerticalStrut(8));
                 }
             }
@@ -647,8 +691,41 @@ public class ResidentDashboard extends JFrame {
         }
     }
 
-    static class FeedbackCard extends JPanel {
-        FeedbackCard(String status, String category, String text, String location, String date, String author, int votes) {
+    class FeedbackCard extends JPanel {
+        private final Feedbacks feedback;
+        private final JLabel voteCountLabel;
+        private final JButton upvoteBtn;
+        private final JButton downvoteBtn;
+        private boolean hasUpvoted = false;
+        private boolean hasDownvoted = false;
+        private volatile boolean voteInFlight = false;
+
+        private static final Color UPVOTE_COLOR = new Color(0, 150, 0);
+        private static final Color DOWNVOTE_COLOR = new Color(150, 0, 0);
+
+        FeedbackCard(Feedbacks feedback, String status, String category, String text, String location, String date, String author) {
+            this.feedback = feedback;
+            
+            int userId = user.getAttr_id();
+            if (feedback.getAttr_upvote() != null) {
+                String uid = String.valueOf(userId);
+                for (String id : feedback.getAttr_upvote()) {
+                    if (uid.equals(id)) {
+                        hasUpvoted = true;
+                        break;
+                    }
+                }
+            }
+            if (feedback.getAttr_downvote() != null) {
+                String uid = String.valueOf(userId);
+                for (String id : feedback.getAttr_downvote()) {
+                    if (uid.equals(id)) {
+                        hasDownvoted = true;
+                        break;
+                    }
+                }
+            }
+            
             setLayout(new GridBagLayout());
             setBackground(Color.WHITE);
             setBorder(BorderFactory.createCompoundBorder(
@@ -659,11 +736,55 @@ public class ResidentDashboard extends JFrame {
 
             JPanel voteStack = new JPanel(new GridLayout(3, 1, 0, -5));
             voteStack.setOpaque(false);
-            voteStack.add(createArrowButton("▲", new Color(0, 150, 0)));
-            JLabel vc = new JLabel(String.valueOf(votes), SwingConstants.CENTER);
-            vc.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            voteStack.add(vc);
-            voteStack.add(createArrowButton("▼", new Color(150, 0, 0)));
+            
+            upvoteBtn = createArrowButton("▲", UPVOTE_COLOR);
+            updateButtonColor(upvoteBtn, hasUpvoted, UPVOTE_COLOR);
+            upvoteBtn.addActionListener(e -> handleUpvote());
+            
+            int votes = calculateVotes();
+            voteCountLabel = new JLabel(String.valueOf(votes), SwingConstants.CENTER);
+            voteCountLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            
+            downvoteBtn = createArrowButton("▼", DOWNVOTE_COLOR);
+            updateButtonColor(downvoteBtn, hasDownvoted, DOWNVOTE_COLOR);
+            downvoteBtn.addActionListener(e -> handleDownvote());
+
+            // Please wag nyo lagay yung generic hindi gumagana e
+            upvoteBtn.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    if (upvoteBtn.isEnabled()) {
+                        upvoteBtn.setForeground(UPVOTE_COLOR);
+                    }
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    if (upvoteBtn.isEnabled()) {
+                        upvoteBtn.setForeground(getUpvoteNormalColor());
+                    }
+                }
+            });
+
+            downvoteBtn.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    if (downvoteBtn.isEnabled()) {
+                        downvoteBtn.setForeground(DOWNVOTE_COLOR);
+                    }
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    if (downvoteBtn.isEnabled()) {
+                        downvoteBtn.setForeground(getDownvoteNormalColor());
+                    }
+                }
+            });
+            
+            voteStack.add(upvoteBtn);
+            voteStack.add(voteCountLabel);
+            voteStack.add(downvoteBtn);
             gbc.gridx = 0; gbc.gridy = 0; gbc.gridheight = 2; gbc.insets = new Insets(0, 0, 0, 15);
             add(voteStack, gbc);
 
@@ -713,6 +834,168 @@ public class ResidentDashboard extends JFrame {
             gbc.gridx = 1; gbc.gridy = 1;
             gbc.anchor = GridBagConstraints.SOUTHEAST;
             add(detailsBtn, gbc);
+        }
+
+        private int calculateVotes() {
+            int upvotes = feedback.getAttr_upvote() != null ? feedback.getAttr_upvote().length : 0;
+            int downvotes = feedback.getAttr_downvote() != null ? feedback.getAttr_downvote().length : 0;
+            return upvotes - downvotes;
+        }
+
+        private void updateButtonColor(JButton btn, boolean active, Color baseColor) {
+            if (active) {
+                btn.setForeground(baseColor);
+            } else {
+                btn.setForeground(Color.GRAY);
+            }
+        }
+
+        private Color getUpvoteNormalColor() {
+            return hasUpvoted ? UPVOTE_COLOR : Color.GRAY;
+        }
+
+        private Color getDownvoteNormalColor() {
+            return hasDownvoted ? DOWNVOTE_COLOR : Color.GRAY;
+        }
+
+        private void setVoteButtonsEnabled(boolean enabled) {
+            upvoteBtn.setEnabled(enabled);
+            downvoteBtn.setEnabled(enabled);
+        }
+
+        private void handleUpvote() {
+            if (voteInFlight) {
+                return;
+            }
+            VoteRequest.VoteType voteType;
+            if (hasUpvoted) {
+                voteType = VoteRequest.VoteType.REMOVE_UPVOTE;
+            } else {
+                voteType = VoteRequest.VoteType.UPVOTE;
+            }
+            
+            voteInFlight = true;
+            setVoteButtonsEnabled(false);
+
+            new Thread(() -> {
+                try {
+                    Object[] response = feedbackController.vote(feedback.getAttr_id(), user.getAttr_id(), voteType);
+
+                    if (response == null) {
+                        throw new IllegalStateException("No response from server");
+                    }
+
+                    if (!"200".equals(response[0])) {
+                        voteInFlight = false;
+                        SwingUtilities.invokeLater(() -> {
+                            setVoteButtonsEnabled(true);
+                            JOptionPane.showMessageDialog(ResidentDashboard.this,
+                                    "Failed to process vote: " + response[1],
+                                    "Vote Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        });
+                    }
+                } catch (Exception ex) {
+                    voteInFlight = false;
+                    SwingUtilities.invokeLater(() -> {
+                        setVoteButtonsEnabled(true);
+                        JOptionPane.showMessageDialog(ResidentDashboard.this,
+                                "Failed to process vote: " + ex.getMessage(),
+                                "Vote Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    });
+                }
+            }, "vote-upvote-" + feedback.getAttr_id()).start();
+        }
+
+        private void handleDownvote() {
+            if (voteInFlight) {
+                return;
+            }
+            VoteRequest.VoteType voteType;
+            if (hasDownvoted) {
+                voteType = VoteRequest.VoteType.REMOVE_DOWNVOTE;
+            } else {
+                voteType = VoteRequest.VoteType.DOWNVOTE;
+            }
+            
+            voteInFlight = true;
+            setVoteButtonsEnabled(false);
+
+            // Never block the Swing EDT with network I/O. UI will update via broadcast (VOTE_UPDATE).
+            new Thread(() -> {
+                try {
+                    Object[] response = feedbackController.vote(feedback.getAttr_id(), user.getAttr_id(), voteType);
+
+                    if (response == null) {
+                        throw new IllegalStateException("No response from server");
+                    }
+
+                    if (!"200".equals(response[0])) {
+                        voteInFlight = false;
+                        SwingUtilities.invokeLater(() -> {
+                            setVoteButtonsEnabled(true);
+                            JOptionPane.showMessageDialog(ResidentDashboard.this,
+                                    "Failed to process vote: " + response[1],
+                                    "Vote Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        });
+                    }
+                } catch (Exception ex) {
+                    voteInFlight = false;
+                    SwingUtilities.invokeLater(() -> {
+                        setVoteButtonsEnabled(true);
+                        JOptionPane.showMessageDialog(ResidentDashboard.this,
+                                "Failed to process vote: " + ex.getMessage(),
+                                "Vote Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    });
+                }
+            }, "vote-downvote-" + feedback.getAttr_id()).start();
+        }
+
+        public void updateVotes(Feedbacks updatedFeedback) {
+            feedback.setAttr_upvote(updatedFeedback.getAttr_upvote());
+            feedback.setAttr_downvote(updatedFeedback.getAttr_downvote());
+            
+            int userId = user.getAttr_id();
+            
+            boolean newUpvoted = false;
+            boolean newDownvoted = false;
+            
+            if (updatedFeedback.getAttr_upvote() != null) {
+                String uid = String.valueOf(userId);
+                for (String id : updatedFeedback.getAttr_upvote()) {
+                    if (uid.equals(id)) {
+                        newUpvoted = true;
+                        break;
+                    }
+                }
+            }
+            if (updatedFeedback.getAttr_downvote() != null) {
+                String uid = String.valueOf(userId);
+                for (String id : updatedFeedback.getAttr_downvote()) {
+                    if (uid.equals(id)) {
+                        newDownvoted = true;
+                        break;
+                    }
+                }
+            }
+            
+            hasUpvoted = newUpvoted;
+            hasDownvoted = newDownvoted;
+
+            voteInFlight = false;
+            setVoteButtonsEnabled(true);
+            
+            int totalVotes = calculateVotes();
+            
+            voteCountLabel.setText(String.valueOf(totalVotes));
+            updateButtonColor(upvoteBtn, hasUpvoted, UPVOTE_COLOR);
+            updateButtonColor(downvoteBtn, hasDownvoted, DOWNVOTE_COLOR);
+            
+            revalidate();
+            repaint();
         }
     }
 

@@ -1,10 +1,15 @@
 package client.model;
 
+import common.BroadcastMessage;
 import common.Feedbacks;
 import common.User;
+import common.VoteRequest;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import static common.Config.CONFIG_DEBUG;
 import static common.Config.SOCKET_ADDRESS;
@@ -16,9 +21,20 @@ public class ClientConnection {
     private ObjectInputStream in;
     private boolean connected = false;
     private ConnectionListener listener;
+    private BroadcastListener broadcastListener;
+    private Thread listenerThread;
+    private final BlockingQueue<Object> responseQueue = new LinkedBlockingQueue<>();
+
+    public interface BroadcastListener {
+        void onBroadcastReceived(BroadcastMessage message);
+    }
 
     public void setConnectionListener(ConnectionListener listener) {
         this.listener = listener;
+    }
+
+    public void setBroadcastListener(BroadcastListener broadcastListener) {
+        this.broadcastListener = broadcastListener;
     }
 
     public void connectAsync() {
@@ -42,12 +58,44 @@ public class ClientConnection {
             in = new ObjectInputStream(socket.getInputStream());
             connected = true;
             System.out.println("Connected to server");
+            
+            startBroadcastListener();
+            
             return true;
         } catch (IOException e) {
             System.err.println("Connection failed: " + e.getMessage());
             connected = false;
             return false;
         }
+    }
+
+    private void startBroadcastListener() {
+        listenerThread = new Thread(() -> {
+            while (connected) {
+                try {
+                    Object received = in.readObject();
+                    
+                    if (received instanceof BroadcastMessage) {
+                        BroadcastMessage broadcast = (BroadcastMessage) received;
+                        if (CONFIG_DEBUG) {
+                            System.out.println("Received broadcast: " + broadcast.getType());
+                        }
+                        if (broadcastListener != null) {
+                            broadcastListener.onBroadcastReceived(broadcast);
+                        }
+                    } else {
+                        responseQueue.offer(received);
+                    }
+                } catch (IOException | ClassNotFoundException e) {
+                    if (connected) {
+                        System.err.println("Error in broadcast listener: " + e.getMessage());
+                    }
+                    break;
+                }
+            }
+        });
+        listenerThread.setDaemon(true);
+        listenerThread.start();
     }
 
     public void sendUser(User user) {
@@ -57,8 +105,10 @@ public class ClientConnection {
         }
         
         try {
-            out.writeObject(user);
-            out.flush();
+            synchronized (out) {
+                out.writeObject(user);
+                out.flush();
+            }
             if(CONFIG_DEBUG){
                 System.out.println("Sent user: " + user);
             }
@@ -74,13 +124,34 @@ public class ClientConnection {
         }
         
         try {
-            out.writeObject(feedback);
-            out.flush();
+            synchronized (out) {
+                out.writeObject(feedback);
+                out.flush();
+            }
             if(CONFIG_DEBUG){
                 System.out.println("Sent feedback: " + feedback);
             }
         } catch (IOException e) {
             System.err.println("Error sending feedback: " + e.getMessage());
+        }
+    }
+
+    public void sendVoteRequest(VoteRequest voteRequest) {
+        if (!connected) {
+            System.err.println("Not connected to server");
+            return;
+        }
+        
+        try {
+            synchronized (out) {
+                out.writeObject(voteRequest);
+                out.flush();
+            }
+            if(CONFIG_DEBUG){
+                System.out.println("Sent vote request: " + voteRequest);
+            }
+        } catch (IOException e) {
+            System.err.println("Error sending vote request: " + e.getMessage());
         }
     }
 
@@ -91,8 +162,10 @@ public class ClientConnection {
         }
         
         try {
-            out.writeObject(request);
-            out.flush();
+            synchronized (out) {
+                out.writeObject(request);
+                out.flush();
+            }
             if(CONFIG_DEBUG){
                 System.out.println("Sent request: " + request);
             }
@@ -108,23 +181,34 @@ public class ClientConnection {
         }
         
         try {
-            return in.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Error receiving data: " + e.getMessage());
+            Object response = responseQueue.poll(10, TimeUnit.SECONDS);
+            if (response == null) {
+                System.err.println("Timeout waiting for server response");
+            }
+            return response;
+        } catch (InterruptedException e) {
+            System.err.println("Interrupted while waiting for response: " + e.getMessage());
+            Thread.currentThread().interrupt();
             return null;
         }
     }
 
     public void disconnect() {
         try {
+            connected = false;
             if (out != null) {
-                out.writeObject("DISCONNECT");
-                out.flush();
+                synchronized (out) {
+                    out.writeObject("DISCONNECT");
+                    out.flush();
+                }
             }
+            if (listenerThread != null) {
+                listenerThread.interrupt();
+            }
+            responseQueue.clear();
             if (in != null) in.close();
             if (out != null) out.close();
             if (socket != null) socket.close();
-            connected = false;
             System.out.println("Disconnected from server");
             if (listener != null) {
                 listener.onDisconnected();

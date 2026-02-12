@@ -8,14 +8,14 @@ public class Feedbacks implements Serializable {
     int issued_by;
     int attr_approvedby;
     String[] attr_status = {"Resolved", "In-Progress", "Pending"};
-    int[] attr_upvote;
-    int[] attr_downvote;
+    String[] attr_upvote;
+    String[] attr_downvote;
     String[] categories = {"Event Suggestion", "Missing Person", "Noise Complaint", "Infrastructure", "Other"};
     String location;
     String content;
     Date issued_date;
 
-    public Feedbacks(int attr_id, int issued_by, int attr_approvedby, String[] attr_status, int[] attr_upvote, int[] attr_downvote, String[] categories, String location, String content, Date issued_date) {
+    public Feedbacks(int attr_id, int issued_by, int attr_approvedby, String[] attr_status, String[] attr_upvote, String[] attr_downvote, String[] categories, String location, String content, Date issued_date) {
         this.attr_id = attr_id;
         this.issued_by = issued_by;
         this.attr_approvedby = attr_approvedby;
@@ -57,11 +57,11 @@ public class Feedbacks implements Serializable {
         return attr_status;
     }
 
-    public int[] getAttr_upvote() {
+    public String[] getAttr_upvote() {
         return attr_upvote;
     }
 
-    public int[] getAttr_downvote() {
+    public String[] getAttr_downvote() {
         return attr_downvote;
     }
 
@@ -97,11 +97,11 @@ public class Feedbacks implements Serializable {
         this.attr_status = attr_status;
     }
 
-    public void setAttr_upvote(int[] attr_upvote) {
+    public void setAttr_upvote(String[] attr_upvote) {
         this.attr_upvote = attr_upvote;
     }
 
-    public void setAttr_downvote(int[] attr_downvote) {
+    public void setAttr_downvote(String[] attr_downvote) {
         this.attr_downvote = attr_downvote;
     }
 

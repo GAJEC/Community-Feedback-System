@@ -8,18 +8,31 @@ public final class Images {
 
     private Images() {} // prevent instantiation
 
+    // Tinry ko kase yung bat, eto naman para sa images. Ginawa ko na static final para parang constants na siya, tapos may helper method para sa scaling. Yung resource method is to handle the case na hindi mahanap yung image sa isang path, so it tries multiple paths (e.g. for different build setups). Yung safeIcon naman is to return an empty icon instead of null if hindi mahanap yung image, para maiwasan yung null pointer exceptions sa UI.
+    private static URL resource(String... paths) {
+        for (String path : paths) {
+            URL url = Images.class.getResource(path);
+            if (url != null) return url;
+        }
+        return null;
+    }
+
+    private static ImageIcon safeIcon(URL url) {
+        return (url == null) ? new ImageIcon() : new ImageIcon(url);
+    }
+
     // Instances
     // Logo
-    public static final URL LOGO_URL = Images.class.getResource("/assets/logo_icon.png");
-    public static final ImageIcon LOGO = new ImageIcon(LOGO_URL);
-    public static final URL ICON_URL = Images.class.getResource("/assets/app_icon.png");
-    public static final ImageIcon ICON = new ImageIcon(ICON_URL);
+    public static final URL LOGO_URL = resource("/assets/logo_icon.png", "/res/assets/logo_icon.png");
+    public static final ImageIcon LOGO = safeIcon(LOGO_URL);
+    public static final URL ICON_URL = resource("/assets/app_icon.png", "/res/assets/app_icon.png");
+    public static final ImageIcon ICON = safeIcon(ICON_URL);
 
     // Others
-    public static final URL PERSON_URL = Images.class.getResource("/assets/username_icon.png");
-    public static final ImageIcon PERSON = new ImageIcon(PERSON_URL);
-    public static final URL LOCK_URL = Images.class.getResource("/assets/password_icon.png");
-    public static final ImageIcon LOCK = new ImageIcon(LOCK_URL);
+    public static final URL PERSON_URL = resource("/assets/username_icon.png", "/res/assets/username_icon.png");
+    public static final ImageIcon PERSON = safeIcon(PERSON_URL);
+    public static final URL LOCK_URL = resource("/assets/password_icon.png", "/res/assets/password_icon.png");
+    public static final ImageIcon LOCK = safeIcon(LOCK_URL);
 
     // Methods
     /**
