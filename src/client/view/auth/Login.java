@@ -3,10 +3,10 @@ package client.view.auth;
 import client.controller.LoginController;
 import client.model.ClientConnection;
 import client.utils.CredentialManager;
-import client.view.components.CloseButton;
-import client.view.components.DraggablePanel;
-import client.view.components.IconInputField;
-import client.view.components.Button;
+import client.view.components.button.CloseButton;
+import client.view.components.panel.DraggablePanel;
+import client.view.components.field.IconInputField;
+import client.view.components.button.Button;
 import client.view.strings.Colors;
 import client.view.strings.Fonts;
 import client.view.strings.Images;
@@ -95,7 +95,7 @@ public class Login extends JFrame {
 
 
             JLabel title = new JLabel("Welcome to Community Feedback!");
-            title.setFont(Fonts.SansSerif(1, 30));
+            title.setFont(Fonts.SANS_TITLE);
             title.setForeground(Colors.WHITE);
 
             c.gridy = 1;
@@ -104,7 +104,7 @@ public class Login extends JFrame {
 
 
             JLabel desc = new JLabel("Keep connected with us");
-            desc.setFont(Fonts.SansSerif(0, 20));
+            desc.setFont(Fonts.SANS_SUB_TITLE);
             desc.setForeground(Colors.WHITE);
 
             c.gridy = 2;
@@ -131,7 +131,7 @@ public class Login extends JFrame {
             add(Box.createVerticalStrut(200));
 
             JLabel title = new JLabel("Sign In");
-            title.setFont(Fonts.SansSerif(1, 32));
+            title.setFont(Fonts.SANS_TITLE);
             title.setForeground(Colors.PRIMARY);
             title.setAlignmentX(Component.CENTER_ALIGNMENT);
             add(title);
@@ -188,7 +188,7 @@ public class Login extends JFrame {
             add(Box.createVerticalStrut(5));
 
             JLabel goRegister = new JLabel("How to Register");
-            goRegister.setFont(Fonts.SansSerif(0, 12));
+            goRegister.setFont(Fonts.SANS_NORMAL_TEXT);
             goRegister.setAlignmentX(Component.CENTER_ALIGNMENT);
 
             Button.applyLinkHover(goRegister, Colors.TERTIARY, Colors.PRIMARY);
@@ -213,7 +213,7 @@ public class Login extends JFrame {
             setBorder(new EmptyBorder(50, 50, 50, 50));
 
             JLabel title = new JLabel("How to Register");
-            title.setFont(Fonts.SansSerif(1, 28));
+            title.setFont(Fonts.SANS_TITLE);
             title.setAlignmentX(CENTER_ALIGNMENT);
             add(title);
             add(Box.createVerticalStrut(20));

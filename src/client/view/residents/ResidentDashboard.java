@@ -2,13 +2,14 @@ package client.view.residents;
 
 import client.controller.FeedbackController;
 import client.model.ClientConnection;
-import client.view.components.DropShadowBorder;
-import client.view.components.FeedbackSubmitPopUp;
-import client.view.components.ClientHeaderPanel;
-import client.view.components.HintTextField;
+import client.view.components.panel.DropShadowBorder;
+import client.view.components.resident.FeedbackSubmitPopUp;
+import client.view.components.resident.ClientHeaderPanel;
+import client.view.components.field.HintTextField;
+import client.view.components.resident.ClientFeedbackDetailDialog;
+import client.view.strings.Fonts;
 import common.BroadcastMessage;
 import common.Feedbacks;
-import client.view.components.*;
 import common.User;
 import common.VoteRequest;
 
@@ -188,7 +189,7 @@ public class ResidentDashboard extends JFrame {
         container.setBorder(BorderFactory.createEmptyBorder(15, 40, 15, 40));
 
         JLabel title = new JLabel("Community Feedbacks");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        title.setFont(Fonts.UI_TITLE_2);
         container.add(title, BorderLayout.NORTH);
 
         JPanel centerContent = new JPanel(new BorderLayout(0, 10));

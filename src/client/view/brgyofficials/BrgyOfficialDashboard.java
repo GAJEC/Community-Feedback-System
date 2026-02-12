@@ -1,7 +1,8 @@
 package client.view.brgyofficials;
 
-import client.view.components.*;
-import client.view.components.Button;
+import client.view.components.button.Button;
+import client.view.components.barangay.BrgyOfficialHeaderPanel;
+import client.view.components.field.HintTextField;
 import common.User;
 
 import javax.swing.*;

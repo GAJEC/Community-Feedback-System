@@ -1,7 +1,6 @@
-package client.view.components;
+package client.view.components.barangay;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class FeedbackRowPanel extends JPanel {

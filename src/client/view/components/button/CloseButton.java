@@ -1,4 +1,4 @@
-package client.view.components;
+package client.view.components.button;
 
 import javax.swing.*;
 import java.awt.*;

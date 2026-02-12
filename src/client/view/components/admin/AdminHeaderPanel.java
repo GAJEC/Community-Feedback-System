@@ -1,16 +1,14 @@
-package client.view.components;
-
-import common.User;
+package client.view.components.admin;
 
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
 
-public class BrgyOfficialHeaderPanel extends JPanel {
+public class AdminHeaderPanel extends JPanel {
 
-    private static final Color HEADER_COLOR = new Color(34, 153, 84);
+    private static final Color HEADER_COLOR = new Color(0, 80, 80);
     private static final Color NAV_COLOR = new Color(255, 255, 255);
-    private static final Color ACTIVE_TEXT = new Color(114, 181, 112);
+    private static final Color ACTIVE_TEXT = new Color(0, 102, 102);
     private static final Color LOGOUT_RED = new Color(180, 40, 40);
 
     public JButton profileButton;
@@ -19,19 +17,19 @@ public class BrgyOfficialHeaderPanel extends JPanel {
     public JButton viewFeedbackBtn;
     public JButton manageFeedbackBtn;
     public JButton statsBtn;
-    public JButton postAnnouncementBtn;
+
 
     private String currentActiveTab;
-    private User user;
 
-    public BrgyOfficialHeaderPanel(User user) {
-        this.user = user;
-        this.currentActiveTab = "View Feedbacks";
+
+    public AdminHeaderPanel(String activeTab) {
+        this.currentActiveTab = activeTab;
+
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(HEADER_COLOR);
 
         buildHeader();
-        buildDashboard();
+        buildNavBar();
     }
 
     private void buildHeader() {
@@ -52,6 +50,7 @@ public class BrgyOfficialHeaderPanel extends JPanel {
             }
         } catch (Exception ignored) {}
 
+        // Text Panel
         JPanel textPanel = new JPanel();
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
         textPanel.setOpaque(false);
@@ -60,7 +59,7 @@ public class BrgyOfficialHeaderPanel extends JPanel {
         title.setFont(new Font("Segoe UI", Font.BOLD, 22));
         title.setForeground(Color.WHITE);
 
-        JLabel tagline = new JLabel("Barangay Official Portal");
+        JLabel tagline = new JLabel("Admin Panel - Barangay Official"); // Admin specific sub-header
         tagline.setFont(new Font("Segoe UI", Font.ITALIC, 14));
         tagline.setForeground(new Color(255,255,255,180));
 
@@ -70,33 +69,17 @@ public class BrgyOfficialHeaderPanel extends JPanel {
         leftPnl.add(textPanel);
         headerPanel.add(leftPnl, BorderLayout.WEST);
 
+        // --- Right Side (Profile + Logout) ---
         JPanel rightPnl = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 45));
         rightPnl.setOpaque(false);
 
-        profileButton = Button.createRounded("Barangay Official", 30, new Color(255, 255, 255, 40), new Color(255, 255, 255, 70));
+        // Profile Button with Admin Name
+        // You can add an icon here if you have one, e.g., setIcon(...)
+        profileButton = new RoundedButton("Barangay Official", 30, new Color(255,255,255,40));
         profileButton.setPreferredSize(new Dimension(180, 40));
 
-        logoutButton = Button.createRounded("Logout", 20, LOGOUT_RED, LOGOUT_RED.brighter());
+        logoutButton = new RoundedButton("Logout", 20, LOGOUT_RED);
         logoutButton.setPreferredSize(new Dimension(100, 40));
-
-        try {
-            URL logoutIconURL = getClass().getResource("/assets/profile_icon.png");
-            if (logoutIconURL != null) {
-                Image img = new ImageIcon(logoutIconURL).getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH);
-                profileButton.setIcon(new ImageIcon(img));
-                profileButton.setIconTextGap(2);
-            }
-        } catch (Exception ignored) {}
-
-
-        try {
-            URL logoutIconURL = getClass().getResource("/assets/logout_icon.png");
-            if (logoutIconURL != null) {
-                Image img = new ImageIcon(logoutIconURL).getImage().getScaledInstance(18, 18, Image.SCALE_SMOOTH);
-                logoutButton.setIcon(new ImageIcon(img));
-                logoutButton.setIconTextGap(8);
-            }
-        } catch (Exception ignored) {}
 
         rightPnl.add(profileButton);
         rightPnl.add(logoutButton);
@@ -105,8 +88,8 @@ public class BrgyOfficialHeaderPanel extends JPanel {
         add(headerPanel);
     }
 
-    private void buildDashboard() {
-        JPanel navBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 10));
+    private void buildNavBar() {
+        JPanel navBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 0));
         navBar.setBackground(NAV_COLOR);
         navBar.setPreferredSize(new Dimension(1000, 50));
         navBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
@@ -116,51 +99,61 @@ public class BrgyOfficialHeaderPanel extends JPanel {
         viewFeedbackBtn = new JButton("View Feedbacks");
         manageFeedbackBtn = new JButton("Manage Feedback");
         statsBtn = new JButton("Statistics");
-        postAnnouncementBtn = new  JButton("Post Announcement");
 
         // Apply Styling based on which tab is currently active
         styleTab(viewFeedbackBtn, "View Feedbacks".equals(currentActiveTab));
         styleTab(manageFeedbackBtn, "Manage Feedback".equals(currentActiveTab));
         styleTab(statsBtn, "Statistics".equals(currentActiveTab));
-        styleTab(postAnnouncementBtn, "Post Announcement".equals(currentActiveTab));
 
         navBar.add(viewFeedbackBtn);
         navBar.add(manageFeedbackBtn);
         navBar.add(statsBtn);
-        navBar.add(postAnnouncementBtn);
 
         add(navBar);
-
-        viewFeedbackBtn.addActionListener(e -> setActiveTab("View Feedbacks"));
-        manageFeedbackBtn.addActionListener(e -> setActiveTab("Manage Feedback"));
-        statsBtn.addActionListener(e -> setActiveTab("Statistics"));
-        postAnnouncementBtn.addActionListener(e -> setActiveTab("Post Announcement"));
     }
 
-    private void setActiveTab(String tabName) {
-        currentActiveTab = tabName;
-
-        styleTab(viewFeedbackBtn, "View Feedbacks".equals(currentActiveTab));
-        styleTab(manageFeedbackBtn, "Manage Feedback".equals(currentActiveTab));
-        styleTab(statsBtn, "Statistics".equals(currentActiveTab));
-        styleTab(postAnnouncementBtn, "Post Announcement".equals(currentActiveTab));
-
-        repaint();
-    }
-
-    public void styleTab(JButton btn, boolean active) {
+    private void styleTab(JButton btn, boolean active) {
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setContentAreaFilled(false);
+        btn.setBorderPainted(false);
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Active vs Inactive colors
         btn.setForeground(active ? ACTIVE_TEXT : Color.GRAY);
 
-        btn.setBorderPainted(true);
-
         if (active) {
+            // Green underline for the active tab
             btn.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, ACTIVE_TEXT));
-        } else {
-            btn.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, new Color(0,0,0,0)));
+            btn.setBorderPainted(true);
+        }
+    }
+
+    // ================= ROUNDED BUTTON CLASS =================
+    // Copied from your reference to ensure visual consistency
+    static class RoundedButton extends JButton {
+        private final int radius;
+        private final Color color;
+
+        RoundedButton(String txt, int r, Color c) {
+            super(txt);
+            radius = r;
+            color = c;
+            setContentAreaFilled(false);
+            setBorderPainted(false);
+            setFocusPainted(false);
+            setForeground(Color.WHITE);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+            setFont(new Font("Segoe UI", Font.BOLD, 12));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(color);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
+            super.paintComponent(g);
         }
     }
 }

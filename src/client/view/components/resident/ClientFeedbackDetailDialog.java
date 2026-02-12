@@ -1,11 +1,11 @@
-package client.view.components;
+package client.view.components.resident;
 
+import client.view.strings.Fonts;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
-
 
 public class ClientFeedbackDetailDialog extends JDialog {
     private static final Color background = Color.WHITE;
@@ -72,12 +72,12 @@ public class ClientFeedbackDetailDialog extends JDialog {
 
 
         JLabel title = new JLabel("Feedback Details");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        title.setFont(Fonts.UI_TITLE);
         title.setForeground(Color.WHITE);
 
 
         JLabel idLabel = new JLabel("ID: ");
-        idLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        idLabel.setFont(Fonts.UI_SUB_TEXT);
         idLabel.setForeground(new Color(255, 255, 255, 180));
 
 
