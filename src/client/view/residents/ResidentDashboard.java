@@ -3,6 +3,7 @@ package client.view.residents;
 import client.controller.FeedbackController;
 import client.model.ClientConnection;
 import client.view.components.panel.DropShadowBorder;
+import client.view.components.panel.RoundedPanel;
 import client.view.components.resident.FeedbackSubmitPopUp;
 import client.view.components.resident.ClientHeaderPanel;
 import client.view.components.field.HintTextField;
@@ -997,24 +998,6 @@ public class ResidentDashboard extends JFrame {
             
             revalidate();
             repaint();
-        }
-    }
-
-    static class RoundedPanel extends JPanel {
-        private int radius;
-        private Color bg;
-        public RoundedPanel(int r, Color c) {
-            this.radius = r;
-            this.bg = c;
-            setOpaque(false);
-        }
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(bg);
-            g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), radius, radius));
-            g2.dispose();
-            super.paintComponent(g);
         }
     }
 

@@ -1,5 +1,8 @@
 package client.view.components.resident;
 
+import client.view.components.button.CloseButton;
+import client.view.components.panel.RoundedPanel;
+import client.view.strings.Colors;
 import client.view.strings.Fonts;
 
 import javax.swing.*;
@@ -39,30 +42,8 @@ public class ClientFeedbackDetailDialog extends JDialog {
         badges.add(new roundedStatusCategory("Infrastructure", new Color(255, 255, 255, 60), Color.WHITE));
 
 
-        JButton closeBtn = new JButton("✕");
-        closeBtn.setFont(new Font("SansSerif", Font.BOLD, 18));
-        closeBtn.setForeground(new Color(255, 255, 255));
-        closeBtn.setContentAreaFilled(false);
-        closeBtn.setBorderPainted(false);
-        closeBtn.setFocusPainted(false);
-        closeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        closeBtn.addActionListener(e -> dispose());
-
-
-        closeBtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                closeBtn.setForeground(Color.RED);
-            }
-
-
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                closeBtn.setForeground(new Color(255, 255, 255));
-            }
-        });
-
-
         topHeaderRow.add(badges, BorderLayout.WEST);
-        topHeaderRow.add(closeBtn, BorderLayout.EAST);
+        topHeaderRow.add(new CloseButton(this, Colors.WHITE), BorderLayout.EAST);
 
 
         JPanel titlePanel = new JPanel();
@@ -213,39 +194,6 @@ public class ClientFeedbackDetailDialog extends JDialog {
         txt.add(t); txt.add(m); txt.add(s);
         card.add(txt, BorderLayout.CENTER);
         return card;
-    }
-
-
-    static class RoundedPanel extends JPanel {
-        private final int r;
-        private final Color c;
-        private Color sCol = new Color(241, 245, 249);
-        private float sWidth = 1.0f;
-
-
-        RoundedPanel(int radius, Color color) {
-            r = radius;
-            c = color;
-            setOpaque(false);
-        }
-        public void setStroke(Color col, float w) {
-            this.sCol = col;
-            this.sWidth = w;
-            repaint();
-        }
-
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(c);
-            g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), r, r));
-            if (sWidth > 0) {
-                g2.setStroke(new BasicStroke(sWidth));
-                g2.setColor(sCol);
-                g2.draw(new RoundRectangle2D.Double(sWidth/2, sWidth/2, getWidth()-sWidth, getHeight()-sWidth, r, r));
-            }
-            g2.dispose();
-        }
     }
 
     static class roundedStatusCategory extends JLabel {
