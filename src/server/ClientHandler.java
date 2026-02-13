@@ -1,7 +1,9 @@
 package server;
 
+import common.BroadcastMessage;
 import common.Feedbacks;
 import common.User;
+import common.VoteRequest;
 import org.xml.sax.SAXException;
 import server.actions.FeedbackActions;
 import server.actions.LoginActions;
@@ -17,10 +19,25 @@ public class ClientHandler extends Thread {
     private ObjectInputStream in;
     private ObjectOutputStream out;
     private final int clientId;
+    private volatile boolean running = true;
 
     public ClientHandler(Socket socket, int clientId) {
         this.socket = socket;
         this.clientId = clientId;
+    }
+
+    // Para makapagsend tayo ng broadcast. Returns false if may error sa pag send (e.g. client disconnected)
+    public boolean sendBroadcast(BroadcastMessage message) {
+        try {
+            synchronized (out) {
+                out.writeObject(message);
+                out.flush();
+            }
+            return true;
+        } catch (IOException e) {
+            System.err.println("Error broadcasting to client " + clientId + ": " + e.getMessage());
+            return false;
+        }
     }
 
     @Override
@@ -29,9 +46,12 @@ public class ClientHandler extends Thread {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
 
+            // Add naten yung client sa active clients list, para makareceive siya ng broadcast messages
+            Server.addClient(this);
+
             System.out.println("Client " + clientId + " connected from " + socket.getInetAddress());
 
-            while (true) {
+            while (running) {
                 Object received = in.readObject();
 
                 switch (received) {
@@ -41,8 +61,12 @@ public class ClientHandler extends Thread {
                         }
 
                         Object[] response = LoginActions.handleLogin(u, clientId);
-                        out.writeObject(response);
-                        out.flush();
+
+                        // Gumamit tayo ng synchronized block para sure na walang sabayang access sa output stream
+                        synchronized (out) {
+                            out.writeObject(response);
+                            out.flush();
+                        }
                     }
                     case Feedbacks f -> {
                         if(CONFIG_DEBUG){
@@ -50,8 +74,37 @@ public class ClientHandler extends Thread {
                         }
 
                         Object[] response = FeedbackActions.handleFeedbackSubmission(f, clientId);
-                        out.writeObject(response);
-                        out.flush();
+                        synchronized (out) {
+                            out.writeObject(response);
+                            out.flush();
+                        }
+
+                        if ("200".equals(response[0])) {
+                            BroadcastMessage broadcast = new BroadcastMessage(
+                                BroadcastMessage.BroadcastType.NEW_FEEDBACK,
+                                response[2]
+                            );
+                            Server.broadcast(broadcast, this);
+                        }
+                    }
+                    case VoteRequest vr -> {
+                        if(CONFIG_DEBUG){
+                            System.out.println("Received vote request from Client " + clientId + ": " + vr);
+                        }
+                        
+                        Object[] response = FeedbackActions.handleVote(vr, clientId);
+                        synchronized (out) {
+                            out.writeObject(response);
+                            out.flush();
+                        }
+
+                        if ("200".equals(response[0]) && response[2] != null) {
+                            BroadcastMessage broadcast = new BroadcastMessage(
+                                BroadcastMessage.BroadcastType.VOTE_UPDATE,
+                                response[2]
+                            );
+                            Server.broadcast(broadcast, this);
+                        }
                     }
                     case String s -> {
                         if ("GET_FEEDBACKS".equals(s)) {
@@ -60,8 +113,13 @@ public class ClientHandler extends Thread {
                             }
                             
                             Object[] response = FeedbackActions.getAllFeedbacks();
-                            out.writeObject(response);
-                            out.flush();
+                            synchronized (out) {
+                                out.writeObject(response);
+                                out.flush();
+                            }
+                        } else if ("DISCONNECT".equals(s)) {
+                            System.out.println("Client " + clientId + " requested disconnect");
+                            running = false;
                         } else {
                             System.out.println("Received unknown string command: " + s);
                         }
@@ -72,17 +130,25 @@ public class ClientHandler extends Thread {
             }
 
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Client " + clientId + " disconnected");
+            System.out.println("Client " + clientId + " disconnected: " + e.getMessage());
         } catch (ParserConfigurationException | SAXException e) {
-            throw new RuntimeException(e);
+            System.err.println("Error processing request: " + e.getMessage());
         } finally {
-            try {
-                if (in != null) in.close();
-                if (out != null) out.close();
-                if (socket != null) socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            cleanup();
         }
+    }
+
+    // Para sa cleanup kapag nagdisconnect ang client o nageerror, para maayos na ma-release lahat ng resources
+    private void cleanup() {
+        running = false;
+        Server.removeClient(this);
+        try {
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (IOException e) {
+            System.err.println("Error during cleanup: " + e.getMessage());
+        }
+        System.out.println("Client " + clientId + " handler terminated");
     }
 }

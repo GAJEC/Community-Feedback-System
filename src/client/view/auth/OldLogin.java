@@ -1,8 +1,8 @@
 //package client.view.auth;
 //import client.controller.LoginController;
 //import client.model.ClientConnection;
-//import client.view.components.IconInputField;
-//import client.view.components.Button;
+//import client.view.components.field.IconInputField;
+//import client.view.components.button.Button;
 //import common.User;
 //
 //import java.awt.*;

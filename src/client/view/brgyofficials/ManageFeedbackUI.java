@@ -1,8 +1,8 @@
 package client.view.brgyofficials;
 
-import client.view.components.AdminHeaderPanel;
-import client.view.components.FeedbackRowPanel;
-import client.view.components.HintTextField;
+import client.view.components.admin.AdminHeaderPanel;
+import client.view.components.barangay.FeedbackRowPanel;
+import client.view.components.field.HintTextField;
 import client.view.strings.Colors;
 
 import javax.swing.*;

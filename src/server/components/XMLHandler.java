@@ -135,6 +135,52 @@ public class XMLHandler<T> {
 
     // CRUD bois
 
+    private static boolean looksLikeJavaArrayToString(String val) {
+        if (val == null) return false;
+        // Examples: "[I@58243dbb", "[Ljava.lang.String;@5f7652d7"
+        return val.startsWith("[") && val.contains("@");
+    }
+
+    private static String[] parseStringArray(String val) {
+        if (val == null) return new String[0];
+        String trimmed = val.trim();
+        if (trimmed.isEmpty()) return new String[0];
+        if (looksLikeJavaArrayToString(trimmed)) return new String[0];
+
+        String[] parts = trimmed.contains(",") ? trimmed.split(",") : new String[]{trimmed};
+        int count = 0;
+        for (String p : parts) {
+            if (p != null && !p.trim().isEmpty()) count++;
+        }
+        String[] result = new String[count];
+        int idx = 0;
+        for (String p : parts) {
+            if (p == null) continue;
+            String t = p.trim();
+            if (t.isEmpty()) continue;
+            result[idx++] = t;
+        }
+        return result;
+    }
+
+    private static int[] parseIntArray(String val) {
+        if (val == null) return new int[0];
+        String trimmed = val.trim();
+        if (trimmed.isEmpty()) return new int[0];
+        if (looksLikeJavaArrayToString(trimmed)) return new int[0];
+
+        String[] parts = trimmed.contains(",") ? trimmed.split(",") : new String[]{trimmed};
+        int[] result = new int[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            try {
+                result[i] = Integer.parseInt(parts[i].trim());
+            } catch (NumberFormatException e) {
+                result[i] = 0;
+            }
+        }
+        return result;
+    }
+
     private String valueToString(Object value) {
         if (value == null) return "";
         
@@ -263,7 +309,8 @@ public class XMLHandler<T> {
                 types[i] = fields[i].getType();
                 String name = fields[i].getName();
                 String raw = name.startsWith("attr_") ? el.getAttribute(name.substring(5)) : getElementText(el, name);
-                values[i] = convert(raw, types[i]);
+                Object converted = convert(raw, types[i]);
+                values[i] = converted;
             }
 
             if (clazz.isRecord()) return clazz.getConstructor(types).newInstance(values);
@@ -307,19 +354,8 @@ public class XMLHandler<T> {
         }
 
         // Kung gusto nyo magdagdag pa ng datatype pwede naman
-        if (type == String[].class) return new String[]{val};
-        if (type == int[].class) {
-            String[] parts = val.contains(",") ? val.split(",") : new String[]{val};
-            int[] result = new int[parts.length];
-            for (int i = 0; i < parts.length; i++) {
-                try {
-                    result[i] = Integer.parseInt(parts[i].trim());
-                } catch (NumberFormatException e) {
-                    result[i] = 0;
-                }
-            }
-            return result;
-        }
+        if (type == String[].class) return parseStringArray(val);
+        if (type == int[].class) return parseIntArray(val);
         if (type == int.class || type == Integer.class) return Integer.parseInt(val);
         if (type == Date.class) {
             try {
@@ -381,10 +417,15 @@ public class XMLHandler<T> {
                         field.setAccessible(true);
                         String fieldName = field.getName();
                         Object value = field.get(obj);
-                        String valueStr = (value != null) ? value.toString() : "";
+                        String valueStr = valueToString(value);
 
                         if (fieldName.startsWith("attr_")) {
-                            element.setAttribute(fieldName.substring(5), valueStr);
+                            String attrName = fieldName.substring(5);
+                            if (valueStr.isEmpty()) {
+                                element.removeAttribute(attrName);
+                            } else {
+                                element.setAttribute(attrName, valueStr);
+                            }
                         } else {
                             NodeList children = element.getElementsByTagName(fieldName);
                             if (children.getLength() > 0) {

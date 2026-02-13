@@ -1,4 +1,4 @@
-package client.view.components;
+package client.view.components.panel;
 
 import javax.swing.border.AbstractBorder;
 import java.awt.*;

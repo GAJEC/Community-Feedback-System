@@ -1,6 +1,8 @@
-package client.view.components;
+package client.view.components.resident;
 
+import client.view.components.LogoutPopUp;
 import client.view.strings.Colors;
+import client.view.strings.Fonts;
 import common.User;
 
 import javax.swing.*;
@@ -56,11 +58,11 @@ public class ClientHeaderPanel extends JPanel {
 
 
         JLabel title = new JLabel("Community Feedback System");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setFont(Fonts.UI_TITLE);
         title.setForeground(Color.WHITE);
 
         JLabel tagline = new JLabel("Your Voice. Our Community. Real Change");
-        tagline.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+        tagline.setFont(Fonts.UI_HEADING_4);
         tagline.setForeground(new Color(255, 255, 255, 180));
 
         textPanel.add(title);
@@ -106,7 +108,6 @@ public class ClientHeaderPanel extends JPanel {
                     logoutDialog.setVisible(true);
                 }
             });
-        ;
 
         rightPnl.add(profileButton);
         rightPnl.add(logoutButton);
@@ -139,7 +140,7 @@ public class ClientHeaderPanel extends JPanel {
 
     // Utility method to style nav buttons
     public void styleTab(JButton btn, boolean active) {
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setFont(Fonts.UI_HEADING_3);
         btn.setContentAreaFilled(false);
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));

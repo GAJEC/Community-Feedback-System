@@ -3,6 +3,7 @@ package client.controller;
 import client.model.ClientConnection;
 import client.model.FeedbackModel;
 import common.Feedbacks;
+import common.VoteRequest;
 
 import java.util.Date;
 
@@ -40,6 +41,11 @@ public class FeedbackController {
 
     public Object[] getAllFeedbacks() {
         return feedbackModel.getAllFeedbacks();
+    }
+
+    public Object[] vote(int feedbackId, int userId, VoteRequest.VoteType voteType) {
+        VoteRequest voteRequest = new VoteRequest(feedbackId, userId, voteType);
+        return feedbackModel.vote(voteRequest);
     }
 
     public boolean isConnected() {
