@@ -1,9 +1,9 @@
 package client.view.auth;
 
-import client.view.components.DropShadowBorder;
-import client.view.components.RoundedTextField;
-import client.view.components.Button;
+import client.view.components.field.RoundedTextField;
+import client.view.components.panel.DropShadowBorder;
 import client.view.strings.Colors;
+import client.view.components.button.Button;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -136,7 +136,7 @@ public class Register extends JFrame {
 
         // Submit Button (With Hover)
         gbc.gridy++; gbc.insets = new Insets(10, sidePadding, 10, sidePadding);
-        Button submitBtn = new Button("Create Account", 15);
+        Button submitBtn = new Button("Create Account",15);
         submitBtn.setPreferredSize(new Dimension(FIELD_SIZE.width, 50));
         submitBtn.setFont(new Font("Segoe UI", Font.BOLD, 15));
 
