@@ -156,23 +156,32 @@ public class BrgyOfficialDashboard extends JFrame {
             setBackground(Color.WHITE);
             setBorder(new CompoundBorder(new RoundedBorder(12),
                     new EmptyBorder(12, 15, 12, 15)));
-            setMaximumSize(new Dimension(Integer.MAX_VALUE, 140));
+            setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
             JPanel mainPanel = new JPanel(new BorderLayout(15, 1));
             mainPanel.setOpaque(false);
             mainPanel.add(voteWrapper(votes), BorderLayout.WEST);
 
-            JPanel centerPanel = new JPanel(new BorderLayout(0, 0));
+            JPanel centerPanel = new JPanel();
+            centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
             centerPanel.setOpaque(false);
-            centerPanel.add(createTagRow(status, category), BorderLayout.NORTH);
-            centerPanel.add(createTextStack(text, location, date, author), BorderLayout.CENTER);
+            JPanel tagRow = createTagRow(status, category);
+            JPanel textStack = createTextStack(text, location, date, author);
+            tagRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+            textStack.setAlignmentX(Component.LEFT_ALIGNMENT);
+            centerPanel.add(tagRow);
+            centerPanel.add(Box.createVerticalStrut(6));
+            centerPanel.add(textStack);
+            centerPanel.add(Box.createVerticalStrut(10));
+
             JPanel bottomPanel = new JPanel();
             bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
             bottomPanel.setOpaque(false);
             bottomPanel.add(priorityAndStatusPanel());
             bottomPanel.add(Box.createVerticalStrut(6));
             bottomPanel.add(addNotesPanel());
-            centerPanel.add(bottomPanel, BorderLayout.SOUTH);
+            bottomPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            centerPanel.add(bottomPanel);;
 
             mainPanel.add(centerPanel, BorderLayout.CENTER);
             add(mainPanel, BorderLayout.CENTER);
@@ -288,16 +297,78 @@ public class BrgyOfficialDashboard extends JFrame {
             return panel;
         }
 
-        // TBE
         private JPanel addNotesPanel() {
-            JPanel notes = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-            notes.setOpaque(false);
-            JLabel addNote = new JLabel("Add internal note →");
-            addNote.setForeground(new Color(0, 128, 0));
-            addNote.setFont(new Font("Segoe UI", Font.BOLD, 12));
-            addNote.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            notes.add(addNote);
-            return notes;
+
+            JPanel container = new JPanel();
+            container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+            container.setOpaque(false);
+            JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+            headerPanel.setOpaque(false);
+            JLabel toggleLabel = new JLabel("Add internal note →");
+            toggleLabel.setForeground(new Color(0, 128, 0));
+            toggleLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            toggleLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            headerPanel.add(toggleLabel);
+            container.add(headerPanel);
+
+            JPanel notePanel = new JPanel();
+            notePanel.setLayout(new BoxLayout(notePanel, BoxLayout.Y_AXIS));
+            notePanel.setOpaque(false);
+            notePanel.setVisible(false);
+            JTextArea noteArea = new JTextArea(4, 30);
+            noteArea.setLineWrap(true);
+            noteArea.setWrapStyleWord(true);
+            noteArea.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            JScrollPane scrollPane = new JScrollPane(noteArea);
+            scrollPane.setPreferredSize(new Dimension(400, 80));
+            JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 5));
+            buttonRow.setOpaque(false);
+
+            JButton saveButton = new JButton("Save");
+            saveButton.setFocusPainted(false);
+            saveButton.setBackground(new Color(34, 153, 84));
+            saveButton.setForeground(Color.WHITE);
+            saveButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            buttonRow.add(saveButton);
+            notePanel.add(scrollPane);
+            notePanel.add(buttonRow);
+            container.add(Box.createVerticalStrut(5));
+            container.add(notePanel);
+
+            final String[] savedNote = { null };
+
+            saveButton.addActionListener(e -> {
+                String text = noteArea.getText().trim();
+                if (text.isEmpty()) {
+                    JOptionPane.showMessageDialog(FeedbackCard.this,
+                            "Note cannot be empty.", "Warning", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                savedNote[0] = text;
+                JOptionPane.showMessageDialog(FeedbackCard.this,
+                        "Internal note saved successfully.", "Saved", JOptionPane.INFORMATION_MESSAGE);
+            });
+
+            toggleLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+                boolean expanded = false;
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent e) {
+                    expanded = !expanded;
+                    notePanel.setVisible(expanded);
+                    if (expanded) {
+                        toggleLabel.setText("Hide note ↓");
+                        noteArea.setText(savedNote[0] != null ? savedNote[0] : "");
+                    } else {
+                        toggleLabel.setText("Add internal note →");
+                        if (savedNote[0] == null) {
+                            noteArea.setText("");
+                        }
+                    }
+                    FeedbackCard.this.revalidate();
+                    FeedbackCard.this.repaint();
+                }
+            });
+            return container;
         }
     }
 
