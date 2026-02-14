@@ -1,6 +1,10 @@
 package client.view.common;
 
+import client.view.UiPreview;
 import client.view.auth.Login;
+import client.view.common.button.Button;
+import client.view.strings.Colors;
+import client.view.strings.Fonts;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -30,10 +34,12 @@ public class LogoutPopUp extends JDialog {
         message.setForeground(TEXT_COLOR);
         message.setHorizontalAlignment(SwingConstants.CENTER);
 
-        RoundedButton yesBtn = new RoundedButton("Logout", 15, LOGOUT_COLOR, Color.WHITE);
-        RoundedButton noBtn = new RoundedButton("Cancel", 15, new Color(241, 245, 249), TEXT_COLOR);
+        Button yesBtn = new Button("Logout", 15, LOGOUT_COLOR, Color.WHITE, Colors.RED, Fonts.INTER_HEADING_4);
+        yesBtn.setPreferredSize(new Dimension(110, 35));
+        Button noBtn = new Button("Cancel", 15, new Color(241, 245, 249), TEXT_COLOR, Colors.LIGHT_GRAY, Fonts.INTER_HEADING_4);
+        noBtn.setPreferredSize(new Dimension(110, 35));
 
-        yesBtn.addActionListener(e -> {
+        Button.applyClick(yesBtn, () -> {
             // 1. Close Logout Dialog
             dispose();
 
@@ -45,7 +51,8 @@ public class LogoutPopUp extends JDialog {
             client.model.ClientConnection connection = new client.model.ClientConnection();
             new Login(connection).setVisible(true);
         });
-        noBtn.addActionListener(e -> dispose());
+
+        Button.applyClick(noBtn, this::dispose);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         buttonPanel.setOpaque(false);
@@ -57,8 +64,6 @@ public class LogoutPopUp extends JDialog {
 
         add(container);
     }
-
-
 
     static class RoundedPanel extends JPanel {
         private final int r;
@@ -93,43 +98,47 @@ public class LogoutPopUp extends JDialog {
         }
     }
 
-    static class RoundedButton extends JButton {
-        private final int radius;
-        private final Color bgColor;
-
-        RoundedButton(String label, int radius, Color bgColor, Color textColor) {
-            super(label);
-            this.radius = radius;
-            this.bgColor = bgColor;
-            setContentAreaFilled(false);
-            setFocusPainted(false);
-            setBorderPainted(false);
-            setOpaque(false);
-
-            setForeground(textColor);
-            setFont(new Font("Inter", Font.BOLD, 12));
-            setCursor(new Cursor(Cursor.HAND_CURSOR));
-            setPreferredSize(new Dimension(110, 35));
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            if (getModel().isPressed()) {
-                g2.setColor(bgColor.darker());
-            } else if (getModel().isRollover()) {
-                g2.setColor(bgColor.brighter());
-            } else {
-                g2.setColor(bgColor);
-            }
-
-
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
-            g2.dispose();
-
-            super.paintComponent(g);
-        }
+    public static void main(String[] args) {
+        UiPreview.show(LogoutPopUp::new);
     }
+
+//    static class RoundedButton extends JButton {
+//        private final int radius;
+//        private final Color bgColor;
+//
+//        RoundedButton(String label, int radius, Color bgColor, Color textColor) {
+//            super(label);
+//            this.radius = radius;
+//            this.bgColor = bgColor;
+//            setContentAreaFilled(false);
+//            setFocusPainted(false);
+//            setBorderPainted(false);
+//            setOpaque(false);
+//
+//            setForeground(textColor);
+//            setFont(new Font("Inter", Font.BOLD, 12));
+//            setCursor(new Cursor(Cursor.HAND_CURSOR));
+//            setPreferredSize(new Dimension(110, 35));
+//        }
+//
+//        @Override
+//        protected void paintComponent(Graphics g) {
+//            Graphics2D g2 = (Graphics2D) g.create();
+//            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+//
+//            if (getModel().isPressed()) {
+//                g2.setColor(bgColor.darker());
+//            } else if (getModel().isRollover()) {
+//                g2.setColor(bgColor.brighter());
+//            } else {
+//                g2.setColor(bgColor);
+//            }
+//
+//
+//            g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
+//            g2.dispose();
+//
+//            super.paintComponent(g);
+//        }
+//    }
 }

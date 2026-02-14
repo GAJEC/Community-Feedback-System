@@ -17,7 +17,7 @@ public class Colors {
     public static final Color YELLOW = new Color(255, 255, 0);
     public static final Color MAGENTA = new Color(255, 0, 255);
     public static final Color CYAN = new Color(0, 255, 255);
-    public static final Color LIGHT_GRAY = new Color(161, 161, 161);
+    public static final Color LIGHT_GRAY = new Color(218, 218, 218);
     public static final Color TRANSPARENT = new Color(0, 0, 0, 0);
 
     // Button Colors

@@ -42,5 +42,6 @@ public class Fonts {
     public static final Font INTER_HEADING_1 = Inter(Font.BOLD, 18);
     public static final Font INTER_HEADING_2 = Inter(Font.BOLD, 16);
     public static final Font INTER_HEADING_3 = Inter(Font.BOLD, 14);
+    public static final Font INTER_HEADING_4 = Inter(Font.BOLD, 12);
     public static final Font INTER_NORMAL_TEXT = Inter(Font.PLAIN, 12);
 }

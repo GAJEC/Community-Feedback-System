@@ -26,7 +26,6 @@ public class Button extends JButton {
         setBackground(background);
         setForeground(foreground);
         setCursor(new Cursor(Cursor.HAND_CURSOR));
-        setPreferredSize(new Dimension(110, 35));
     }
 
     // no hover effect

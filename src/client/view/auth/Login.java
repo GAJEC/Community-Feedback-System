@@ -165,7 +165,7 @@ public class Login extends JFrame {
             btnLogin.setMaximumSize(new Dimension(250, 45));
             btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            btnLogin.applyClick(btnLogin, () -> {
+            Button.applyClick(btnLogin, () -> {
                 Object[] result = controller.handleLogin(username.getText(), password.getText());
 
                 boolean success = Integer.parseInt((String) result[0]) == 200;
@@ -236,7 +236,7 @@ public class Login extends JFrame {
 
             Button backBtn = new Button("Back To Login", 30, Colors.SECONDARY, Colors.WHITE, Colors.TERTIARY);
             backBtn.setAlignmentX(CENTER_ALIGNMENT);
-            backBtn.applyClick(backBtn, () -> {
+            Button.applyClick(backBtn, () -> {
                 JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
                 if (topFrame instanceof Login loginFrame) {
                     loginFrame.showLoginPanel();
