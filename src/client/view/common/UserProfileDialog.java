@@ -1,88 +1,64 @@
 package client.view.common;
 
-
 import client.view.UiPreview;
 import client.view.common.button.CloseButton;
+import client.view.common.field.InfoRow;
+import client.view.common.panel.CustomPanel;
 import client.view.strings.Colors;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.net.URL;
-import java.awt.geom.RoundRectangle2D;
-
+import static client.view.strings.Colors.*;
+import static client.view.strings.Fonts.SansSerif;
+import static client.view.strings.Images.*;
 
 public class UserProfileDialog extends JDialog {
-
-    private ImageIcon getScaledIcon(String path, int width, int height) {
-        // This ensures it looks in the classpath resources
-        URL imgURL = getClass().getResource(path);
-        if (imgURL == null) {
-            System.err.println("Couldn't find file: " + path);
-            return null;
-        }
-
-        ImageIcon srcIcon = new ImageIcon(imgURL);
-        Image srcImg = srcIcon.getImage();
-        Image scaledImg = srcImg.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-        return new ImageIcon(scaledImg);
-    }
-
     public UserProfileDialog(JFrame parent) {
         super(parent, true);
         setUndecorated(true);
         setSize(420, 600);
-        int arc = 30;
-        setShape(new RoundRectangle2D.Double(
-                0, 0,
-                getWidth(),
-                getHeight(),
-                arc, arc
-        ));
         setLocationRelativeTo(parent);
+        setBackground(TRANSPARENT);
 
-        JPanel mainPanel = new JPanel();
+        int radius = 25;
+        CustomPanel mainPanel = new CustomPanel(radius);
         mainPanel.setLayout(new BorderLayout());
-        mainPanel.setBorder(new EmptyBorder(0, 0, 15, 0));
-        mainPanel.setBackground(Color.WHITE);
+        mainPanel.setBorder(new EmptyBorder(0, 0, 3, 3));
+        mainPanel.setBackground(TRANSPARENT);
+        mainPanel.setDropShadow(new Color(0,0,0,40), 5f);
+        mainPanel.setOffsetShadow(new Color(0,0,0,30), 4);
         mainPanel.add(createHeader(), BorderLayout.NORTH);
         mainPanel.add(createContent(), BorderLayout.CENTER);
 
-        add(mainPanel);
-    }
 
+        setContentPane(mainPanel);
+    }
 
     // HEADER
     private JPanel createHeader() {
-        JPanel header = new JPanel(new BorderLayout());
-        header.setPreferredSize(new Dimension(420, 150));
-
-        header.setBackground(new Color(0, 120, 120));
+        CustomPanel header = new CustomPanel(25, SECONDARY);
         header.setLayout(new BorderLayout());
+        header.setPreferredSize(new Dimension(420, 150));
         header.setBorder(new EmptyBorder(15, 20, 15, 20));
+        header.setRoundedCorners(true, true, false, false);
 
-        JLabel title = new JLabel("User Profile");
-        title.setForeground(Color.WHITE);
-        title.setFont(new Font("SansSerif", Font.BOLD, 20));
-
-
+        JLabel title = new JLabel("User Profile"); title.setForeground(WHITE);
+        title.setFont(SansSerif(1, 20));
 
         JPanel top = new JPanel(new BorderLayout());
         top.setOpaque(false);
         top.add(title, BorderLayout.WEST);
-        top.add(new CloseButton(this, Colors.WHITE), BorderLayout.EAST);
+        top.add(new CloseButton(this, WHITE), BorderLayout.EAST);
 
         header.add(top, BorderLayout.NORTH);
-        header.add(createProfileInfo(), BorderLayout.CENTER);
-
-        return header;
+        header.add(createProfileInfo(), BorderLayout.CENTER); return header;
     }
 
     private JPanel createProfileInfo() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 20));
         panel.setOpaque(false);
 
-        ImageIcon profileIcon = getScaledIcon("/assets/profile_icon.png", 60, 60);
+        ImageIcon profileIcon = scaled(PROFILE_URL, 60, 60);
         JLabel icon = new JLabel(profileIcon);
 
         JPanel info = new JPanel();
@@ -90,90 +66,48 @@ public class UserProfileDialog extends JDialog {
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
 
         JLabel name = new JLabel("Alan Glen Escobar");
-        name.setForeground(Color.WHITE);
-        name.setFont(new Font("SansSerif", Font.BOLD, 18));
+        name.setForeground(WHITE);
+        name.setFont(SansSerif(1, 18));
 
         JLabel id = new JLabel("ID: user_001");
-        id.setForeground(new Color(220, 220, 255));
-        id.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        id.setForeground(LIGHTEST_GRAY);
+        id.setFont(SansSerif(0, 14));
 
-        info.add(name);
-        info.add(id);
-
-        panel.add(icon);
-        panel.add(info);
-
-        return panel;
+        info.add(name); info.add(id); panel.add(icon);
+        panel.add(info); return panel;
     }
 
     // CONTENT
     private JPanel createContent() {
-        JPanel content = new JPanel();
-        content.setBackground(Color.WHITE);
+        CustomPanel content = new CustomPanel(25, WHITE);
         content.setBorder(new EmptyBorder(25, 25, 15, 25));
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-
-        content.add(createInfoRow("/assets/email_icon.png", "Email Address", "alan.escobarney@email.com"));
+        content.add(new InfoRow(EMAIL_URL, "Email Address", "alan.escobarney@email.com"));
         content.add(Box.createVerticalStrut(15));
-        content.add(createInfoRow("/assets/phone_icon.png", "Phone Number", "+63 912 345 6789"));
+        content.add(new InfoRow(PHONE_URL, "Phone Number", "+63 912 345 6789"));
         content.add(Box.createVerticalStrut(15));
-        content.add(createInfoRow("/assets/location_icon.png", "Barangay", "Luna Burgos"));
-
+        content.add(new InfoRow(LOCATION_URL, "Barangay", "Luna Burgos"));
 
         JSeparator line = new JSeparator(SwingConstants.HORIZONTAL);
         line.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        line.setForeground(new Color(230, 230, 230));
+        line.setForeground(Colors.LIGHT_GRAY);
         line.setAlignmentX(Component.LEFT_ALIGNMENT);
-        content.add(line);
 
+        content.add(line);
         content.add(Box.createVerticalStrut(10));
 
-        JLabel note = new JLabel(
-                "<html><b>Note:</b> This is a demonstration system. " +
-                        "In a production environment, you would be able to edit your profile information here.</html>"
-        );
-        note.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        note.setForeground(Color.DARK_GRAY);
+        JLabel note = new JLabel( "<html><b>Note:</b> This is a demonstration system. " + "In a production environment, you would be able to edit your profile information here.</html>" );
+        note.setFont(SansSerif(0, 13));
+        note.setForeground(Colors.BLACK);
         note.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         content.add(note);
-
         content.add(Box.createVerticalGlue());
 
         return content;
     }
 
-    private JPanel createInfoRow(String iconPath, String label, String value) {
-        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
-        row.setOpaque(false);
-
-        ImageIcon icons = getScaledIcon(iconPath, 28, 28);
-        JLabel icon = new JLabel(icons);
-
-        JPanel text = new JPanel();
-        text.setOpaque(false);
-        text.setLayout(new BoxLayout(text, BoxLayout.Y_AXIS));
-
-        JLabel lbl = new JLabel(label);
-        lbl.setFont(new Font("SansSerif", Font.BOLD, 14));
-
-        JLabel val = new JLabel(value);
-        val.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        val.setForeground(Color.GRAY);
-
-        text.add(lbl);
-        text.add(val);
-
-        row.add(icon);
-        row.add(text);
-
-        row.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return row;
-    }
-
-
     public static void main(String[] args) {
         UiPreview.show(UserProfileDialog::new);
     }
 }
-

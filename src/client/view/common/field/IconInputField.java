@@ -4,72 +4,42 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
+import static client.view.strings.Colors.LIGHTEST_GRAY;
+import static client.view.strings.Colors.LIGHT_GRAY;
+import static client.view.strings.Fonts.SansSerif;
+
 public class IconInputField extends JPanel {
-    private JTextField field;
-    private final String placeholder;
-    private final boolean isPassword;
 
-    public IconInputField(Icon icon, String placeholder, boolean password) {
-        this.placeholder = placeholder;
-        this.isPassword = password;
+    private final JTextField field;
 
+    public IconInputField(Icon icon, String placeholder, Color background, Color foreground, Font font, boolean password) {
         setLayout(new BorderLayout(12, 0));
-        setBackground(new Color(232, 247, 243));
+        setBackground(background);
         setBorder(new EmptyBorder(10, 15, 10, 15));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
 
         JLabel iconLabel = new JLabel(icon);
-        iconLabel.setForeground(new Color(160, 180, 175));
+        iconLabel.setForeground(foreground);
 
         if (password) {
-            field = new JPasswordField();
-            ((JPasswordField) field).setEchoChar((char) 0);
+            field = new HintPasswordField(placeholder);
         } else {
-            field = new JTextField();
+            field = new HintTextField(placeholder);
         }
 
-
-        field.setText(placeholder);
-        field.setForeground(new Color(170, 170, 170));
         field.setBorder(null);
         field.setBackground(getBackground());
-        field.setFont(new Font("SansSerif", Font.PLAIN, 14));
-
-        field.addFocusListener(new java.awt.event.FocusAdapter() {
-            @Override
-            public void focusGained(java.awt.event.FocusEvent e) {
-                if (field.getText().equals(placeholder)) {
-                    field.setText("");
-                    field.setForeground(Color.BLACK);
-                    if (isPassword) {
-                        ((JPasswordField) field).setEchoChar('•');
-                    }
-                }
-            }
-
-            @Override
-            public void focusLost(java.awt.event.FocusEvent e) {
-                if (field.getText().isEmpty()) {
-                    field.setText(placeholder);
-                    field.setForeground(new Color(170, 170, 170));
-                    if (isPassword) {
-                        ((JPasswordField) field).setEchoChar((char) 0);
-                    }
-                }
-            }
-        });
-
-
+        field.setFont(font);
 
         add(iconLabel, BorderLayout.WEST);
         add(field, BorderLayout.CENTER);
     }
 
+    public IconInputField(Icon icon, String placeholder, boolean password) {
+        this(icon, placeholder, LIGHTEST_GRAY, LIGHT_GRAY, SansSerif(0, 14), password);
+    }
+
     public String getText() {
-        String text = field.getText();
-        if (text.equals(placeholder)) {
-            return "";
-        }
-        return text;
+        return field.getText();
     }
 }

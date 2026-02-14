@@ -1,6 +1,6 @@
 package client.view.brgyofficials.panel;
 
-import client.view.common.button.Button;
+import client.view.common.button.Buttons;
 import common.User;
 
 import javax.swing.*;
@@ -74,10 +74,10 @@ public class BrgyOfficialHeaderPanel extends JPanel {
         JPanel rightPnl = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 45));
         rightPnl.setOpaque(false);
 
-        profileButton = client.view.common.button.Button.createRounded("Barangay Official", 30, new Color(255, 255, 255, 40), new Color(255, 255, 255, 70));
+        profileButton = Buttons.createRounded("Barangay Official", 30, new Color(255, 255, 255, 40), new Color(255, 255, 255, 70));
         profileButton.setPreferredSize(new Dimension(180, 40));
 
-        logoutButton = Button.createRounded("Logout", 20, LOGOUT_RED, LOGOUT_RED.brighter());
+        logoutButton = Buttons.createRounded("Logout", 20, LOGOUT_RED, LOGOUT_RED.brighter());
         logoutButton.setPreferredSize(new Dimension(100, 40));
 
         try {

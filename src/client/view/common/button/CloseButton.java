@@ -8,7 +8,7 @@ import java.awt.*;
 public class CloseButton extends JButton {
 
     private static final Color NORMAL = Colors.PRIMARY; // for dark headers
-    private static final Color HOVER = Colors.RED;
+    private static final Color HOVER = Colors.LIGHT_RED;
 
 
     // Custom foreground and hover color

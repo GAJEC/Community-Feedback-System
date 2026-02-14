@@ -1,13 +1,16 @@
 package client.view.residents.panels;
 
+import client.view.UiPreview;
 import client.view.common.button.CloseButton;
-import client.view.common.panel.RoundedPanel;
+import client.view.common.panel.CustomPanel;
 import client.view.strings.Colors;
-import client.view.strings.Fonts;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+
+import static client.view.strings.Fonts.SegoeUi;
+import static client.view.strings.Fonts.SegoeUiSemibold;
 
 public class ClientFeedbackDetailDialog extends JDialog {
     private static final Color background = Color.WHITE;
@@ -22,11 +25,12 @@ public class ClientFeedbackDetailDialog extends JDialog {
         setLocationRelativeTo(null);
         setBackground(new Color(0, 0, 0, 0));
 
-        RoundedPanel main = new RoundedPanel(30, background);
+        CustomPanel main = new CustomPanel(30, background);
         main.setLayout(new BorderLayout());
         main.setStroke( new Color(192, 192, 192), 1.5f);
 
-        RoundedPanel headerRow = new RoundedPanel(15, darkTeal);
+        CustomPanel headerRow = new CustomPanel(30, darkTeal);
+        headerRow.setRoundedCorners(true, true, false, false);
         headerRow.setLayout(new BorderLayout());
         headerRow.setBorder(new EmptyBorder(25, 30, 25, 30));
         headerRow.setPreferredSize(new Dimension(850, 160));
@@ -52,12 +56,12 @@ public class ClientFeedbackDetailDialog extends JDialog {
 
 
         JLabel title = new JLabel("Feedback Details");
-        title.setFont(Fonts.UI_TITLE);
+        title.setFont(SegoeUi(1, 30));
         title.setForeground(Color.WHITE);
 
 
         JLabel idLabel = new JLabel("ID: ");
-        idLabel.setFont(Fonts.UI_SUB_TEXT);
+        idLabel.setFont(SegoeUi(0, 10));
         idLabel.setForeground(new Color(255, 255, 255, 180));
 
 
@@ -96,14 +100,14 @@ public class ClientFeedbackDetailDialog extends JDialog {
         // Feedback Content
         JLabel contentLabel = new JLabel("Feedback Content");
         contentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        contentLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 18));
+        contentLabel.setFont(SegoeUiSemibold(1, 18));
         bodyContainer.add(contentLabel);
         bodyContainer.add(Box.createVerticalStrut(8));
 
         JTextArea contentArea = new JTextArea("The street lights along Main Road have not been working for the past week.");
         styleTextArea(contentArea);
 
-        RoundedPanel contentCard = new RoundedPanel(15, cardBackground);
+        CustomPanel contentCard = new CustomPanel(15, cardBackground);
         contentCard.setStroke( new Color(192, 192, 192), 1.0f);
         contentCard.setLayout(new BorderLayout());
         contentCard.setBorder(new EmptyBorder(15, 15, 15, 15));
@@ -116,12 +120,12 @@ public class ClientFeedbackDetailDialog extends JDialog {
 
         // Official Response
         JLabel responseLabel = new JLabel("Official Response");
-        responseLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 18));
+        responseLabel.setFont(SegoeUiSemibold(1, 18));
         responseLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         bodyContainer.add(responseLabel);
         bodyContainer.add(Box.createVerticalStrut(8));
 
-        RoundedPanel responseCard = new RoundedPanel(15, new Color(241, 248, 255));
+        CustomPanel responseCard = new CustomPanel(15, new Color(241, 248, 255));
         responseCard.setStroke(new Color(191, 219, 254), 1.2f);
         responseCard.setLayout(new BoxLayout(responseCard, BoxLayout.Y_AXIS));
         responseCard.setBorder(new EmptyBorder(18, 18, 18, 18));
@@ -133,12 +137,12 @@ public class ClientFeedbackDetailDialog extends JDialog {
         JPanel nameBadge = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         nameBadge.setOpaque(false);
         JLabel name = new JLabel("Maria Santos");
-        name.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        name.setFont(SegoeUi(1, 15));
         nameBadge.add(name);
         nameBadge.add(new roundedStatusCategory("Barangay Official", new Color(153, 204, 255), new Color(0, 102, 204)));
 
         JLabel date = new JLabel("Feb 4, 2026 at 05:56 PM");
-        date.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        date.setFont(SegoeUi(0, 12));
         date.setForeground(new Color(148, 163, 184));
         respTop.add(nameBadge, BorderLayout.WEST);
         respTop.add(date, BorderLayout.EAST);
@@ -161,12 +165,12 @@ public class ClientFeedbackDetailDialog extends JDialog {
         ta.setWrapStyleWord(true);
         ta.setEditable(false);
         ta.setOpaque(false);
-        ta.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        ta.setFont(SegoeUi(0, 14));
         ta.setForeground(new Color(71, 85, 105));
     }
 
     private JPanel detailCard(String title, String main, String sub) {
-        RoundedPanel card = new RoundedPanel(15, cardBackground);
+        CustomPanel card = new CustomPanel(15, cardBackground);
         card.setLayout(new BorderLayout());
         card.setStroke( new Color(192, 192, 192), 1.2f);
         card.setBorder(new EmptyBorder(12, 15, 12, 15));
@@ -178,15 +182,15 @@ public class ClientFeedbackDetailDialog extends JDialog {
         txt.setOpaque(false);
 
         JLabel t = new JLabel(title.toUpperCase());
-        t.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        t.setFont(SegoeUi(1, 10));
         t.setForeground(new Color(0, 128, 255));
 
         JLabel m = new JLabel(main);
-        m.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        m.setFont(SegoeUi(1, 15));
 
 
         JLabel s = new JLabel(sub);
-        s.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        s.setFont(SegoeUi(0, 12));
         s.setForeground(new Color(148, 163, 184));
 
 
@@ -199,7 +203,7 @@ public class ClientFeedbackDetailDialog extends JDialog {
         private final Color bg;
         roundedStatusCategory(String t, Color bg, Color fg) {
             super(t); this.bg = bg; setForeground(fg);
-            setFont(new Font("Segoe UI", Font.BOLD, 11));
+            setFont(SegoeUi(1, 11));
             setBorder(new EmptyBorder(6, 12, 6, 12));
         }
         protected void paintComponent(Graphics g) {
@@ -210,6 +214,10 @@ public class ClientFeedbackDetailDialog extends JDialog {
             g2.dispose();
             super.paintComponent(g);
         }
+    }
+
+    public static void main(String[] args) {
+        UiPreview.show(ClientFeedbackDetailDialog::new);
     }
 }
 

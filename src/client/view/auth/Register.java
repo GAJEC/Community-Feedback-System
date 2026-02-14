@@ -1,9 +1,9 @@
 package client.view.auth;
 
 import client.view.common.field.RoundedTextField;
-import client.view.common.panel.DropShadowBorder;
+import client.view.common.panel.CustomPanel;
 import client.view.strings.Colors;
-import client.view.common.button.Button;
+import client.view.common.button.Buttons;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -46,9 +46,13 @@ public class Register extends JFrame {
         mainContainer.add(new RegistrationHeaderPanel(), gbcMain);
 
         // --- 3. BUILD FORM CARD ---
-        JPanel formCard = new JPanel(new GridBagLayout());
-        formCard.setBackground(Color.WHITE);
-        formCard.setBorder(new DropShadowBorder(10));
+        CustomPanel formCard = new CustomPanel();
+        formCard.setLayout(new GridBagLayout());
+        formCard.setBackgroundColor(Color.WHITE);
+        formCard.setRadius(20);
+        formCard.setOffsetShadow(new Color(0, 0, 0, 30), 3);
+        formCard.setDropShadow(new Color(0, 0, 0, 30), 1f);
+        formCard.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -136,7 +140,7 @@ public class Register extends JFrame {
 
         // Submit Button (With Hover)
         gbc.gridy++; gbc.insets = new Insets(10, sidePadding, 10, sidePadding);
-        Button submitBtn = new Button("Create Account",15);
+        Buttons submitBtn = new Buttons("Create Account",15);
         submitBtn.setPreferredSize(new Dimension(FIELD_SIZE.width, 50));
         submitBtn.setFont(new Font("Segoe UI", Font.BOLD, 15));
 

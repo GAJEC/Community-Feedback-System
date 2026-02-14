@@ -1,13 +1,15 @@
 package client.view.residents.panels;
 
-import client.view.common.button.Button;
-import client.view.common.panel.RoundedPanel;
+import client.view.UiPreview;
+import client.view.common.button.Buttons;
+import client.view.common.panel.CustomPanel;
 import client.view.strings.Colors;
-import client.view.strings.Fonts;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+
+import static client.view.strings.Fonts.Inter;
 
 public class FeedbackSubmitPopUp extends JDialog {
     public FeedbackSubmitPopUp(JFrame parent) {
@@ -17,16 +19,22 @@ public class FeedbackSubmitPopUp extends JDialog {
         setSize(400, 200);
         setLocationRelativeTo(parent);
 
-        RoundedPanel main = new RoundedPanel(30, Color.WHITE);
+        CustomPanel main = new CustomPanel(30);
         main.setLayout(new BorderLayout(0, 15));
         main.setBorder(new EmptyBorder(30, 30, 20, 30));
 
+        main.setOffsetShadow(new Color(0, 0, 0, 40), 3);
+        main.setDropShadow(new Color(0, 0, 0, 25), 1f);
+
         JLabel message = new JLabel("Your feedback has been submitted successfully!");
-        message.setFont(Fonts.INTER_HEADING_3);
+        message.setFont(Inter(1, 14));
         message.setForeground(new Color(30, 41, 59));
         message.setHorizontalAlignment(SwingConstants.CENTER);
 
-        Button okBtn = new Button("OK", 15, Colors.SUB_PRIMARY, Color.WHITE, Colors.TERTIARY);
+        Buttons okBtn = new Buttons("OK", 15);
+        okBtn.setBackgroundColor(Colors.SUB_PRIMARY);
+        okBtn.setForeground(Color.WHITE);
+        okBtn.setHoverColor(Colors.TERTIARY);
         okBtn.setPreferredSize(new Dimension(110, 35));
         okBtn.addActionListener(e -> dispose());
 
@@ -38,5 +46,9 @@ public class FeedbackSubmitPopUp extends JDialog {
         main.add(buttonPanel, BorderLayout.SOUTH);
 
         add(main);
+    }
+
+    public static void main(String[] args) {
+        UiPreview.show(FeedbackSubmitPopUp::new);
     }
 }

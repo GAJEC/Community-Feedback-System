@@ -4,11 +4,10 @@ import client.controller.LoginController;
 import client.model.ClientConnection;
 import client.utils.CredentialManager;
 import client.view.common.button.CloseButton;
-import client.view.common.panel.DraggablePanel;
+import client.view.common.panel.CustomPanel;
 import client.view.common.field.IconInputField;
-import client.view.common.button.Button;
+import client.view.common.button.Buttons;
 import client.view.strings.Colors;
-import client.view.strings.Fonts;
 import client.view.strings.Images;
 import common.User;
 
@@ -16,6 +15,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
+import static client.view.strings.Fonts.SansSerif;
+import static client.view.strings.Images.*;
 import static common.Config.CONFIG_DEBUG;
 
 public class Login extends JFrame {
@@ -24,7 +25,7 @@ public class Login extends JFrame {
 
     public Login(ClientConnection connection) {
         setUndecorated(true);
-        setSize(1200, 800);
+        setSize(1200, 750);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
@@ -32,9 +33,10 @@ public class Login extends JFrame {
 
         LoginController controller = new LoginController(connection);
         setTitle("Login UI");
-        DraggablePanel root = new DraggablePanel();
+        CustomPanel root = new CustomPanel();
+        root.setDraggable(true);
         root.setLayout(new GridBagLayout());
-        root.setBackground(Color.WHITE);
+        root.setBackgroundColor(Color.WHITE);
 
         GridBagConstraints gbc = new GridBagConstraints();
 
@@ -95,7 +97,7 @@ public class Login extends JFrame {
 
 
             JLabel title = new JLabel("Welcome to Community Feedback!");
-            title.setFont(Fonts.SANS_TITLE);
+            title.setFont(SansSerif(1, 30));
             title.setForeground(Colors.WHITE);
 
             c.gridy = 1;
@@ -104,7 +106,7 @@ public class Login extends JFrame {
 
 
             JLabel desc = new JLabel("Keep connected with us");
-            desc.setFont(Fonts.SANS_SUB_TITLE);
+            desc.setFont(SansSerif(0, 20));
             desc.setForeground(Colors.WHITE);
 
             c.gridy = 2;
@@ -131,15 +133,15 @@ public class Login extends JFrame {
             add(Box.createVerticalStrut(200));
 
             JLabel title = new JLabel("Sign In");
-            title.setFont(Fonts.SANS_TITLE);
+            title.setFont(SansSerif(1, 30));
             title.setForeground(Colors.PRIMARY);
             title.setAlignmentX(Component.CENTER_ALIGNMENT);
             add(title);
             add(Box.createVerticalStrut(30));
 
             // Inputs
-            IconInputField username = new IconInputField(Images.mediumPerson(), "Username", false);
-            IconInputField password = new IconInputField(Images.mediumLock(), "Password", true);
+            IconInputField username = new IconInputField(Images.scaled(USERNAME_URL, 20, 20), "Username", false);
+            IconInputField password = new IconInputField(Images.scaled(LOCK_URL, 20, 20), "Password", true);
 
             add(username);
             add(Box.createVerticalStrut(15));
@@ -152,7 +154,7 @@ public class Login extends JFrame {
 
             JCheckBox rememberMe = new JCheckBox("Remember me");
             rememberMe.setOpaque(false);
-            rememberMe.setFont(Fonts.SansSerif(0, 14));
+            rememberMe.setFont(SansSerif(0, 14));
             rememberMe.setForeground(Colors.SUB_TEXT);
             rememberMe.setFocusPainted(false);
             rememberMe.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -161,11 +163,11 @@ public class Login extends JFrame {
 
             add(Box.createVerticalStrut(15));
 
-            Button btnLogin = new Button("SIGN IN", 30, Colors.PRIMARY, Colors.WHITE, Colors.SECONDARY);
+            Buttons btnLogin = new Buttons("SIGN IN", 30, Colors.PRIMARY, Colors.WHITE, Colors.SECONDARY, SansSerif(0, 14));
             btnLogin.setMaximumSize(new Dimension(250, 45));
             btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            Button.applyClick(btnLogin, () -> {
+            Buttons.applyClick(btnLogin, () -> {
                 Object[] result = controller.handleLogin(username.getText(), password.getText());
 
                 boolean success = Integer.parseInt((String) result[0]) == 200;
@@ -188,12 +190,12 @@ public class Login extends JFrame {
             add(Box.createVerticalStrut(5));
 
             JLabel goRegister = new JLabel("How to Register");
-            goRegister.setFont(Fonts.SANS_NORMAL_TEXT);
+            goRegister.setFont(SansSerif(0, 12));
             goRegister.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            Button.applyLinkHover(goRegister, Colors.TERTIARY, Colors.PRIMARY);
+            Buttons.applyLinkHover(goRegister, Colors.TERTIARY, Colors.PRIMARY);
 
-            Button.applyClick(goRegister, () -> {
+            Buttons.applyClick(goRegister, () -> {
                 JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(LoginForm.this);
                 if (topFrame instanceof Login loginFrame) {
                     loginFrame.showRegisterPanel();
@@ -213,7 +215,7 @@ public class Login extends JFrame {
             setBorder(new EmptyBorder(50, 50, 50, 50));
 
             JLabel title = new JLabel("How to Register");
-            title.setFont(Fonts.SANS_TITLE);
+            title.setFont(SansSerif(1, 30));
             title.setAlignmentX(CENTER_ALIGNMENT);
             add(title);
             add(Box.createVerticalStrut(20));
@@ -229,14 +231,14 @@ public class Login extends JFrame {
                             "</html>"
             );
 
-            info.setFont(Fonts.SansSerif(0, 18));
+            info.setFont(SansSerif(0, 18));
             info.setAlignmentX(CENTER_ALIGNMENT);
             add(info);
             add(Box.createVerticalStrut(30));
 
-            Button backBtn = new Button("Back To Login", 30, Colors.SECONDARY, Colors.WHITE, Colors.TERTIARY);
+            Buttons backBtn = new Buttons("Back To Login", 30, Colors.SECONDARY, Colors.WHITE, Colors.TERTIARY, SansSerif(0, 14));
             backBtn.setAlignmentX(CENTER_ALIGNMENT);
-            Button.applyClick(backBtn, () -> {
+            Buttons.applyClick(backBtn, () -> {
                 JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
                 if (topFrame instanceof Login loginFrame) {
                     loginFrame.showLoginPanel();

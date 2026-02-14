@@ -8,7 +8,7 @@ import java.sql.SQLOutput;
 import java.util.function.Function;
 
 public class UiPreview {
-    /* Ganto gamitin
+    /* For Any
 
         public static void main(String[] args) {
             UiPreview.show(new Login());
@@ -33,7 +33,7 @@ public class UiPreview {
     }
 
 
-    /*
+    /* For JDialogue
 
         public static void main(String[] args) {
             UiPreview.show(FeedbackSubmitPopUp::new);
@@ -59,7 +59,7 @@ public class UiPreview {
     }
 
 
-    /* Ganto gamit
+    /* For JPanel
 
         public static void main(String[] args) {
             // dummy User

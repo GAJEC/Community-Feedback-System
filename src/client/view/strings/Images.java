@@ -21,18 +21,34 @@ public final class Images {
         return (url == null) ? new ImageIcon() : new ImageIcon(url);
     }
 
-    // Instances
     // Logo
     public static final URL LOGO_URL = resource("/assets/logo_icon.png", "/res/assets/logo_icon.png");
     public static final ImageIcon LOGO = safeIcon(LOGO_URL);
+
     public static final URL ICON_URL = resource("/assets/app_icon.png", "/res/assets/app_icon.png");
     public static final ImageIcon ICON = safeIcon(ICON_URL);
 
     // Others
-    public static final URL PERSON_URL = resource("/assets/username_icon.png", "/res/assets/username_icon.png");
-    public static final ImageIcon PERSON = safeIcon(PERSON_URL);
+    public static final URL USERNAME_URL = resource("/assets/username_icon.png", "/res/assets/username_icon.png");
+    public static final ImageIcon USERNAME = safeIcon(USERNAME_URL);
+
     public static final URL LOCK_URL = resource("/assets/password_icon.png", "/res/assets/password_icon.png");
     public static final ImageIcon LOCK = safeIcon(LOCK_URL);
+
+    public static final URL PROFILE_URL = resource("/assets/profile_icon.png", "/res/assets/profile_icon.png");
+    public static final ImageIcon PROFILE = safeIcon(PROFILE_URL);
+
+    public static final URL EMAIL_URL = resource("/assets/email_icon.png", "/res/assets/email_icon.png");
+    public static final ImageIcon EMAIL = safeIcon(EMAIL_URL);
+
+    public static final URL PHONE_URL = resource("/assets/phone_icon.png", "/res/assets/phone_icon.png");
+    public static final ImageIcon PHONE = safeIcon(PHONE_URL);
+
+    public static final URL LOCATION_URL = resource("/assets/location_icon.png", "/res/assets/location_icon.png");
+    public static final ImageIcon LOCATION = safeIcon(LOCATION_URL);
+
+    public static final URL LOGOUT_URL = resource("/assets/logout_icon.png", "/res/assets/logout_icon.png");
+    public static final ImageIcon LOGOUT = safeIcon(LOGOUT_URL);
 
     // Methods
     /**
@@ -47,34 +63,6 @@ public final class Images {
      */
     public static ImageIcon scaledIcon(int width, int height) {
         return scaled(ICON_URL, width, height);
-    }
-
-    // Others
-    // Large - Info
-    public static ImageIcon bigPerson(int width, int height) {
-        return scaled(LOGO_URL, width, height);
-    }
-
-    // Medium - Text Fields
-    public static ImageIcon mediumPerson() { // Used for Username login
-        return scaled(PERSON_URL, 20, 20);
-    }
-    public static ImageIcon mediumLock() { // Used for password login
-        return scaled(LOCK_URL, 20, 20);
-    }
-
-    // Small - Normal texts
-    public static ImageIcon smallSearch(int width, int height) {
-        return scaled(LOGO_URL, width, height);
-    }
-    public static ImageIcon smallCategory(int width, int height) {
-        return scaled(LOGO_URL, width, height);
-    }
-    public static ImageIcon smallStatus(int width, int height) {
-        return scaled(LOGO_URL, width, height);
-    }
-    public static ImageIcon smallSort(int width, int height) {
-        return scaled(LOGO_URL, width, height);
     }
 
     // Common

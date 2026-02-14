@@ -2,13 +2,12 @@ package client.view.residents;
 
 import client.controller.FeedbackController;
 import client.model.ClientConnection;
-import client.view.common.panel.DropShadowBorder;
-import client.view.common.panel.RoundedPanel;
+import client.view.common.panel.CustomPanel;
 import client.view.residents.panels.FeedbackSubmitPopUp;
 import client.view.residents.panels.ClientHeaderPanel;
 import client.view.common.field.HintTextField;
 import client.view.residents.panels.ClientFeedbackDetailDialog;
-import client.view.strings.Fonts;
+import client.view.strings.Images;
 import common.BroadcastMessage;
 import common.Feedbacks;
 import common.User;
@@ -27,7 +26,9 @@ import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
-import java.net.URL;
+
+import static client.view.strings.Colors.*;
+import static client.view.strings.Fonts.SegoeUi;
 
 public class ResidentDashboard extends JFrame {
 
@@ -58,22 +59,11 @@ public class ResidentDashboard extends JFrame {
         userCache.put(user.getAttr_id(), user);
         this.isViewMode = viewMode;
         this.user = user;
-        
+
         connection.setBroadcastListener(this::handleBroadcast);
         setTitle("Community Feedback System");
 
-        try {
-            URL iconURL = getClass().getResource("/res/assets/app_icon.png");
-            if (iconURL == null) {
-                iconURL = getClass().getResource("/assets/app_icon.png");
-            }
-
-            if (iconURL != null) {
-                this.setIconImage(new ImageIcon(iconURL).getImage());
-            }
-        } catch (Exception e) {
-            System.err.println("Could not load app icon: " + e.getMessage());
-        }
+        this.setIconImage(Images.ICON.getImage());
 
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
         setSize((int) (d.width * 0.8), (int) (d.height * 0.85));
@@ -101,13 +91,13 @@ public class ResidentDashboard extends JFrame {
         mainPanel.add(contentContainer, BorderLayout.CENTER);
 
         setContentPane(mainPanel);
-        
+
         if (viewMode) {
             loadViewContent();
         } else {
             loadSubmitContent();
         }
-        
+
         setVisible(true);
     }
 
@@ -216,7 +206,7 @@ public class ResidentDashboard extends JFrame {
         container.setBorder(BorderFactory.createEmptyBorder(15, 40, 15, 40));
 
         JLabel title = new JLabel("Community Feedbacks");
-        title.setFont(Fonts.UI_TITLE_2);
+        title.setFont(SegoeUi(1, 26));
         container.add(title, BorderLayout.NORTH);
 
         JPanel centerContent = new JPanel(new BorderLayout(0, 10));
@@ -252,12 +242,13 @@ public class ResidentDashboard extends JFrame {
         sidebar.setOpaque(false);
         sidebar.setPreferredSize(new Dimension(280, 600));
 
-        RoundedPanel widget = new RoundedPanel(20, new Color(255, 255, 255, 200));
+        CustomPanel widget = new CustomPanel(20, WHITE);
+        widget.setOffsetShadow(LIGHTEST_GRAY,3);
         widget.setLayout(new BoxLayout(widget, BoxLayout.Y_AXIS));
         widget.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         JLabel label = new JLabel("Latest Announcements");
-        label.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        label.setFont(SegoeUi(1, 16));
         label.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         widget.add(label);
 
@@ -271,7 +262,7 @@ public class ResidentDashboard extends JFrame {
 
     private JPanel createFilterPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(WHITE);
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
                 BorderFactory.createEmptyBorder(15, 20, 15, 20)));
@@ -283,8 +274,9 @@ public class ResidentDashboard extends JFrame {
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.6;
         JPanel searchContainer = new JPanel(new BorderLayout(0, 5));
         searchContainer.setOpaque(false);
+
         JLabel searchLabel = new JLabel("🔍 Search");
-        searchLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        searchLabel.setFont(SegoeUi(1, 12));
         JTextField searchField = new HintTextField("Search feedbacks...");
         searchField.setPreferredSize(new Dimension(0, 35));
         searchContainer.add(searchLabel, BorderLayout.NORTH);
@@ -330,11 +322,16 @@ public class ResidentDashboard extends JFrame {
         wrapper.setBackground(BG_COLOR);
         wrapper.setBorder(new EmptyBorder(15, 40, 15, 40));
 
-        JPanel card = new JPanel();
+        CustomPanel card = new CustomPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(Color.WHITE);
         card.setPreferredSize(new Dimension(750, 780));
-        card.setBorder(new DropShadowBorder(35));
+        card.setBackgroundColor(Color.WHITE);
+
+        card.setOffsetShadow(new Color(0,0,0,30), 3); // light offset shadow
+        card.setDropShadow(new Color(0,0,0,30), 1f); // subtle outline
+        card.setRadius(20);
+
+        card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         JLabel title = new JLabel("Submit Community Feedback");
         title.setFont(new Font("Segoe UI", Font.BOLD, 26));
@@ -737,7 +734,7 @@ public class ResidentDashboard extends JFrame {
 
         FeedbackCard(Feedbacks feedback, String status, String category, String text, String location, String date, String author) {
             this.feedback = feedback;
-            
+
             int userId = user.getAttr_id();
             if (feedback.getAttr_upvote() != null) {
                 String uid = String.valueOf(userId);
@@ -757,7 +754,7 @@ public class ResidentDashboard extends JFrame {
                     }
                 }
             }
-            
+
             setLayout(new GridBagLayout());
             setBackground(Color.WHITE);
             setBorder(BorderFactory.createCompoundBorder(
@@ -768,15 +765,15 @@ public class ResidentDashboard extends JFrame {
 
             JPanel voteStack = new JPanel(new GridLayout(3, 1, 0, -5));
             voteStack.setOpaque(false);
-            
+
             upvoteBtn = createArrowButton("▲", UPVOTE_COLOR);
             updateButtonColor(upvoteBtn, hasUpvoted, UPVOTE_COLOR);
             upvoteBtn.addActionListener(e -> handleUpvote());
-            
+
             int votes = calculateVotes();
             voteCountLabel = new JLabel(String.valueOf(votes), SwingConstants.CENTER);
             voteCountLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            
+
             downvoteBtn = createArrowButton("▼", DOWNVOTE_COLOR);
             updateButtonColor(downvoteBtn, hasDownvoted, DOWNVOTE_COLOR);
             downvoteBtn.addActionListener(e -> handleDownvote());
@@ -813,7 +810,7 @@ public class ResidentDashboard extends JFrame {
                     }
                 }
             });
-            
+
             voteStack.add(upvoteBtn);
             voteStack.add(voteCountLabel);
             voteStack.add(downvoteBtn);
@@ -909,7 +906,7 @@ public class ResidentDashboard extends JFrame {
             } else {
                 voteType = VoteRequest.VoteType.UPVOTE;
             }
-            
+
             voteInFlight = true;
             setVoteButtonsEnabled(false);
 
@@ -954,7 +951,7 @@ public class ResidentDashboard extends JFrame {
             } else {
                 voteType = VoteRequest.VoteType.DOWNVOTE;
             }
-            
+
             voteInFlight = true;
             setVoteButtonsEnabled(false);
 
@@ -993,12 +990,12 @@ public class ResidentDashboard extends JFrame {
         public void updateVotes(Feedbacks updatedFeedback) {
             feedback.setAttr_upvote(updatedFeedback.getAttr_upvote());
             feedback.setAttr_downvote(updatedFeedback.getAttr_downvote());
-            
+
             int userId = user.getAttr_id();
-            
+
             boolean newUpvoted = false;
             boolean newDownvoted = false;
-            
+
             if (updatedFeedback.getAttr_upvote() != null) {
                 String uid = String.valueOf(userId);
                 for (String id : updatedFeedback.getAttr_upvote()) {
@@ -1017,19 +1014,19 @@ public class ResidentDashboard extends JFrame {
                     }
                 }
             }
-            
+
             hasUpvoted = newUpvoted;
             hasDownvoted = newDownvoted;
 
             voteInFlight = false;
             setVoteButtonsEnabled(true);
-            
+
             int totalVotes = calculateVotes();
-            
+
             voteCountLabel.setText(String.valueOf(totalVotes));
             updateButtonColor(upvoteBtn, hasUpvoted, UPVOTE_COLOR);
             updateButtonColor(downvoteBtn, hasDownvoted, DOWNVOTE_COLOR);
-            
+
             revalidate();
             repaint();
         }

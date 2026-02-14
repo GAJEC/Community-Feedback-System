@@ -1,6 +1,6 @@
 package client.view.brgyofficials;
 
-import client.view.common.button.Button;
+import client.view.common.button.Buttons;
 import client.view.brgyofficials.panel.BrgyOfficialHeaderPanel;
 import client.view.common.field.HintTextField;
 import common.User;
@@ -258,15 +258,15 @@ public class BrgyOfficialDashboard extends JFrame {
             Dimension statusBtnSize = new Dimension(65, 22);
             JPanel priorityPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
             priorityPanel.setOpaque(false);
-            Button urgentBtn = Button.createRounded("Urgent", 6,
+            Buttons urgentBtn = Buttons.createRounded("Urgent", 6,
                     new Color(255, 180, 180), new Color(230, 100, 90));
-            Button highBtn = Button.createRounded("High", 6,
+            Buttons highBtn = Buttons.createRounded("High", 6,
                     new Color(255, 220, 180), new Color(230, 160, 100));
-            Button mediumBtn = Button.createRounded("Medium", 6,
+            Buttons mediumBtn = Buttons.createRounded("Medium", 6,
                     new Color(255, 240, 180), new Color(210, 180, 110));
-            Button lowBtn = Button.createRounded("Low", 6,
+            Buttons lowBtn = Buttons.createRounded("Low", 6,
                     new Color(220, 240, 200), new Color(170, 200, 140));
-            for (Button btn : new Button[]{urgentBtn, highBtn, mediumBtn, lowBtn}) {
+            for (Buttons btn : new Buttons[]{urgentBtn, highBtn, mediumBtn, lowBtn}) {
                 btn.setPreferredSize(priorityBtnSize);
                 btn.setFont(btnFont);
                 btn.setForeground(new Color(50, 50, 50, 150));
@@ -278,11 +278,11 @@ public class BrgyOfficialDashboard extends JFrame {
             priorityPanel.add(priorityLabel, 0);
             JPanel quickStatusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
             quickStatusPanel.setOpaque(false);
-            Button startBtn = Button.createRounded("Start", 6,
+            Buttons startBtn = Buttons.createRounded("Start", 6,
                     new Color(200, 220, 255), new Color(140, 160, 240));
-            Button resolveBtn = Button.createRounded("Resolve", 6,
+            Buttons resolveBtn = Buttons.createRounded("Resolve", 6,
                     new Color(200, 255, 200), new Color(100, 170, 100));
-            for (Button btn : new Button[]{startBtn, resolveBtn}) {
+            for (Buttons btn : new Buttons[]{startBtn, resolveBtn}) {
                 btn.setPreferredSize(statusBtnSize);
                 btn.setFont(btnFont);
                 btn.setForeground(new Color(50, 50, 50, 150));

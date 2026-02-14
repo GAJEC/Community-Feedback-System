@@ -10,7 +10,9 @@ public class Colors {
     public static final Color TERTIARY = new Color(0, 150, 150);
 
     // Common
+    public static final Color BLACK = new Color(0, 0, 0);
     public static final Color WHITE =  new Color(255, 255, 255);
+    public static final Color DARK_GRAY = new Color(62, 62, 62);
     public static final Color GREEN = new Color(0, 255, 0);
     public static final Color BLUE = new Color(0, 0, 255);
     public static final Color YELLOW = new Color(255, 255, 0);
@@ -19,9 +21,10 @@ public class Colors {
     public static final Color TRANSPARENT = new Color(0, 0, 0, 0);
 
     // Button Colors
-    public static final Color RED_BUTTON = new Color(180, 40, 40); // Header button
-    public static final Color RED = new Color(255, 0, 0); // mainly used for hover color
-    public static final Color LIGHT_RED = new Color(255, 102, 102); // pop up logout
+    public static final Color DARK_BUTTON = new Color(180, 40, 40); // Header button
+    public static final Color RED = new Color(200, 40, 40);
+    public static final Color LIGHT_RED = new Color(255, 0, 0); // mainly used for hover color
+    public static final Color LIGHTER_RED = new Color(255, 102, 102); // pop up logout
 
     // Text Colors
     public static final Color NORMAL_TEXT = new Color(0, 0, 0);

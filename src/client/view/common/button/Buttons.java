@@ -6,10 +6,20 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class Button extends JButton {
+public class Buttons extends JButton {
     private int radius;
+    private Color hoverColor;
+    private Color normalColor;
 
-    public Button(String label, int radius) {
+    public Buttons() {
+        setContentAreaFilled(false);
+        setFocusPainted(false);
+        setBorderPainted(false);
+        setOpaque(false);
+        setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    public Buttons(String label, int radius) {
         super(label);
         this.radius = radius;
 
@@ -19,38 +29,8 @@ public class Button extends JButton {
         setOpaque(false);
     }
 
-    // no hover effect and font
-    public Button(String label, int radius, Color background, Color foreground) {
-        this(label, radius);
-
-        setBackground(background);
-        setForeground(foreground);
-        setCursor(new Cursor(Cursor.HAND_CURSOR));
-    }
-
-    // no hover effect
-    public Button(String label, int radius, Color background, Color foreground, Font font) {
-        this(label, radius);
-
-        setBackground(background);
-        setForeground(foreground);
-        setFont(font);
-        setCursor(new Cursor(Cursor.HAND_CURSOR));
-    }
-
-    // default font + hover
-    public Button(String label, int radius, Color background, Color foreground, Color hover) {
-        this(label, radius);
-
-        setBackground(background);
-        setForeground(foreground);
-        setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        applyHover(this, background, hover);
-    }
-
     // full constructor
-    public Button(String label, int radius, Color background, Color foreground, Color hover, Font font) {
+    public Buttons(String label, int radius, Color background, Color foreground, Color hover, Font font) {
         this(label, radius);
 
         setBackground(background);
@@ -60,9 +40,14 @@ public class Button extends JButton {
 
         applyHover(this, background, hover);
     }
+    public Buttons(Icon icon, int gap, String label, int radius, Color background, Color foreground, Color hover, Font font) {
+        this(label, radius, background, foreground, hover, font);
+        setButtonIcon(icon, gap);
+        setHorizontalTextPosition(SwingConstants.RIGHT);
+    }
 
-    public static Button createRounded(String text, int radius, Color normal, Color hover) {
-        Button btn = new Button(text, radius);
+    public static Buttons createRounded(String text, int radius, Color normal, Color hover) {
+        Buttons btn = new Buttons(text, radius);
         btn.setBackground(normal);
         btn.setForeground(Color.WHITE);
 
@@ -116,6 +101,48 @@ public class Button extends JButton {
                 onClick.run();
             }
         });
+    }
+
+    public void setLabel(String label) {
+        setText(label);
+    }
+
+    public void setRadius(int radius) {
+        this.radius = radius;
+        repaint();
+    }
+
+    public void setButtonIcon(Icon icon) {
+        setIcon(icon);
+        setHorizontalTextPosition(SwingConstants.RIGHT);
+    }
+
+    public void setButtonIcon(Icon icon, int gap) {
+        setIcon(icon);
+        setHorizontalTextPosition(SwingConstants.RIGHT);
+        setIconTextGap(gap);
+    }
+
+    public void setBackgroundColor(Color background) {
+        setBackground(background);
+        repaint();
+    }
+
+    public void setForegroundColor(Color foreground) {
+        setForeground(foreground);
+        repaint();
+    }
+
+    public void setHoverColor(Color hover) {
+        this.hoverColor = hover;
+        this.normalColor = getBackground();
+
+        applyHover(this, normalColor, hoverColor);
+    }
+
+    public void setFontStyle(Font font) {
+        setFont(font);
+        repaint();
     }
 
     @Override
