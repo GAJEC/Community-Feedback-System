@@ -3,10 +3,10 @@ package client.view.auth;
 import client.controller.LoginController;
 import client.model.ClientConnection;
 import client.utils.CredentialManager;
-import client.view.components.button.CloseButton;
-import client.view.components.panel.DraggablePanel;
-import client.view.components.field.IconInputField;
-import client.view.components.button.Button;
+import client.view.common.button.CloseButton;
+import client.view.common.panel.DraggablePanel;
+import client.view.common.field.IconInputField;
+import client.view.common.button.Button;
 import client.view.strings.Colors;
 import client.view.strings.Fonts;
 import client.view.strings.Images;
@@ -161,12 +161,13 @@ public class Login extends JFrame {
 
             add(Box.createVerticalStrut(15));
 
-            Button btnLogin = Button.createRounded("SIGN IN", 30, Colors.PRIMARY, Colors.SECONDARY);
+            Button btnLogin = new Button("SIGN IN", 30, Colors.PRIMARY, Colors.WHITE, Colors.SECONDARY);
             btnLogin.setMaximumSize(new Dimension(250, 45));
             btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            btnLogin.addActionListener(e -> {
+            btnLogin.applyClick(btnLogin, () -> {
                 Object[] result = controller.handleLogin(username.getText(), password.getText());
+
                 boolean success = Integer.parseInt((String) result[0]) == 200;
                 User loggedInUser = (User) result[2];
 
@@ -176,7 +177,6 @@ public class Login extends JFrame {
                     } else {
                         CredentialManager.deleteCredentials();
                     }
-
                     SwingUtilities.getWindowAncestor(this).dispose();
                     new client.view.residents.ResidentDashboard(true, loggedInUser, connection);
                 } else {
@@ -234,14 +234,15 @@ public class Login extends JFrame {
             add(info);
             add(Box.createVerticalStrut(30));
 
-            Button backBtn = Button.createRounded("Back To Login", 30, Colors.SECONDARY, Colors.TERTIARY);
+            Button backBtn = new Button("Back To Login", 30, Colors.SECONDARY, Colors.WHITE, Colors.TERTIARY);
             backBtn.setAlignmentX(CENTER_ALIGNMENT);
-            backBtn.addActionListener(e -> {
+            backBtn.applyClick(backBtn, () -> {
                 JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
                 if (topFrame instanceof Login loginFrame) {
                     loginFrame.showLoginPanel();
                 }
             });
+
             add(backBtn);
         }
     }

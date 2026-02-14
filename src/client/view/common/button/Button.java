@@ -1,4 +1,4 @@
-package client.view.components.button;
+package client.view.common.button;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -12,9 +12,54 @@ public class Button extends JButton {
     public Button(String label, int radius) {
         super(label);
         this.radius = radius;
+
         setContentAreaFilled(false);
         setFocusPainted(false);
         setBorderPainted(false);
+        setOpaque(false);
+    }
+
+    // no hover effect and font
+    public Button(String label, int radius, Color background, Color foreground) {
+        this(label, radius);
+
+        setBackground(background);
+        setForeground(foreground);
+        setCursor(new Cursor(Cursor.HAND_CURSOR));
+        setPreferredSize(new Dimension(110, 35));
+    }
+
+    // no hover effect
+    public Button(String label, int radius, Color background, Color foreground, Font font) {
+        this(label, radius);
+
+        setBackground(background);
+        setForeground(foreground);
+        setFont(font);
+        setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    // default font + hover
+    public Button(String label, int radius, Color background, Color foreground, Color hover) {
+        this(label, radius);
+
+        setBackground(background);
+        setForeground(foreground);
+        setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        applyHover(this, background, hover);
+    }
+
+    // full constructor
+    public Button(String label, int radius, Color background, Color foreground, Color hover, Font font) {
+        this(label, radius);
+
+        setBackground(background);
+        setForeground(foreground);
+        setFont(font);
+        setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        applyHover(this, background, hover);
     }
 
     public static Button createRounded(String text, int radius, Color normal, Color hover) {

@@ -1,14 +1,13 @@
-package client.view.components.resident;
+package client.view.residents.panels;
 
-import client.view.components.button.CloseButton;
-import client.view.components.panel.RoundedPanel;
+import client.view.common.button.CloseButton;
+import client.view.common.panel.RoundedPanel;
 import client.view.strings.Colors;
 import client.view.strings.Fonts;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
 
 public class ClientFeedbackDetailDialog extends JDialog {
     private static final Color background = Color.WHITE;

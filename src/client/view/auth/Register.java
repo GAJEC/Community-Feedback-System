@@ -1,9 +1,9 @@
 package client.view.auth;
 
-import client.view.components.field.RoundedTextField;
-import client.view.components.panel.DropShadowBorder;
+import client.view.common.field.RoundedTextField;
+import client.view.common.panel.DropShadowBorder;
 import client.view.strings.Colors;
-import client.view.components.button.Button;
+import client.view.common.button.Button;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

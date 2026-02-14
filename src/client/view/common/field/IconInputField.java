@@ -1,4 +1,4 @@
-package client.view.components.field;
+package client.view.common.field;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

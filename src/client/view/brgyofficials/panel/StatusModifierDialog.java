@@ -1,4 +1,4 @@
-package client.view.components.barangay;
+package client.view.brgyofficials.panel;
 
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;

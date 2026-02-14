@@ -1,6 +1,7 @@
-package client.view.components.resident;
+package client.view.residents.panels;
 
-import client.view.components.LogoutPopUp;
+import client.view.UiPreview;
+import client.view.common.LogoutPopUp;
 import client.view.strings.Colors;
 import client.view.strings.Fonts;
 import common.User;
@@ -179,5 +180,14 @@ public class ClientHeaderPanel extends JPanel {
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
             super.paintComponent(g);
         }
+    }
+
+    public static void main(String[] args) {
+        // dummy User
+        User dummyUser = new User(
+                "DUMBell",
+                "passpass"
+        );
+        UiPreview.show(v -> new ClientHeaderPanel(dummyUser), "ClientHeaderPanel Preview");
     }
 }

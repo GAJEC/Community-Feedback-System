@@ -5,6 +5,7 @@ public class Colors {
 
     // Main Theme
     public static final Color PRIMARY = new Color(0,80,80);
+    public static final Color SUB_PRIMARY = new Color(0,102,102);
     public static final Color SECONDARY = new Color(0, 120, 120);
     public static final Color TERTIARY = new Color(0, 150, 150);
 
@@ -17,6 +18,7 @@ public class Colors {
     public static final Color MAGENTA = new Color(255, 0, 255);
     public static final Color CYAN = new Color(0, 255, 255);
     public static final Color LIGHT_GRAY = new Color(161, 161, 161);
+    public static final Color TRANSPARENT = new Color(0, 0, 0, 0);
 
     // Button Colors
     public static final Color RED_BUTTON = new Color(180, 40, 40);

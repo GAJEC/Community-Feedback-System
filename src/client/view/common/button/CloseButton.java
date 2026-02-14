@@ -1,4 +1,4 @@
-package client.view.components.button;
+package client.view.common.button;
 
 import client.view.strings.Colors;
 
