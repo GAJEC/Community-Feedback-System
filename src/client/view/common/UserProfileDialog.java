@@ -23,7 +23,6 @@ public class UserProfileDialog extends JDialog {
         mainPanel.setLayout(new BorderLayout());
         mainPanel.setBorder(new EmptyBorder(0, 0, 3, 3));
         mainPanel.setBackground(TRANSPARENT);
-        mainPanel.setDropShadow(new Color(0,0,0,40), 5f);
         mainPanel.setOffsetShadow(new Color(0,0,0,30), 4);
         mainPanel.add(createHeader(), BorderLayout.NORTH);
         mainPanel.add(createContent(), BorderLayout.CENTER);

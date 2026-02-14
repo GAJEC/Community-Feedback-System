@@ -327,8 +327,7 @@ public class ResidentDashboard extends JFrame {
         card.setPreferredSize(new Dimension(750, 780));
         card.setBackgroundColor(Color.WHITE);
 
-        card.setOffsetShadow(new Color(0,0,0,30), 3); // light offset shadow
-        card.setDropShadow(new Color(0,0,0,30), 1f); // subtle outline
+        card.setOffsetShadow(new Color(0,0,0,30), 4);
         card.setRadius(20);
 
         card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));

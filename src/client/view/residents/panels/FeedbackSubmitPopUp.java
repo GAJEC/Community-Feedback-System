@@ -24,7 +24,6 @@ public class FeedbackSubmitPopUp extends JDialog {
         main.setBorder(new EmptyBorder(30, 30, 20, 30));
 
         main.setOffsetShadow(new Color(0, 0, 0, 40), 3);
-        main.setDropShadow(new Color(0, 0, 0, 25), 1f);
 
         JLabel message = new JLabel("Your feedback has been submitted successfully!");
         message.setFont(Inter(1, 14));

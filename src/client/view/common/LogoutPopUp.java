@@ -23,9 +23,7 @@ public class LogoutPopUp extends JDialog {
         container.setLayout(new BorderLayout(0, 15));
         container.setBorder(new EmptyBorder(25, 25, 25, 25));
         container.setStroke(Colors.LIGHTEST_GRAY, 1f);
-
-        container.setOffsetShadow(new Color(0, 0, 0, 30), 3);
-        container.setDropShadow(new Color(0, 0, 0, 30), 1f);
+        container.setOffsetShadow(new Color(0, 0, 0, 30), 4);
 
         JLabel message = new JLabel("Are you sure you want to logout?");
         message.setFont(new Font("Inter", Font.BOLD, 14));

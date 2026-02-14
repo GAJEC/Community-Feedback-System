@@ -27,14 +27,12 @@ public class ClientFeedbackDetailDialog extends JDialog {
 
         CustomPanel main = new CustomPanel(30, background);
         main.setLayout(new BorderLayout());
-        main.setStroke( new Color(192, 192, 192), 1.5f);
 
         CustomPanel headerRow = new CustomPanel(30, darkTeal);
         headerRow.setRoundedCorners(true, true, false, false);
         headerRow.setLayout(new BorderLayout());
         headerRow.setBorder(new EmptyBorder(25, 30, 25, 30));
         headerRow.setPreferredSize(new Dimension(850, 160));
-        headerRow.setStroke(new Color(0, 102, 102), 2.5f);
 
         JPanel topHeaderRow = new JPanel(new BorderLayout());
         topHeaderRow.setOpaque(false);

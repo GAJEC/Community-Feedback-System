@@ -50,8 +50,7 @@ public class Register extends JFrame {
         formCard.setLayout(new GridBagLayout());
         formCard.setBackgroundColor(Color.WHITE);
         formCard.setRadius(20);
-        formCard.setOffsetShadow(new Color(0, 0, 0, 30), 3);
-        formCard.setDropShadow(new Color(0, 0, 0, 30), 1f);
+        formCard.setOffsetShadow(new Color(0, 0, 0, 30), 4);
         formCard.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         GridBagConstraints gbc = new GridBagConstraints();
