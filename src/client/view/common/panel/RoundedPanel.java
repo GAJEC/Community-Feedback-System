@@ -1,5 +1,7 @@
 package client.view.common.panel;
 
+import client.view.strings.Colors;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
@@ -8,7 +10,7 @@ public class RoundedPanel extends JPanel {
 
     private int radius;
     private Color backgroundColor;
-    private Color strokeColor = new Color(241, 245, 249);
+    private Color strokeColor = Colors.LIGHTEST_GRAY;
     private float strokeWidth = 0f; // default no border
 
     public RoundedPanel(int radius, Color backgroundColor) {

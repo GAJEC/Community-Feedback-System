@@ -3,40 +3,36 @@ package client.view.common;
 import client.view.UiPreview;
 import client.view.auth.Login;
 import client.view.common.button.Button;
+import client.view.common.panel.RoundedPanel;
 import client.view.strings.Colors;
 import client.view.strings.Fonts;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
 
 public class LogoutPopUp extends JDialog {
-    private final Color LOGOUT_COLOR = new Color(255, 102, 102); // Indigo
-    private final Color TEXT_COLOR = new Color(30, 41, 59);
-    private final Color BG_COLOR = Color.WHITE;
-
     public LogoutPopUp(JFrame parent) {
         super(parent, true);
         setUndecorated(true);
-        setBackground(new Color(0, 0, 0, 0));
+        setBackground(Colors.TRANSPARENT);
 
         setSize(350, 180);
         setLocationRelativeTo(parent);
 
-        RoundedPanel container = new RoundedPanel(30, BG_COLOR);
+        RoundedPanel container = new RoundedPanel(30, Colors.WHITE);
         container.setLayout(new BorderLayout(0, 15));
         container.setBorder(new EmptyBorder(25, 25, 25, 25));
-        container.setStroke(new Color(226, 232, 240), 1.5f);
+        container.setStroke(Colors.LIGHTEST_GRAY, 1.5f);
 
         JLabel message = new JLabel("Are you sure you want to logout?");
         message.setFont(new Font("Inter", Font.BOLD, 14));
-        message.setForeground(TEXT_COLOR);
+        message.setForeground(Colors.NORMAL_TEXT);
         message.setHorizontalAlignment(SwingConstants.CENTER);
 
-        Button yesBtn = new Button("Logout", 15, LOGOUT_COLOR, Color.WHITE, Colors.RED, Fonts.INTER_HEADING_4);
+        Button yesBtn = new Button("Logout", 15, Colors.LIGHT_RED, Colors.WHITE, Colors.RED, Fonts.INTER_HEADING_4);
         yesBtn.setPreferredSize(new Dimension(110, 35));
-        Button noBtn = new Button("Cancel", 15, new Color(241, 245, 249), TEXT_COLOR, Colors.LIGHT_GRAY, Fonts.INTER_HEADING_4);
+        Button noBtn = new Button("Cancel", 15, Colors.LIGHTER_GRAY, Colors.NORMAL_TEXT, Colors.LIGHT_GRAY, Fonts.INTER_HEADING_4);
         noBtn.setPreferredSize(new Dimension(110, 35));
 
         Button.applyClick(yesBtn, () -> {
@@ -65,80 +61,7 @@ public class LogoutPopUp extends JDialog {
         add(container);
     }
 
-    static class RoundedPanel extends JPanel {
-        private final int r;
-        private final Color c;
-        private Color sCol = new Color(241, 245, 249);
-        private float sWidth = 1.0f;
-
-        RoundedPanel(int radius, Color color) {
-            r = radius;
-            c = color;
-            setOpaque(false);
-        }
-
-        public void setStroke(Color col, float w) {
-            this.sCol = col;
-            this.sWidth = w;
-            repaint();
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(c);
-            g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), r, r));
-            if (sWidth > 0) {
-                g2.setStroke(new BasicStroke(sWidth));
-                g2.setColor(sCol);
-                g2.draw(new RoundRectangle2D.Double(sWidth/2.0, sWidth/2.0, getWidth()-sWidth, getHeight()-sWidth, r, r));
-            }
-            g2.dispose();
-        }
-    }
-
     public static void main(String[] args) {
         UiPreview.show(LogoutPopUp::new);
     }
-
-//    static class RoundedButton extends JButton {
-//        private final int radius;
-//        private final Color bgColor;
-//
-//        RoundedButton(String label, int radius, Color bgColor, Color textColor) {
-//            super(label);
-//            this.radius = radius;
-//            this.bgColor = bgColor;
-//            setContentAreaFilled(false);
-//            setFocusPainted(false);
-//            setBorderPainted(false);
-//            setOpaque(false);
-//
-//            setForeground(textColor);
-//            setFont(new Font("Inter", Font.BOLD, 12));
-//            setCursor(new Cursor(Cursor.HAND_CURSOR));
-//            setPreferredSize(new Dimension(110, 35));
-//        }
-//
-//        @Override
-//        protected void paintComponent(Graphics g) {
-//            Graphics2D g2 = (Graphics2D) g.create();
-//            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-//
-//            if (getModel().isPressed()) {
-//                g2.setColor(bgColor.darker());
-//            } else if (getModel().isRollover()) {
-//                g2.setColor(bgColor.brighter());
-//            } else {
-//                g2.setColor(bgColor);
-//            }
-//
-//
-//            g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
-//            g2.dispose();
-//
-//            super.paintComponent(g);
-//        }
-//    }
 }
