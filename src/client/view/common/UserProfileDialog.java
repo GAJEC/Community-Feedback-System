@@ -1,6 +1,10 @@
 package client.view.common;
 
 
+import client.view.UiPreview;
+import client.view.common.button.CloseButton;
+import client.view.strings.Colors;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -9,31 +13,6 @@ import java.awt.geom.RoundRectangle2D;
 
 
 public class UserProfileDialog extends JDialog {
-
-    private JButton createCloseButton() {
-        JButton closeBtn = new JButton("✕");
-        closeBtn.setFont(new Font("SansSerif", Font.BOLD, 18));
-        closeBtn.setForeground(new Color(230, 230, 230));
-        closeBtn.setContentAreaFilled(false);
-        closeBtn.setBorderPainted(false);
-        closeBtn.setFocusPainted(false);
-        closeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        closeBtn.addActionListener(e -> dispose());
-
-
-        closeBtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                closeBtn.setForeground(Color.RED);
-            }
-
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                closeBtn.setForeground(new Color(230, 230, 230));
-            }
-        });
-
-        return closeBtn;
-    }
 
     private ImageIcon getScaledIcon(String path, int width, int height) {
         // This ensures it looks in the classpath resources
@@ -86,13 +65,12 @@ public class UserProfileDialog extends JDialog {
         title.setForeground(Color.WHITE);
         title.setFont(new Font("SansSerif", Font.BOLD, 20));
 
-        JButton closeBtn = createCloseButton();
 
 
         JPanel top = new JPanel(new BorderLayout());
         top.setOpaque(false);
         top.add(title, BorderLayout.WEST);
-        top.add(closeBtn, BorderLayout.EAST);
+        top.add(new CloseButton(this, Colors.WHITE), BorderLayout.EAST);
 
         header.add(top, BorderLayout.NORTH);
         header.add(createProfileInfo(), BorderLayout.CENTER);
@@ -193,5 +171,9 @@ public class UserProfileDialog extends JDialog {
         return row;
     }
 
+
+    public static void main(String[] args) {
+        UiPreview.show(UserProfileDialog::new);
+    }
 }
 

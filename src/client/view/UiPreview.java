@@ -36,7 +36,7 @@ public class UiPreview {
     /*
 
         public static void main(String[] args) {
-            DialogPreview.show(FeedbackSubmitPopUp::new);
+            UiPreview.show(FeedbackSubmitPopUp::new);
         }
 
     */
