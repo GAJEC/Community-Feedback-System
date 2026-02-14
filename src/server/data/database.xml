@@ -11,13 +11,4 @@
         <username>joshlei</username>
         <password>123</password>
     </user>
-    <feedback approvedby="0" downvote="0" id="1" status="Pending" upvote="1">
-        <issued_by>1</issued_by>
-        <categories>Infrastructure</categories>
-        <location>JoshLei Test</location>
-        <content>JoshLei Test
-
-JoshLei Test</content>
-        <issued_date>Thu Feb 12 22:43:01 PST 2026</issued_date>
-    </feedback>
 </dataset>

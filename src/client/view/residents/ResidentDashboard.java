@@ -45,6 +45,7 @@ public class ResidentDashboard extends JFrame {
     private ClientConnection connection;
     private Map<Integer, User> userCache = new HashMap<>();
     private Map<Integer, FeedbackCard> feedbackCards = new HashMap<>();
+    private JPanel feedbackListPanel;
 
     private RoundedTextField titleField;
     private JComboBox<String> categoryBox;
@@ -135,9 +136,35 @@ public class ResidentDashboard extends JFrame {
         FeedbackCard card = feedbackCards.get(feedback.getAttr_id());
         if (card != null) {
             card.updateVotes(feedback);
+            resortFeedbackListByVotes();
         } else {
             System.out.println("[Update] Card not found for feedback #" + feedback.getAttr_id());
         }
+    }
+
+    private void resortFeedbackListByVotes() {
+        if (!isViewMode || feedbackListPanel == null || feedbackCards.isEmpty()) {
+            return;
+        }
+
+        java.util.List<FeedbackCard> cards = new java.util.ArrayList<>(feedbackCards.values());
+        cards.sort((a, b) -> Integer.compare(b.getVoteScore(), a.getVoteScore()));
+
+        feedbackListPanel.removeAll();
+        feedbackListPanel.add(Box.createVerticalStrut(5));
+        for (FeedbackCard c : cards) {
+            feedbackListPanel.add(c);
+            feedbackListPanel.add(Box.createVerticalStrut(8));
+        }
+
+        feedbackListPanel.revalidate();
+        feedbackListPanel.repaint();
+    }
+
+    private int voteScore(Feedbacks feedback) {
+        int upvotes = feedback.getAttr_upvote() != null ? feedback.getAttr_upvote().length : 0;
+        int downvotes = feedback.getAttr_downvote() != null ? feedback.getAttr_downvote().length : 0;
+        return upvotes - downvotes;
     }
 
     private void refreshFeedbackList() {
@@ -199,6 +226,8 @@ public class ResidentDashboard extends JFrame {
         JPanel listPanel = new JPanel();
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
         listPanel.setOpaque(false);
+
+        feedbackListPanel = listPanel;
 
         listPanel.add(Box.createVerticalStrut(5));
 
@@ -554,6 +583,8 @@ public class ResidentDashboard extends JFrame {
             } else {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy");
 
+                java.util.Arrays.sort(feedbacks, (a, b) -> Integer.compare(voteScore(b), voteScore(a)));
+
                 for (Feedbacks feedback : feedbacks) {
                     String[] statuses = feedback.getAttr_status();
                     String status = (statuses != null && statuses.length > 0 && statuses[0] != null && !statuses[0].trim().isEmpty())
@@ -842,6 +873,10 @@ public class ResidentDashboard extends JFrame {
             int upvotes = feedback.getAttr_upvote() != null ? feedback.getAttr_upvote().length : 0;
             int downvotes = feedback.getAttr_downvote() != null ? feedback.getAttr_downvote().length : 0;
             return upvotes - downvotes;
+        }
+
+        public int getVoteScore() {
+            return calculateVotes();
         }
 
         private void updateButtonColor(JButton btn, boolean active, Color baseColor) {
