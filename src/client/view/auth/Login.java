@@ -3,10 +3,9 @@ package client.view.auth;
 import client.controller.LoginController;
 import client.model.ClientConnection;
 import client.utils.CredentialManager;
-import client.view.common.button.CloseButton;
-import client.view.common.panel.CustomPanel;
+import client.view.common.CustomPanel;
 import client.view.common.field.IconInputField;
-import client.view.common.button.Buttons;
+import client.view.common.Buttons;
 import client.view.strings.Colors;
 import client.view.strings.Images;
 import common.User;
@@ -47,7 +46,7 @@ public class Login extends JFrame {
         gbc.weighty = 0;
         gbc.anchor = GridBagConstraints.FIRST_LINE_END;
         gbc.insets = new Insets(10, 0, 0, 10);
-        root.add(new CloseButton(this), gbc);
+        root.add(new Buttons.CloseButton(this), gbc);
 
         // Left panel logo
         gbc.insets = new Insets(0, 0, 0, 0);

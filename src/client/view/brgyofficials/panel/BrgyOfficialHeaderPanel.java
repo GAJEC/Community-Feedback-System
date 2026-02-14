@@ -1,6 +1,6 @@
 package client.view.brgyofficials.panel;
 
-import client.view.common.button.Buttons;
+import client.view.common.Buttons;
 import common.User;
 
 import javax.swing.*;

@@ -1,9 +1,7 @@
 package client.view.common;
 
 import client.view.UiPreview;
-import client.view.common.button.CloseButton;
 import client.view.common.field.InfoRow;
-import client.view.common.panel.CustomPanel;
 import client.view.strings.Colors;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -48,7 +46,7 @@ public class UserProfileDialog extends JDialog {
         JPanel top = new JPanel(new BorderLayout());
         top.setOpaque(false);
         top.add(title, BorderLayout.WEST);
-        top.add(new CloseButton(this, WHITE), BorderLayout.EAST);
+        top.add(new Buttons.CloseButton(this, WHITE), BorderLayout.EAST);
 
         header.add(top, BorderLayout.NORTH);
         header.add(createProfileInfo(), BorderLayout.CENTER); return header;

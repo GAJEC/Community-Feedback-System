@@ -3,7 +3,7 @@ package client.view.residents.panels;
 import client.view.UiPreview;
 import client.view.common.LogoutPopUp;
 import client.view.common.UserProfileDialog;
-import client.view.common.button.Buttons;
+import client.view.common.Buttons;
 import client.view.strings.Colors;
 import client.view.strings.Images;
 import common.User;

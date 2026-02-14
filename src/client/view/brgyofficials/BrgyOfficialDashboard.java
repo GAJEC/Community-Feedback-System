@@ -1,6 +1,6 @@
 package client.view.brgyofficials;
 
-import client.view.common.button.Buttons;
+import client.view.common.Buttons;
 import client.view.brgyofficials.panel.BrgyOfficialHeaderPanel;
 import client.view.common.field.HintTextField;
 import common.User;

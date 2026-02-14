@@ -1,8 +1,8 @@
 package client.view.residents.panels;
 
 import client.view.UiPreview;
-import client.view.common.button.CloseButton;
-import client.view.common.panel.CustomPanel;
+import client.view.common.Buttons;
+import client.view.common.CustomPanel;
 import client.view.strings.Colors;
 
 import javax.swing.*;
@@ -46,7 +46,7 @@ public class ClientFeedbackDetailDialog extends JDialog {
 
 
         topHeaderRow.add(badges, BorderLayout.WEST);
-        topHeaderRow.add(new CloseButton(this, Colors.WHITE), BorderLayout.EAST);
+        topHeaderRow.add(new Buttons.CloseButton(this, Colors.WHITE), BorderLayout.EAST);
 
 
         JPanel titlePanel = new JPanel();

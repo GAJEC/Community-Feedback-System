@@ -2,7 +2,7 @@ package client.view.residents;
 
 import client.controller.FeedbackController;
 import client.model.ClientConnection;
-import client.view.common.panel.CustomPanel;
+import client.view.common.CustomPanel;
 import client.view.residents.panels.FeedbackSubmitPopUp;
 import client.view.residents.panels.ClientHeaderPanel;
 import client.view.common.field.HintTextField;

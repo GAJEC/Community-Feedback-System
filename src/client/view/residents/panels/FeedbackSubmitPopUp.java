@@ -1,8 +1,8 @@
 package client.view.residents.panels;
 
 import client.view.UiPreview;
-import client.view.common.button.Buttons;
-import client.view.common.panel.CustomPanel;
+import client.view.common.Buttons;
+import client.view.common.CustomPanel;
 import client.view.strings.Colors;
 
 import javax.swing.*;

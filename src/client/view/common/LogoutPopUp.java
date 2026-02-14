@@ -2,8 +2,6 @@ package client.view.common;
 
 import client.view.UiPreview;
 import client.view.auth.Login;
-import client.view.common.button.Buttons;
-import client.view.common.panel.CustomPanel;
 import client.view.strings.Colors;
 
 import javax.swing.*;
