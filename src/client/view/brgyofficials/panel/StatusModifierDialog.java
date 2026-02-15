@@ -1,5 +1,7 @@
 package client.view.brgyofficials.panel;
 
+import client.view.common.Buttons; // Imported your custom button
+
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
 import javax.swing.border.EmptyBorder;
@@ -26,12 +28,15 @@ public class StatusModifierDialog extends JDialog {
     private final ButtonGroup buttonGroup = new ButtonGroup();
     private String selectedStatus;
 
+    private static final int COMPONENT_WIDTH = 380;
+
     public StatusModifierDialog(JFrame parent, String currentStatus, String feedbackDetails) {
         super(parent, "Update Status", true);
         this.selectedStatus = currentStatus;
 
         setUndecorated(true);
-        setSize(550, 700);
+        // 1. UPDATED SIZE
+        setSize(450, 550);
         setLocationRelativeTo(parent);
 
         JPanel root = new JPanel(new BorderLayout());
@@ -39,20 +44,20 @@ public class StatusModifierDialog extends JDialog {
         root.setBorder(new LocalShadowBorder(2));
         setContentPane(root);
 
-        // 1. HEADER
+        // HEADER
         add(createHeader(), BorderLayout.NORTH);
 
-        // 2. CLOSE ON CLICK OUTSIDE
+        // CLOSE ON CLICK OUTSIDE
         this.addWindowFocusListener(new java.awt.event.WindowFocusListener() {
             @Override public void windowGainedFocus(java.awt.event.WindowEvent e) {}
             @Override public void windowLostFocus(java.awt.event.WindowEvent e) { dispose(); }
         });
 
-        // 3. MAIN CONTENT PANEL
+        // MAIN CONTENT PANEL
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBackground(BG_COLOR);
-        contentPanel.setBorder(new EmptyBorder(25, 30, 25, 30));
+        contentPanel.setBorder(new EmptyBorder(15, 30, 15, 30));
 
         // -- FEEDBACK LABEL --
         JLabel lblSubtitle = new JLabel("FEEDBACK DETAILS");
@@ -61,44 +66,41 @@ public class StatusModifierDialog extends JDialog {
         lblSubtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
         contentPanel.add(lblSubtitle);
 
-        contentPanel.add(createSpacer(10));
+        contentPanel.add(createSpacer(8));
 
         // -- FEEDBACK TEXT AREA --
         JTextArea txtDetails = new JTextArea(feedbackDetails);
-        txtDetails.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtDetails.setFont(new Font("Segoe UI", Font.PLAIN, 13)); // Slightly smaller font
         txtDetails.setForeground(TEXT_DARK);
         txtDetails.setLineWrap(true);
         txtDetails.setWrapStyleWord(true);
         txtDetails.setEditable(false);
         txtDetails.setFocusable(false);
         txtDetails.setBackground(new Color(248, 249, 250));
-
-        // *** ADDED PADDING HERE ***
-        // Top: 15, Left: 20, Bottom: 15, Right: 20
-        txtDetails.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        txtDetails.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
         JScrollPane textScroller = new JScrollPane(txtDetails);
-        textScroller.setPreferredSize(new Dimension(490, 120));
-        textScroller.setMaximumSize(new Dimension(490, 120));
-        // Only the line border on the outside now, padding is inside the text area
+
+        textScroller.setPreferredSize(new Dimension(COMPONENT_WIDTH, 80));
+        textScroller.setMaximumSize(new Dimension(COMPONENT_WIDTH, 80));
         textScroller.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
         textScroller.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         contentPanel.add(textScroller);
-        contentPanel.add(createSpacer(25));
+        contentPanel.add(createSpacer(15)); // Reduced spacer
 
-        // -- OPTIONS --
+        // Reduced spacer between cards to 8px to fit height
         contentPanel.add(createOption("In Progress", "Currently being worked on", COL_PROGRESS));
-        contentPanel.add(createSpacer(10));
+        contentPanel.add(createSpacer(8));
         contentPanel.add(createOption("Pending", "Awaiting review", COL_PENDING));
-        contentPanel.add(createSpacer(10));
+        contentPanel.add(createSpacer(8));
         contentPanel.add(createOption("Resolved", "Issue has been fixed", COL_RESOLVED));
-        contentPanel.add(createSpacer(10));
+        contentPanel.add(createSpacer(8));
         contentPanel.add(createOption("Archived", "Closed and hidden", COL_ARCHIVED));
 
         add(contentPanel, BorderLayout.CENTER);
 
-        // 4. FOOTER
+        // FOOTER
         add(createFooter(), BorderLayout.SOUTH);
 
         selectOption(currentStatus);
@@ -114,8 +116,7 @@ public class StatusModifierDialog extends JDialog {
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBackground(MAIN_GREEN);
-        header.setBorder(new EmptyBorder(25, 30, 25, 30));
-        // Ensure header aligns left so children inherit alignment logic
+        header.setBorder(new EmptyBorder(20, 30, 20, 30)); // Slightly compressed header padding
         header.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JPanel topRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
@@ -135,22 +136,22 @@ public class StatusModifierDialog extends JDialog {
         };
         logo.setFont(new Font("Segoe UI", Font.BOLD, 16));
         logo.setForeground(MAIN_GREEN);
-        logo.setPreferredSize(new Dimension(30, 30));
+        logo.setPreferredSize(new Dimension(28, 28));
 
         JLabel title = new JLabel("  Update Status");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 20));
         title.setForeground(Color.WHITE);
 
         topRow.add(logo);
         topRow.add(title);
 
         JLabel tagline = new JLabel("Change the feedback status");
-        tagline.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tagline.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tagline.setForeground(new Color(240, 255, 240));
         tagline.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         header.add(topRow);
-        header.add(Box.createVerticalStrut(4));
+        header.add(Box.createVerticalStrut(2));
         header.add(tagline);
         return header;
     }
@@ -160,12 +161,30 @@ public class StatusModifierDialog extends JDialog {
         footer.setBackground(BG_COLOR);
         footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, BORDER_COLOR));
 
-        ModernButton btnCancel = new ModernButton("Cancel", Color.WHITE, TEXT_DARK, BORDER_COLOR);
-        btnCancel.setPreferredSize(new Dimension(100, 40));
+        Font btnFont = new Font("Segoe UI", Font.BOLD, 13);
+
+        Buttons btnCancel = new Buttons(
+                "Cancel",
+                15,                   // Radius
+                Color.WHITE,          // Background
+                TEXT_DARK,            // Foreground
+                new Color(245, 245, 245), // Hover color
+                btnFont               // Font
+        );
+        btnCancel.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
+        btnCancel.setPreferredSize(new Dimension(90, 35));
         btnCancel.addActionListener(e -> dispose());
 
-        ModernButton btnUpdate = new ModernButton("Update Status", MAIN_GREEN, Color.WHITE, MAIN_GREEN);
-        btnUpdate.setPreferredSize(new Dimension(160, 40));
+        // --- Update Button ---
+        Buttons btnUpdate = new Buttons(
+                "Update Status",
+                15,                   // Radius
+                MAIN_GREEN,           // Background
+                Color.WHITE,          // Foreground
+                new Color(25, 135, 84), // Hover color (Darker green)
+                btnFont               // Font
+        );
+        btnUpdate.setPreferredSize(new Dimension(140, 35));
         btnUpdate.addActionListener(e -> dispose());
 
         footer.add(btnCancel);
@@ -190,8 +209,6 @@ public class StatusModifierDialog extends JDialog {
         }
     }
 
-    // --- HELPER CLASSES ---
-
     static class LocalShadowBorder extends AbstractBorder {
         private final int padding;
         public LocalShadowBorder(int padding) { this.padding = padding; }
@@ -207,39 +224,6 @@ public class StatusModifierDialog extends JDialog {
         public Insets getBorderInsets(Component c) { return new Insets(padding, padding, padding, padding); }
     }
 
-    static class ModernButton extends JButton {
-        private Color normalColor, hoverColor, textColor, borderColor;
-        private boolean isHovered = false;
-
-        public ModernButton(String text, Color bg, Color fg, Color border) {
-            super(text);
-            this.normalColor = bg;
-            this.hoverColor = bg == Color.WHITE ? new Color(245, 245, 245) : bg.darker();
-            this.textColor = fg;
-            this.borderColor = border;
-            setFocusPainted(false);
-            setBorderPainted(false);
-            setContentAreaFilled(false);
-            setCursor(new Cursor(Cursor.HAND_CURSOR));
-            addMouseListener(new MouseAdapter() {
-                public void mouseEntered(MouseEvent e) { isHovered = true; repaint(); }
-                public void mouseExited(MouseEvent e) { isHovered = false; repaint(); }
-            });
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(isHovered ? hoverColor : normalColor);
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-            g2.setColor(borderColor);
-            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
-            super.paintComponent(g2);
-            g2.dispose();
-        }
-    }
-
     class StatusCard extends JPanel {
         String title;
         JRadioButton radioButton;
@@ -252,9 +236,10 @@ public class StatusModifierDialog extends JDialog {
             setBackground(Color.WHITE);
             setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(BORDER_COLOR, 1),
-                    BorderFactory.createEmptyBorder(12, 15, 12, 15)));
-            setMaximumSize(new Dimension(490, 70));
-            setPreferredSize(new Dimension(490, 70));
+                    BorderFactory.createEmptyBorder(10, 15, 10, 15)));
+
+            setMaximumSize(new Dimension(COMPONENT_WIDTH, 55));
+            setPreferredSize(new Dimension(COMPONENT_WIDTH, 55));
             setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             radioButton = new JRadioButton();
@@ -264,9 +249,9 @@ public class StatusModifierDialog extends JDialog {
             JPanel textPanel = new JPanel(new GridLayout(2, 1));
             textPanel.setOpaque(false);
             JLabel lblT = new JLabel(title);
-            lblT.setFont(new Font("Segoe UI", Font.BOLD, 15));
+            lblT.setFont(new Font("Segoe UI", Font.BOLD, 14));
             JLabel lblD = new JLabel(desc);
-            lblD.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            lblD.setFont(new Font("Segoe UI", Font.PLAIN, 11));
             lblD.setForeground(TEXT_GRAY);
             textPanel.add(lblT);
             textPanel.add(lblD);
@@ -285,19 +270,19 @@ public class StatusModifierDialog extends JDialog {
             for (StatusCard c : cards) {
                 c.setBorder(BorderFactory.createCompoundBorder(
                         BorderFactory.createLineBorder(BORDER_COLOR, 1),
-                        BorderFactory.createEmptyBorder(12, 15, 12, 15)));
+                        BorderFactory.createEmptyBorder(10, 15, 10, 15)));
             }
             if (radioButton.isSelected()) {
                 setBorder(BorderFactory.createCompoundBorder(
                         BorderFactory.createLineBorder(baseColor, 2),
-                        BorderFactory.createEmptyBorder(11, 14, 11, 14)));
+                        BorderFactory.createEmptyBorder(9, 14, 9, 14)));
             }
         }
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            new StatusModifierDialog(null, "Pending", "Sample report: Si Edgard matapos makipag inuman, nanggulo dito sa Bawang Street. Itinulog niya po sa kalsada. Sana maaksyoanan agad..").setVisible(true);
+            new StatusModifierDialog(null, "Pending", "Bakit ang pogi ko.").setVisible(true);
         });
     }
 }
