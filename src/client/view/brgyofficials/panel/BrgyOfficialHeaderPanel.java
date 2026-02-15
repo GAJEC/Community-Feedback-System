@@ -25,9 +25,9 @@ public class BrgyOfficialHeaderPanel extends JPanel {
     private String currentActiveTab;
     private User user;
 
-    public BrgyOfficialHeaderPanel(User user) {
+    public BrgyOfficialHeaderPanel(User user, String activeTab) {
         this.user = user;
-        this.currentActiveTab = "View Feedbacks";
+        this.currentActiveTab = activeTab;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(HEADER_COLOR);
 

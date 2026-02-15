@@ -32,7 +32,7 @@ public class BrgyOfficialDashboard extends JFrame {
         setLocationRelativeTo(null);
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(BG_COLOR);
-        BrgyOfficialHeaderPanel header = new BrgyOfficialHeaderPanel(user);
+        BrgyOfficialHeaderPanel header = new BrgyOfficialHeaderPanel(user, "View Feedbacks");
         mainPanel.add(header, BorderLayout.NORTH);
         contentContainer = new JPanel(new BorderLayout());
         contentContainer.setOpaque(false);
@@ -269,7 +269,7 @@ public class BrgyOfficialDashboard extends JFrame {
             for (Buttons btn : new Buttons[]{urgentBtn, highBtn, mediumBtn, lowBtn}) {
                 btn.setPreferredSize(priorityBtnSize);
                 btn.setFont(btnFont);
-                btn.setForeground(new Color(50, 50, 50, 150));
+                btn.setForeground(Color.DARK_GRAY);
                 priorityPanel.add(btn);
             }
             JLabel priorityLabel = new JLabel("Set Priority: ");
