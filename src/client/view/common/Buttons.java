@@ -48,14 +48,13 @@ public class Buttons extends JButton {
         setHorizontalTextPosition(SwingConstants.RIGHT);
     }
 
-    public static Buttons createRounded(String text, int radius, Color normal, Color hover) {
-        Buttons btn = new Buttons(text, radius);
-        btn.setBackground(normal);
-        btn.setForeground(Color.WHITE);
+    public Buttons (String text, int radius, Color normal, Color hover) {
+        this(text, radius);
+        setBackground(normal);
+        setForeground(Color.WHITE);
 
-        applyHover(btn, normal, hover);
+        applyHover(this, normal, hover);
 
-        return btn;
     }
 
     public static void applyHover(JComponent component, Color normal, Color hover) {
@@ -239,5 +238,24 @@ public class Buttons extends JButton {
                 }
             });
         }
+    }
+
+    public static JButton createArrowButton(String a, Color h) {
+        JButton b = new JButton(a);
+        b.setContentAreaFilled(false);
+        b.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
+        b.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        b.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                b.setForeground(h);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                b.setForeground(Color.BLACK);
+            }
+        });
+        return b;
     }
 }

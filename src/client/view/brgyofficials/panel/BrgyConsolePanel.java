@@ -1,4 +1,4 @@
-package client.view.brgyofficials;
+package client.view.brgyofficials.panel;
 
 
 import javax.swing.*;

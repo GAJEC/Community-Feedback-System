@@ -2,7 +2,8 @@ package client.view.brgyofficials;
 
 import client.view.common.Buttons;
 import client.view.brgyofficials.panel.BrgyOfficialHeaderPanel;
-import client.view.common.field.HintTextField;
+import client.view.common.RoundedInputField;
+import client.view.strings.Images;
 import common.User;
 
 import javax.swing.*;
@@ -11,6 +12,8 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.net.URL;
+
+import static client.view.strings.Fonts.SegoeUi;
 
 public class BrgyOfficialDashboard extends JFrame {
 
@@ -52,10 +55,10 @@ public class BrgyOfficialDashboard extends JFrame {
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
         titlePanel.setOpaque(false);
         JLabel title = new JLabel("Feedback Overview");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        title.setFont(SegoeUi(Font.BOLD, 26));
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel tagline = new JLabel("Review and manage community feedbacks");
-        tagline.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+        tagline.setFont(SegoeUi(Font.ITALIC, 14));
         tagline.setForeground(new Color(120, 120, 120));
         tagline.setAlignmentX(Component.LEFT_ALIGNMENT);
         titlePanel.add(title);
@@ -101,7 +104,7 @@ public class BrgyOfficialDashboard extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridx = 0;
         gbc.weightx = 0.6;
-        panel.add(new HintTextField("Search feedbacks..."), gbc);
+        panel.add(new RoundedInputField(Images.scaled(Images.SEARCH, 15, 15), "Search feedbacks...", false), gbc);
         gbc.gridx = 1;
         gbc.weightx = 0.2;
         panel.add(new JComboBox<>(new String[]{"All Categories", "Infrastructure", "Sanitation",
@@ -139,9 +142,9 @@ public class BrgyOfficialDashboard extends JFrame {
             setBorder(new CompoundBorder(new RoundedBorder(12),
                     new EmptyBorder(15, 15, 15, 15)));
             JLabel t = new JLabel(title);
-            t.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            t.setFont(SegoeUi(Font.BOLD, 14));
             JLabel v = new JLabel(value);
-            v.setFont(new Font("Segoe UI", Font.BOLD, 26));
+            v.setFont(SegoeUi(Font.BOLD, 26));
             v.setForeground(GREEN);
             add(t, BorderLayout.NORTH);
             add(v, BorderLayout.CENTER);
@@ -202,7 +205,7 @@ public class BrgyOfficialDashboard extends JFrame {
                 }
             } catch (Exception ignored) {}
             JLabel voteCount = new JLabel(String.valueOf(votes));
-            voteCount.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            voteCount.setFont(SegoeUi(Font.BOLD, 14));
             voteCount.setAlignmentX(Component.CENTER_ALIGNMENT);
             votePanel.add(upVote);
             votePanel.add(Box.createVerticalStrut(2));
@@ -228,16 +231,16 @@ public class BrgyOfficialDashboard extends JFrame {
             label.setOpaque(true);
             label.setBackground(bg);
             label.setForeground(fg);
-            label.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            label.setFont(SegoeUi(Font.BOLD, 11));
             label.setBorder(new EmptyBorder(5, 10, 5, 10));
             return label;
         }
 
         private JPanel createTextStack(String text, String location, String date, String author) {
             JLabel body = new JLabel("<html>" + text + "</html>");
-            body.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            body.setFont(SegoeUi(Font.BOLD, 14));
             JLabel meta = new JLabel("📍 " + location + " • 👤 " + author + " • 📅 " + date);
-            meta.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            meta.setFont(SegoeUi(Font.PLAIN, 11));
             meta.setForeground(Color.GRAY);
             JPanel textStack = new JPanel();
             textStack.setLayout(new BoxLayout(textStack, BoxLayout.Y_AXIS));
@@ -252,20 +255,16 @@ public class BrgyOfficialDashboard extends JFrame {
         private JPanel priorityAndStatusPanel() {
             JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
             panel.setOpaque(false);
-            Font btnFont = new Font("Segoe UI", Font.BOLD, 8);
+            Font btnFont = SegoeUi(Font.BOLD, 8);
             Color labelColor = new Color(50,50,50);
             Dimension priorityBtnSize = new Dimension(65, 22);
             Dimension statusBtnSize = new Dimension(65, 22);
             JPanel priorityPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
             priorityPanel.setOpaque(false);
-            Buttons urgentBtn = Buttons.createRounded("Urgent", 6,
-                    new Color(255, 180, 180), new Color(230, 100, 90));
-            Buttons highBtn = Buttons.createRounded("High", 6,
-                    new Color(255, 220, 180), new Color(230, 160, 100));
-            Buttons mediumBtn = Buttons.createRounded("Medium", 6,
-                    new Color(255, 240, 180), new Color(210, 180, 110));
-            Buttons lowBtn = Buttons.createRounded("Low", 6,
-                    new Color(220, 240, 200), new Color(170, 200, 140));
+            Buttons urgentBtn = new Buttons("Urgent", 6, new Color(255, 180, 180), new Color(230, 100, 90));
+            Buttons highBtn = new Buttons("High", 6, new Color(255, 220, 180), new Color(230, 160, 100));
+            Buttons mediumBtn = new Buttons("Medium", 6, new Color(255, 240, 180), new Color(210, 180, 110));
+            Buttons lowBtn = new Buttons("Low", 6, new Color(220, 240, 200), new Color(170, 200, 140));
             for (Buttons btn : new Buttons[]{urgentBtn, highBtn, mediumBtn, lowBtn}) {
                 btn.setPreferredSize(priorityBtnSize);
                 btn.setFont(btnFont);
@@ -278,9 +277,9 @@ public class BrgyOfficialDashboard extends JFrame {
             priorityPanel.add(priorityLabel, 0);
             JPanel quickStatusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
             quickStatusPanel.setOpaque(false);
-            Buttons startBtn = Buttons.createRounded("Start", 6,
+            Buttons startBtn = new Buttons("Start", 6,
                     new Color(200, 220, 255), new Color(140, 160, 240));
-            Buttons resolveBtn = Buttons.createRounded("Resolve", 6,
+            Buttons resolveBtn = new Buttons("Resolve", 6,
                     new Color(200, 255, 200), new Color(100, 170, 100));
             for (Buttons btn : new Buttons[]{startBtn, resolveBtn}) {
                 btn.setPreferredSize(statusBtnSize);
@@ -306,7 +305,7 @@ public class BrgyOfficialDashboard extends JFrame {
             headerPanel.setOpaque(false);
             JLabel toggleLabel = new JLabel("Add internal note →");
             toggleLabel.setForeground(new Color(0, 128, 0));
-            toggleLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            toggleLabel.setFont(SegoeUi(Font.BOLD, 12));
             toggleLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             headerPanel.add(toggleLabel);
             container.add(headerPanel);
@@ -318,7 +317,7 @@ public class BrgyOfficialDashboard extends JFrame {
             JTextArea noteArea = new JTextArea(4, 30);
             noteArea.setLineWrap(true);
             noteArea.setWrapStyleWord(true);
-            noteArea.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            noteArea.setFont(SegoeUi(Font.PLAIN, 12));
             JScrollPane scrollPane = new JScrollPane(noteArea);
             scrollPane.setPreferredSize(new Dimension(400, 80));
             JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 5));
@@ -328,7 +327,7 @@ public class BrgyOfficialDashboard extends JFrame {
             saveButton.setFocusPainted(false);
             saveButton.setBackground(new Color(34, 153, 84));
             saveButton.setForeground(Color.WHITE);
-            saveButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            saveButton.setFont(SegoeUi(Font.BOLD, 12));
             buttonRow.add(saveButton);
             notePanel.add(scrollPane);
             notePanel.add(buttonRow);

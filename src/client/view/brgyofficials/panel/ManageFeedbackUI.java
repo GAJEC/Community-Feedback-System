@@ -1,8 +1,7 @@
-package client.view.brgyofficials;
+package client.view.brgyofficials.panel;
 
 import client.view.admin.panel.AdminHeaderPanel;
-import client.view.brgyofficials.panel.FeedbackRowPanel;
-import client.view.common.field.HintTextField;
+import client.view.common.RoundedInputField;
 import client.view.strings.Colors;
 
 import javax.swing.*;
@@ -12,7 +11,6 @@ import java.awt.geom.RoundRectangle2D;
 
 public class ManageFeedbackUI extends JFrame {
 
-    public HintTextField searchField;
     public JComboBox<String> statusFilter;
     public JPanel listContainer;
 
@@ -74,8 +72,7 @@ public class ManageFeedbackUI extends JFrame {
         inputsPanel.setOpaque(false);
         inputsPanel.setBorder(new EmptyBorder(25, 40, 25, 40));
 
-        searchField = new HintTextField("Search feedbacks");
-        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        RoundedInputField searchField = new RoundedInputField(null, "Search feedbacks", false);
 
         String[] filters = {"All Statuses", "Pending", "In Progress", "Resolved"};
         statusFilter = new JComboBox<>(filters);

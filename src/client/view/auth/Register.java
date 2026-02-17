@@ -1,22 +1,22 @@
 package client.view.auth;
 
-import client.view.common.field.RoundedTextField;
 import client.view.common.CustomPanel;
+import client.view.common.InfoRow;
+import client.view.common.RoundedInputField;
 import client.view.strings.Colors;
 import client.view.common.Buttons;
+import client.view.strings.Images;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.net.URL;
+
 
 public class Register extends JFrame {
 
-    private JTextField nameField, ageField, locationField;
-    private JPasswordField passField, confirmPassField;
+    private RoundedInputField nameField, ageField, locationField, passField, confirmPassField;
     private JLabel fileNameLabel;
     private File selectedIdFile;
 
@@ -76,47 +76,47 @@ public class Register extends JFrame {
 
         // Full Name
         gbc.gridy++; gbc.insets = new Insets(0, sidePadding, 5, sidePadding);
-        formCard.add(createLabel("Full Name"), gbc);
+        formCard.add(InfoRow.createLabel("Full Name"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, sidePadding, 15, sidePadding);
-        nameField = new RoundedTextField(15);
+        nameField = new RoundedInputField(null, "John", false);
         nameField.setPreferredSize(FIELD_SIZE);
         formCard.add(nameField, gbc);
 
         // Age
         gbc.gridy++; gbc.insets = new Insets(0, sidePadding, 5, sidePadding);
-        formCard.add(createLabel("Age"), gbc);
+        formCard.add(InfoRow.createLabel("Age"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, sidePadding, 15, sidePadding);
-        ageField = new RoundedTextField(15);
+        ageField = new RoundedInputField(null, "18", false);
         ageField.setPreferredSize(FIELD_SIZE);
         formCard.add(ageField, gbc);
 
         // Location
         gbc.gridy++; gbc.insets = new Insets(0, sidePadding, 5, sidePadding);
-        formCard.add(createLabel("Location / Address"), gbc);
+        formCard.add(InfoRow.createLabel("Location / Address"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, sidePadding, 15, sidePadding);
-        locationField = new RoundedTextField(15);
+        locationField = new RoundedInputField(null, "Baguio", false);
         locationField.setPreferredSize(FIELD_SIZE);
         formCard.add(locationField, gbc);
 
         // Password
         gbc.gridy++; gbc.insets = new Insets(0, sidePadding, 5, sidePadding);
-        formCard.add(createLabel("Password"), gbc);
+        formCard.add(InfoRow.createLabel("Password"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, sidePadding, 15, sidePadding);
-        passField = new RoundedPasswordField(15);
+        passField = new RoundedInputField(null, "", true);
         passField.setPreferredSize(FIELD_SIZE);
         formCard.add(passField, gbc);
 
         // Confirm Password
         gbc.gridy++; gbc.insets = new Insets(0, sidePadding, 5, sidePadding);
-        formCard.add(createLabel("Confirm Password"), gbc);
+        formCard.add(InfoRow.createLabel("Confirm Password"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, sidePadding, 15, sidePadding);
-        confirmPassField = new RoundedPasswordField(15);
+        confirmPassField = new RoundedInputField(null, "", true);
         confirmPassField.setPreferredSize(FIELD_SIZE);
         formCard.add(confirmPassField, gbc);
 
         // Upload ID
         gbc.gridy++; gbc.insets = new Insets(0, sidePadding, 5, sidePadding);
-        formCard.add(createLabel("Upload Valid ID"), gbc);
+        formCard.add(InfoRow.createLabel("Upload Valid ID"), gbc);
 
         gbc.gridy++; gbc.insets = new Insets(0, sidePadding, 25, sidePadding);
         JPanel uploadPanel = new JPanel(new BorderLayout(10, 0));
@@ -190,17 +190,6 @@ public class Register extends JFrame {
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    /**
-     * Creates a label with a red asterisk to indicate a required field.
-     */
-    private JLabel createLabel(String text) {
-        // We use HTML to color just the asterisk red
-        JLabel lbl = new JLabel("<html>" + text + " <font color='red'>*</font></html>");
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lbl.setForeground(new Color(80, 80, 80));
-        return lbl;
-    }
-
     private void chooseFile() {
         JFileChooser fileChooser = new JFileChooser();
         int result = fileChooser.showOpenDialog(this);
@@ -211,81 +200,54 @@ public class Register extends JFrame {
         }
     }
 
-    class RoundedPasswordField extends JPasswordField {
-        private int radius;
-        public RoundedPasswordField(int radius) {
-            this.radius = radius;
-            setOpaque(false);
-            setBorder(new EmptyBorder(5, 10, 5, 10));
-        }
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(getBackground());
-            g2.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, radius, radius);
-            g2.setColor(new Color(200, 200, 200));
-            g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, radius, radius);
-            super.paintComponent(g);
-            g2.dispose();
-        }
-    }
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new Register().setVisible(true));
     }
-}
 
-// --- HEADER PANEL CLASS ---
-class RegistrationHeaderPanel extends JPanel {
-    private static final Color HEADER_COLOR = Colors.PRIMARY;
+    // --- HEADER PANEL CLASS ---
+    static class RegistrationHeaderPanel extends JPanel {
+        private static final Color HEADER_COLOR = Colors.PRIMARY;
 
-    public RegistrationHeaderPanel() {
-        setLayout(new BorderLayout());
-        setBackground(HEADER_COLOR);
-        setPreferredSize(new Dimension(1000, 100)); // Fixed height
+        public RegistrationHeaderPanel() {
+            setLayout(new BorderLayout());
+            setBackground(HEADER_COLOR);
+            setPreferredSize(new Dimension(1000, 100)); // Fixed height
 
-        buildHeader();
-    }
-
-    private void buildHeader() {
-        JPanel contentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 5));
-        contentPanel.setOpaque(false);
-
-        // 1. LOGO SECTION
-        try {
-            URL logoURL = getClass().getResource("/assets/logo_icon.png");
-            if (logoURL != null) {
-                Image logo = new ImageIcon(logoURL).getImage().getScaledInstance(90, 80, Image.SCALE_SMOOTH);
-                JLabel logoLbl = new JLabel(new ImageIcon(logo));
-                logoLbl.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
-                contentPanel.add(logoLbl);
-            }
-        } catch (Exception ignored) {
-            System.out.println("Logo not found");
+            buildHeader();
         }
 
-        // 2. TEXT SECTION
-        JPanel textPanel = new JPanel();
-        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
-        textPanel.setOpaque(false);
-        textPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        private void buildHeader() {
+            JPanel contentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 5));
+            contentPanel.setOpaque(false);
 
-        JLabel title = new JLabel("Community Feedback System");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        title.setForeground(Color.WHITE);
-        title.setAlignmentX(Component.LEFT_ALIGNMENT);
+            // 1. LOGO SECTION
+            JLabel logoLbl = new JLabel(Images.scaledLogo(90, 90));
+            logoLbl.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
+            contentPanel.add(logoLbl);
 
-        JLabel tagline = new JLabel("Your Voice. Our Community. Real Change");
-        tagline.setFont(new Font("Segoe UI", Font.ITALIC, 14));
-        tagline.setForeground(new Color(255, 255, 255, 180));
-        tagline.setAlignmentX(Component.LEFT_ALIGNMENT);
+            // 2. TEXT SECTION
+            JPanel textPanel = new JPanel();
+            textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+            textPanel.setOpaque(false);
+            textPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
-        textPanel.add(title);
-        textPanel.add(Box.createVerticalStrut(5));
-        textPanel.add(tagline);
+            JLabel title = new JLabel("Community Feedback System");
+            title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+            title.setForeground(Color.WHITE);
+            title.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        contentPanel.add(textPanel);
-        add(contentPanel, BorderLayout.WEST);
+            JLabel tagline = new JLabel("Your Voice. Our Community. Real Change");
+            tagline.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+            tagline.setForeground(new Color(255, 255, 255, 180));
+            tagline.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            textPanel.add(title);
+            textPanel.add(Box.createVerticalStrut(5));
+            textPanel.add(tagline);
+
+            contentPanel.add(textPanel);
+            add(contentPanel, BorderLayout.WEST);
+        }
     }
 }
+

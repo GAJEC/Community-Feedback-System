@@ -13,9 +13,9 @@ import static client.view.strings.Fonts.SegoeUi;
 import static client.view.strings.Fonts.SegoeUiSemibold;
 
 public class ClientFeedbackDetailDialog extends JDialog {
-    private static final Color background = Color.WHITE;
+    private static final Color background = Colors.WHITE;
     private static final Color cardBackground = new Color(249, 250, 251);
-    private static final Color darkTeal = new Color(0, 102, 102);
+    private static final Color darkTeal = Colors.SUB_PRIMARY;
 
 
     public ClientFeedbackDetailDialog(Frame frame) {
@@ -39,8 +39,8 @@ public class ClientFeedbackDetailDialog extends JDialog {
 
         JPanel badges = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         badges.setOpaque(false);
-        badges.add(new roundedStatusCategory("IN PROGRESS", new Color(255, 255, 255, 60), Color.WHITE));
-        badges.add(new roundedStatusCategory("Infrastructure", new Color(255, 255, 255, 60), Color.WHITE));
+        badges.add(new roundedStatusCategory("IN PROGRESS", new Color(255, 255, 255, 60), Colors.WHITE));
+        badges.add(new roundedStatusCategory("Infrastructure", new Color(255, 255, 255, 60), Colors.WHITE));
 
 
         topHeaderRow.add(badges, BorderLayout.WEST);

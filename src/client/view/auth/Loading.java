@@ -3,6 +3,7 @@ package client.view.auth;
 import client.controller.LoginController;
 import client.model.ClientConnection;
 import client.utils.CredentialManager;
+import client.view.residents.ResidentDashboard;
 import common.User;
 
 import javax.swing.*;
@@ -127,19 +128,19 @@ public class Loading extends JWindow {
 
                         switch (userType) {
                             case 0:
-                                new client.view.residents.ResidentDashboard(true, loggedInUser, connection);
+                                new ResidentDashboard(true, loggedInUser, connection);
                                 break;
 //                            case 1: // Barangay Official
 //                                new client.view.brgyofficials.BrgyOfficialDashboard(true, loggedInUser);
 //                                break;
                             case 2: // Resident
-                                new client.view.residents.ResidentDashboard(true, loggedInUser, connection);
+                                new ResidentDashboard(true, loggedInUser, connection);
                                 break;
                             default: // Other
                                 if (CONFIG_DEBUG) {
                                     System.out.println("[AUTO-LOGIN] Unknown user type: " + userType);
                                 }
-                                new client.view.residents.ResidentDashboard(true, loggedInUser, connection);
+                                new ResidentDashboard(true, loggedInUser, connection);
                                 break;
                         }
                     } else {

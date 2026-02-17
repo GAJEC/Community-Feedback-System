@@ -9,11 +9,16 @@ public class Colors {
     public static final Color SECONDARY = new Color(0, 120, 120);
     public static final Color TERTIARY = new Color(0, 150, 150);
 
+    // Barangay
+    public static final Color GREEN = new Color(0, 255, 0);
+    public static final Color DARK_GREEN = new Color(34, 153, 84);
+    public static final Color LIGHT_GREEN = new Color(58, 198, 118);
+    public static final Color YELLOW_GREEN = new Color(114, 181, 112);
+
     // Common
     public static final Color BLACK = new Color(0, 0, 0);
     public static final Color WHITE =  new Color(255, 255, 255);
     public static final Color DARK_GRAY = new Color(62, 62, 62);
-    public static final Color GREEN = new Color(0, 255, 0);
     public static final Color BLUE = new Color(0, 0, 255);
     public static final Color YELLOW = new Color(255, 255, 0);
     public static final Color MAGENTA = new Color(255, 0, 255);
@@ -34,6 +39,7 @@ public class Colors {
     // Tag Colors
     public static final Color CATEGORY = new Color(255, 255, 255);
     public static final Color STATUS = new Color(255, 255, 255);
+    public static final Color GRAY = new Color(128, 128, 128);
     public static final Color LIGHTEST_GRAY = new Color(226, 232, 240); // Used for popup stroke
     public static final Color LIGHTER_GRAY = new Color(241, 245, 249); // Used for cancel button
     public static final Color LIGHT_GRAY = new Color(218, 218, 218); // used for cancel button hover

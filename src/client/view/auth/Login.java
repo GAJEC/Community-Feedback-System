@@ -4,8 +4,9 @@ import client.controller.LoginController;
 import client.model.ClientConnection;
 import client.utils.CredentialManager;
 import client.view.common.CustomPanel;
-import client.view.common.field.IconInputField;
 import client.view.common.Buttons;
+import client.view.common.RoundedInputField;
+import client.view.residents.ResidentDashboard;
 import client.view.strings.Colors;
 import client.view.strings.Images;
 import common.User;
@@ -14,6 +15,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
+import static client.view.strings.Colors.LIGHTEST_GRAY;
 import static client.view.strings.Fonts.SansSerif;
 import static client.view.strings.Images.*;
 import static common.Config.CONFIG_DEBUG;
@@ -63,10 +65,8 @@ public class Login extends JFrame {
         formPanel = new JPanel(formLayout);
 
         LoginForm loginForm = new LoginForm(controller, connection);
-        RegisterInfoPanel registerInfo = new RegisterInfoPanel();
 
         formPanel.add(loginForm, "login");
-        formPanel.add(registerInfo, "register");
 
         gbc.gridx = 1;
         gbc.gridy = 1;
@@ -79,7 +79,6 @@ public class Login extends JFrame {
         add(root);
     }
 
-    public void showRegisterPanel() { formLayout.show(formPanel, "register"); }
     public void showLoginPanel() { formLayout.show(formPanel, "login"); }
 
     public static class PanelCover extends JPanel {
@@ -139,8 +138,10 @@ public class Login extends JFrame {
             add(Box.createVerticalStrut(30));
 
             // Inputs
-            IconInputField username = new IconInputField(Images.scaled(USERNAME_URL, 20, 20), "Username", false);
-            IconInputField password = new IconInputField(Images.scaled(LOCK_URL, 20, 20), "Password", true);
+            RoundedInputField username = new RoundedInputField(Images.scaled(USERNAME, 20, 20), "Username", false);
+            username.setStrokeColor(LIGHTEST_GRAY);
+            RoundedInputField password = new RoundedInputField(Images.scaled(LOCK, 20, 20), "Password", true);
+            password.setStrokeColor(LIGHTEST_GRAY);
 
             add(username);
             add(Box.createVerticalStrut(15));
@@ -163,7 +164,7 @@ public class Login extends JFrame {
             add(Box.createVerticalStrut(15));
 
             Buttons btnLogin = new Buttons("SIGN IN", 30, Colors.PRIMARY, Colors.WHITE, Colors.SECONDARY, SansSerif(0, 14));
-            btnLogin.setMaximumSize(new Dimension(250, 45));
+            btnLogin.setMaximumSize(new Dimension(250, 30));
             btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
             Buttons.applyClick(btnLogin, () -> {
@@ -179,7 +180,7 @@ public class Login extends JFrame {
                         CredentialManager.deleteCredentials();
                     }
                     SwingUtilities.getWindowAncestor(this).dispose();
-                    new client.view.residents.ResidentDashboard(true, loggedInUser, connection);
+                    new ResidentDashboard(true, loggedInUser, connection);
                 } else {
                     JOptionPane.showMessageDialog(this, "Login failed: " + result[1], "Login Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -188,63 +189,18 @@ public class Login extends JFrame {
             add(btnLogin);
             add(Box.createVerticalStrut(5));
 
-            JLabel goRegister = new JLabel("How to Register");
-            goRegister.setFont(SansSerif(0, 12));
+            Buttons goRegister = new Buttons("Register", 30, Colors.TERTIARY, Colors.WHITE, Colors.SECONDARY, SansSerif(0, 14));
+            goRegister.setMaximumSize(new Dimension(250, 30));
             goRegister.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            Buttons.applyLinkHover(goRegister, Colors.TERTIARY, Colors.PRIMARY);
-
             Buttons.applyClick(goRegister, () -> {
-                JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(LoginForm.this);
-                if (topFrame instanceof Login loginFrame) {
-                    loginFrame.showRegisterPanel();
-                }
+                new Register().setVisible(true);
+                SwingUtilities.getWindowAncestor(this).dispose();
             });
 
+            add(Box.createVerticalStrut(5));
             add(goRegister);
-            add(Box.createVerticalGlue());
 
-        }
-    }
-
-    public static class RegisterInfoPanel extends JPanel {
-        public RegisterInfoPanel() {
-            setBackground(Color.WHITE);
-            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-            setBorder(new EmptyBorder(50, 50, 50, 50));
-
-            JLabel title = new JLabel("How to Register");
-            title.setFont(SansSerif(1, 30));
-            title.setAlignmentX(CENTER_ALIGNMENT);
-            add(title);
-            add(Box.createVerticalStrut(20));
-
-            JLabel info = new JLabel(
-                    "<html>" +
-                            "<ol>" +
-                            "<li>Go to your local barangay office.</li>" +
-                            "<li>Ask to be registered in the system.</li>" +
-                            "<li>Present a valid government-issued ID.</li>" +
-                            "<li>The official/IT staff will register your account.</li>" +
-                            "</ol>" +
-                            "</html>"
-            );
-
-            info.setFont(SansSerif(0, 18));
-            info.setAlignmentX(CENTER_ALIGNMENT);
-            add(info);
-            add(Box.createVerticalStrut(30));
-
-            Buttons backBtn = new Buttons("Back To Login", 30, Colors.SECONDARY, Colors.WHITE, Colors.TERTIARY, SansSerif(0, 14));
-            backBtn.setAlignmentX(CENTER_ALIGNMENT);
-            Buttons.applyClick(backBtn, () -> {
-                JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
-                if (topFrame instanceof Login loginFrame) {
-                    loginFrame.showLoginPanel();
-                }
-            });
-
-            add(backBtn);
         }
     }
 

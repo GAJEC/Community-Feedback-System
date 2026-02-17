@@ -1,8 +1,9 @@
 package client.view.common;
 
 import client.view.UiPreview;
-import client.view.common.field.InfoRow;
 import client.view.strings.Colors;
+import client.view.strings.Images;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -13,10 +14,6 @@ import static client.view.strings.Images.*;
 public class UserProfileDialog extends JDialog {
     public UserProfileDialog(JFrame parent) {
         super(parent, true);
-        setUndecorated(true);
-        setSize(420, 600);
-        setLocationRelativeTo(parent);
-        setBackground(TRANSPARENT);
 
         int radius = 25;
         CustomPanel mainPanel = new CustomPanel(radius);
@@ -27,8 +24,13 @@ public class UserProfileDialog extends JDialog {
         mainPanel.add(createHeader(), BorderLayout.NORTH);
         mainPanel.add(createContent(), BorderLayout.CENTER);
 
-
         setContentPane(mainPanel);
+
+        setUndecorated(true);
+        pack();
+        setSize(420, getPreferredSize().height+35);
+        setLocationRelativeTo(parent);
+        setBackground(TRANSPARENT);
     }
 
     // HEADER
@@ -48,14 +50,15 @@ public class UserProfileDialog extends JDialog {
         top.add(new Buttons.CloseButton(this, WHITE), BorderLayout.EAST);
 
         header.add(top, BorderLayout.NORTH);
-        header.add(createProfileInfo(), BorderLayout.CENTER); return header;
+        header.add(createProfileInfo(), BorderLayout.CENTER);
+        return header;
     }
 
     private JPanel createProfileInfo() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 20));
         panel.setOpaque(false);
 
-        ImageIcon profileIcon = scaled(PROFILE_URL, 60, 60);
+        ImageIcon profileIcon = Images.scaled(PROFILE, 60, 60);
         JLabel icon = new JLabel(profileIcon);
 
         JPanel info = new JPanel();
@@ -70,8 +73,11 @@ public class UserProfileDialog extends JDialog {
         id.setForeground(LIGHTEST_GRAY);
         id.setFont(SansSerif(0, 14));
 
-        info.add(name); info.add(id); panel.add(icon);
-        panel.add(info); return panel;
+        info.add(name);
+        info.add(id);
+        panel.add(icon);
+        panel.add(info);
+        return panel;
     }
 
     // CONTENT
@@ -79,27 +85,35 @@ public class UserProfileDialog extends JDialog {
         CustomPanel content = new CustomPanel(25, WHITE);
         content.setBorder(new EmptyBorder(25, 25, 15, 25));
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-        content.add(new InfoRow(EMAIL_URL, "Email Address", "alan.escobarney@email.com"));
+
+        InfoRow email = new InfoRow(Images.scaled(EMAIL,28,28), "Email Address", "alan.escobarney@email.com");
+        InfoRow phone = new InfoRow(Images.scaled(PHONE,28,28), "Phone Number", "+63 912 345 6789");
+        InfoRow location = new InfoRow(Images.scaled(LOCATION,28,28), "Barangay", "Luna Burgos");
+
+        content.add(email);
         content.add(Box.createVerticalStrut(15));
-        content.add(new InfoRow(PHONE_URL, "Phone Number", "+63 912 345 6789"));
+        content.add(phone);
         content.add(Box.createVerticalStrut(15));
-        content.add(new InfoRow(LOCATION_URL, "Barangay", "Luna Burgos"));
+        content.add(location);
 
         JSeparator line = new JSeparator(SwingConstants.HORIZONTAL);
         line.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
         line.setForeground(Colors.LIGHT_GRAY);
         line.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        content.add(Box.createVerticalStrut(15));
         content.add(line);
         content.add(Box.createVerticalStrut(10));
 
-        JLabel note = new JLabel( "<html><b>Note:</b> This is a demonstration system. " + "In a production environment, you would be able to edit your profile information here.</html>" );
+        JLabel note = new JLabel(
+                "<html><b>Note:</b> This is a demonstration system. " +
+                        "In a production environment, you would be able to edit your profile information here.</html>"
+        );
         note.setFont(SansSerif(0, 13));
         note.setForeground(Colors.BLACK);
         note.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         content.add(note);
-        content.add(Box.createVerticalGlue());
 
         return content;
     }

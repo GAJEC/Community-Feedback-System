@@ -1,7 +1,7 @@
 package client.view.brgyofficials.panel;
 
 import client.view.common.Buttons;
-import client.view.common.field.HintTextField;
+import client.view.common.RoundedInputField;
 
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
@@ -144,14 +144,11 @@ public class PostAnnouncementDialog extends JDialog {
         contentPanel.add(lblSubject, gbc);
 
         // --- Subject Field (Using HintTextField) ---
-        HintTextField txtSubject = new HintTextField("Enter the topic of announcement...");
-        txtSubject.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtSubject.setBackground(INPUT_BG);
+        RoundedInputField txtSubject = new RoundedInputField(null, "Enter the topic of announcement...", false);
+        txtSubject.setBackgroundColor(INPUT_BG);
+
         // We keep the border to match the rest of the form
-        txtSubject.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+        txtSubject.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         gbc.gridy = 2;
         gbc.insets = new Insets(0, 0, 20, 0);

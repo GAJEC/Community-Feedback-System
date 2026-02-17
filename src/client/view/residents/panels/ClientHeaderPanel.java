@@ -1,6 +1,5 @@
 package client.view.residents.panels;
 
-import client.view.UiPreview;
 import client.view.common.LogoutPopUp;
 import client.view.common.UserProfileDialog;
 import client.view.common.Buttons;
@@ -13,6 +12,7 @@ import java.awt.*;
 
 import static client.view.strings.Colors.*;
 import static client.view.strings.Fonts.SegoeUi;
+import static client.view.strings.Images.PROFILE;
 
 public class ClientHeaderPanel extends JPanel {
     // Colors
@@ -69,7 +69,7 @@ public class ClientHeaderPanel extends JPanel {
         String displayName = (user != null && user.getName() != null) ? user.getName() : "User";
         Buttons profileButton = new Buttons(displayName, 30, SUB_PRIMARY, WHITE, SECONDARY, SegoeUi(1,  12));
         profileButton.setPreferredSize(new Dimension(200, 40));
-        profileButton.setButtonIcon(Images.scaled(Images.PROFILE_URL, 25, 25), 2);
+        profileButton.setButtonIcon(Images.scaled(PROFILE, 25, 25), 2);
 
         Buttons.applyClick(profileButton, () -> {
             UserProfileDialog UserProfileDialog =
@@ -79,8 +79,7 @@ public class ClientHeaderPanel extends JPanel {
 
         Buttons logoutButton = new Buttons("Logout", 20, DARK_BUTTON, WHITE, RED, SegoeUi(1, 12));
         logoutButton.setPreferredSize(new Dimension(100, 40));
-
-        logoutButton.setButtonIcon(Images.scaled(Images.LOGOUT_URL, 18, 18), 8);
+        logoutButton.setButtonIcon(Images.scaled(Images.LOGOUT, 18, 18), 8);
 
         Buttons.applyClick(logoutButton, () -> {
             LogoutPopUp logoutDialog =
@@ -94,6 +93,7 @@ public class ClientHeaderPanel extends JPanel {
         headerPanel.add(rightPnl, BorderLayout.EAST);
         add(headerPanel);
     }
+
     public JButton viewBtn;
     public JButton submitBtn;
     // ================= NAV BAR =================
@@ -132,14 +132,5 @@ public class ClientHeaderPanel extends JPanel {
         } else {
             btn.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, new Color(0,0,0,0)));
         }
-    }
-
-    public static void main(String[] args) {
-        // dummy User
-        User dummyUser = new User(
-                "DUMBell",
-                "passpass"
-        );
-        UiPreview.show(v -> new ClientHeaderPanel(dummyUser), "ClientHeaderPanel Preview");
     }
 }
