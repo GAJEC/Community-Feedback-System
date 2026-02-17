@@ -1,5 +1,6 @@
 package client.view.auth;
 
+import client.model.ClientConnection;
 import client.view.common.CustomPanel;
 import client.view.common.InfoRow;
 import client.view.common.RoundedInputField;
@@ -8,6 +9,7 @@ import client.view.common.Buttons;
 import client.view.strings.Images;
 
 import javax.swing.*;
+import javax.swing.text.Style;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -15,7 +17,7 @@ import java.io.File;
 
 
 public class Register extends JFrame {
-
+    private ClientConnection connection; // Store the connection here
     private RoundedInputField nameField, ageField, locationField, passField, confirmPassField;
     private JLabel fileNameLabel;
     private File selectedIdFile;
@@ -163,13 +165,36 @@ public class Register extends JFrame {
 
         formCard.add(submitBtn, gbc);
 
-        // Login Link
-        gbc.gridy++; gbc.insets = new Insets(0, sidePadding, 35, sidePadding);
-        JLabel loginLink = new JLabel("<html>Already have an account? <font color='#007bff'>Login here</font></html>");
-        loginLink.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        loginLink.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        loginLink.setHorizontalAlignment(SwingConstants.CENTER);
-        formCard.add(loginLink, gbc);
+        JPanel loginRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+        loginRow.setOpaque(false);
+
+        JLabel promptText = new JLabel("Already have an account?");
+        promptText.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        promptText.setForeground(new Color(80, 80, 80)); // Subtle gray
+
+        JLabel loginLink = new JLabel("Login here");
+        loginLink.setFont(new Font("Segoe UI", Font.BOLD, 13));
+
+        Buttons.applyLinkHover(loginLink, new Color(0, 123, 255), new Color(0, 86, 179));
+
+        loginLink.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Window regFrame = SwingUtilities.getWindowAncestor(loginLink);
+                new Login(connection).setVisible(true);
+                if (regFrame != null) {
+                    regFrame.dispose();
+                }
+            }
+        });
+
+        loginRow.add(promptText);
+        loginRow.add(loginLink);
+
+        gbc.gridy++;
+        gbc.insets = new Insets(0, sidePadding, 35, sidePadding);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        formCard.add(loginRow, gbc);
 
         // --- 4. ADD FORM CARD TO MAIN CONTAINER ---
         gbcMain.gridx = 0;
