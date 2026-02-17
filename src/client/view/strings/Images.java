@@ -56,10 +56,10 @@ public final class Images {
     private static final URL LOGOUT_URL = resource("/assets/logout_icon.png", "/res/assets/logout_icon.png");
     public static final ImageIcon LOGOUT = safeIcon(LOGOUT_URL);
 
-    private static final URL SEARCH_URL = resource("/assets/null_icon.png", "/res/assets/null_icon.png");
+    private static final URL SEARCH_URL = resource("/assets/search_icon.png", "/res/assets/search_icon.png");
     public static final ImageIcon SEARCH = safeIcon(SEARCH_URL);
 
-    private static final URL SORT_URL = resource("/assets/null_icon.png", "/res/assets/null_icon.png");
+    private static final URL SORT_URL = resource("/assets/sort_icon.png", "/res/assets/sort_icon.png");
     public static final ImageIcon SORT = safeIcon(SORT_URL);
 
     // Methods

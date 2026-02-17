@@ -490,7 +490,7 @@ public class ResidentDashboard extends JFrame {
         textPanel.add(idLabel);
 
         JLabel iconLabel = new JLabel("👤 ");
-        iconLabel.setFont(SegoeUi(Font.PLAIN, 24));
+        iconLabel.setFont(new Font("Segoe Ui Emoji", Font.PLAIN, 24));
 
         panel.add(iconLabel, BorderLayout.WEST);
         panel.add(textPanel, BorderLayout.CENTER);
@@ -684,29 +684,6 @@ public class ResidentDashboard extends JFrame {
         }
     }
 
-    static class RoundedSortButton extends JButton {
-        public RoundedSortButton(String text) {
-            super(text);
-            setFont(SegoeUi(Font.PLAIN, 12));
-            setFocusPainted(false);
-            setContentAreaFilled(false);
-            setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-            setCursor(new Cursor(Cursor.HAND_CURSOR));
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(new Color(240, 240, 240));
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-            g2.setColor(new Color(210, 210, 210));
-            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
-            g2.dispose();
-            super.paintComponent(g);
-        }
-    }
-
     class FeedbackCard extends JPanel {
         private final Feedbacks feedback;
         private final JLabel voteCountLabel;
@@ -838,7 +815,7 @@ public class ResidentDashboard extends JFrame {
             bodyLabel.setFont(SegoeUi(Font.PLAIN, 14));
             JLabel meta = new JLabel(String.format("📍 %s  •  👤 %s  •  📅 %s", location, author, date));
             meta.setForeground(Color.GRAY);
-            meta.setFont(SegoeUi(Font.PLAIN, 11));
+            meta.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 11));
             textStack.add(bodyLabel);
             textStack.add(meta);
             gbc.gridy = 1; gbc.insets = new Insets(0, 0, 0, 0);
@@ -1048,7 +1025,7 @@ public class ResidentDashboard extends JFrame {
             JLabel tl = new JLabel("<html><b>" + t + "</b></html>");
             tl.setForeground(new Color(0, 102, 102));
             JLabel info = new JLabel("👤 " + o + " | " + dt);
-            info.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+            info.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 10));
             JLabel bl = new JLabel("<html><body style='width: 180px;'>" + d + "</body></html>");
             bl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
             add(tl);
