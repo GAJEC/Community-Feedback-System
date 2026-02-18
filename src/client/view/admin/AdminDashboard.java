@@ -2,6 +2,7 @@ package client.view.admin;
 
 import client.model.ClientConnection;
 import client.view.common.UserProfileDialog;
+import common.BroadcastMessage;
 import common.DeleteUserRequest;
 import common.FeedbackStatusUpdateRequest;
 import common.Feedbacks;
@@ -43,12 +44,14 @@ public class AdminDashboard extends JFrame {
     private JButton summaryBtn;
     private JButton consoleBtn;
     private JButton manageFeedbackBtn;
-    private JButton systemControlsBtn;
 
     private CardLayout contentLayout;
     private JPanel contentPanel;
     private JPanel summaryPanel;
+    private JPanel usersPanel;
     private JPanel manageFeedbackPanel;
+    private AdminConsoleView usersView;
+    private ManageFeedbackView manageFeedbackView;
     private String activeTab = "Summary";
     private final ClientConnection connection;
     private User[] cachedUsers = new User[0];
@@ -63,6 +66,7 @@ public class AdminDashboard extends JFrame {
         if (!this.connection.isConnected()) {
             this.connection.connect();
         }
+        this.connection.setBroadcastListener(this::handleBroadcast);
         refreshDataCaches();
 
         setTitle("Community Feedback System - Admin");
@@ -87,12 +91,11 @@ public class AdminDashboard extends JFrame {
         contentPanel = new JPanel(contentLayout);
 
         summaryPanel = createSummaryPanel();
+        usersPanel = createUsersPanel();
         manageFeedbackPanel = createManageFeedbackPanel();
         contentPanel.add(summaryPanel, "Summary");
-        contentPanel.add(new AdminConsoleView(connection, this::refreshAllData), "Users");
+        contentPanel.add(usersPanel, "Users");
         contentPanel.add(manageFeedbackPanel, "Manage Feedback");
-        contentPanel.add(new SystemControlsView(), "System Controls");
-
         add(contentPanel, BorderLayout.CENTER);
 
         setActiveTab("Summary");
@@ -173,22 +176,18 @@ public class AdminDashboard extends JFrame {
         summaryBtn = new JButton("Summary");
         consoleBtn = new JButton("Users");
         manageFeedbackBtn = new JButton("Manage Feedback");
-        systemControlsBtn = new JButton("System Controls");
 
         summaryBtn.addActionListener(e -> setActiveTab("Summary"));
         consoleBtn.addActionListener(e -> setActiveTab("Users"));
         manageFeedbackBtn.addActionListener(e -> setActiveTab("Manage Feedback"));
-        systemControlsBtn.addActionListener(e -> setActiveTab("System Controls"));
 
         styleTab(summaryBtn, false);
         styleTab(consoleBtn, false);
         styleTab(manageFeedbackBtn, false);
-        styleTab(systemControlsBtn, false);
 
         navBar.add(summaryBtn);
         navBar.add(consoleBtn);
         navBar.add(manageFeedbackBtn);
-        navBar.add(systemControlsBtn);
 
         container.add(navBar);
     }
@@ -200,13 +199,18 @@ public class AdminDashboard extends JFrame {
         styleTab(summaryBtn, "Summary".equals(tab));
         styleTab(consoleBtn, "Users".equals(tab));
         styleTab(manageFeedbackBtn, "Manage Feedback".equals(tab));
-        styleTab(systemControlsBtn, "System Controls".equals(tab));
     }
 
     private void refreshAllData() {
         refreshDataCaches();
         rebuildSummaryPanel();
         if (contentPanel != null) {
+            if (usersPanel != null) {
+                contentPanel.remove(usersPanel);
+            }
+            usersPanel = createUsersPanel();
+            contentPanel.add(usersPanel, "Users");
+
             if (manageFeedbackPanel != null) {
                 contentPanel.remove(manageFeedbackPanel);
             }
@@ -216,6 +220,87 @@ public class AdminDashboard extends JFrame {
             contentPanel.revalidate();
             contentPanel.repaint();
         }
+    }
+
+    private JPanel createUsersPanel() {
+        usersView = new AdminConsoleView(connection, this::refreshAllData);
+        return usersView;
+    }
+
+    private void handleBroadcast(BroadcastMessage message) {
+        SwingUtilities.invokeLater(() -> {
+            switch (message.getType()) {
+                case NEW_USER:
+                    if (message.getData() instanceof User newUser) {
+                        upsertUserCache(newUser);
+                        if (usersView != null) {
+                            usersView.onUsersUpdated(cachedUsers);
+                        }
+                        rebuildSummaryPanel();
+                        if ("Summary".equals(activeTab)) {
+                            contentLayout.show(contentPanel, "Summary");
+                        }
+                    }
+                    break;
+                case NEW_FEEDBACK:
+                    if (message.getData() instanceof Feedbacks feedback) {
+                        upsertFeedbackCache(feedback);
+                        if (manageFeedbackView != null) {
+                            manageFeedbackView.onFeedbacksUpdated();
+                        }
+                        rebuildSummaryPanel();
+                        if ("Summary".equals(activeTab)) {
+                            contentLayout.show(contentPanel, "Summary");
+                        }
+                    }
+                    break;
+                case VOTE_UPDATE:
+                case STATUS_UPDATE:
+                    if (message.getData() instanceof Feedbacks updated) {
+                        upsertFeedbackCache(updated);
+                        if (manageFeedbackView != null) {
+                            manageFeedbackView.onFeedbacksUpdated();
+                        }
+                        rebuildSummaryPanel();
+                        if ("Summary".equals(activeTab)) {
+                            contentLayout.show(contentPanel, "Summary");
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        });
+    }
+
+    private void upsertUserCache(User incoming) {
+        if (incoming == null) return;
+        for (int i = 0; i < cachedUsers.length; i++) {
+            User existing = cachedUsers[i];
+            if (existing != null && existing.getAttr_id() == incoming.getAttr_id()) {
+                cachedUsers[i] = incoming;
+                return;
+            }
+        }
+        User[] expanded = new User[cachedUsers.length + 1];
+        System.arraycopy(cachedUsers, 0, expanded, 0, cachedUsers.length);
+        expanded[cachedUsers.length] = incoming;
+        cachedUsers = expanded;
+    }
+
+    private void upsertFeedbackCache(Feedbacks incoming) {
+        if (incoming == null) return;
+        for (int i = 0; i < cachedFeedbacks.length; i++) {
+            Feedbacks existing = cachedFeedbacks[i];
+            if (existing != null && existing.getAttr_id() == incoming.getAttr_id()) {
+                cachedFeedbacks[i] = incoming;
+                return;
+            }
+        }
+        Feedbacks[] expanded = new Feedbacks[cachedFeedbacks.length + 1];
+        System.arraycopy(cachedFeedbacks, 0, expanded, 0, cachedFeedbacks.length);
+        expanded[cachedFeedbacks.length] = incoming;
+        cachedFeedbacks = expanded;
     }
 
     private void rebuildSummaryPanel() {
@@ -874,7 +959,8 @@ public class AdminDashboard extends JFrame {
     }
 
     private JPanel createManageFeedbackPanel() {
-        return new ManageFeedbackView();
+        manageFeedbackView = new ManageFeedbackView();
+        return manageFeedbackView;
     }
 
     class ManageFeedbackView extends JPanel {
@@ -1005,6 +1091,10 @@ public class AdminDashboard extends JFrame {
 
                 String status = getFeedbackStatus(feedback);
                 String category = feedback.getCategories() != null && feedback.getCategories().length > 0 ? feedback.getCategories()[0] : "Others";
+                String title = feedback.getTitle() == null ? "Untitled Feedback" : feedback.getTitle().trim();
+                if (title.isEmpty()) {
+                    title = "Untitled Feedback";
+                }
                 String content = feedback.getContent() == null ? "" : feedback.getContent();
                 String location = feedback.getLocation() == null ? "" : feedback.getLocation();
                 String author = findUserName(feedback.getIssued_by());
@@ -1012,13 +1102,13 @@ public class AdminDashboard extends JFrame {
                 if (!"All Categories".equals(selectedCategory) && !selectedCategory.equalsIgnoreCase(category)) continue;
                 if (!"All Status".equals(selectedStatus) && !selectedStatus.equalsIgnoreCase(status)) continue;
 
-                String searchBlob = (content + " " + location + " " + author + " " + category + " " + status).toLowerCase();
+                String searchBlob = (title + " " + content + " " + location + " " + author + " " + category + " " + status).toLowerCase();
                 if (!query.isEmpty() && !searchBlob.contains(query)) continue;
 
                 int votes = feedback.getAttr_upvote() == null ? 0 : feedback.getAttr_upvote().length;
                 String date = feedback.getIssued_date() == null ? "-" : dateFormat.format(feedback.getIssued_date());
 
-                listPanel.add(new FeedbackCard(feedback.getAttr_id(), status, category, content, location, date, author, votes));
+                listPanel.add(new FeedbackCard(feedback.getAttr_id(), status, category, title, content, location, date, author, votes));
                 listPanel.add(Box.createVerticalStrut(10));
                 shown++;
             }
@@ -1033,6 +1123,10 @@ public class AdminDashboard extends JFrame {
 
             listPanel.revalidate();
             listPanel.repaint();
+        }
+
+        public void onFeedbacksUpdated() {
+            refreshFeedbackList();
         }
 
         private String findUserName(int userId) {
@@ -1057,13 +1151,15 @@ public class AdminDashboard extends JFrame {
         }
 
         class FeedbackCard extends JPanel {
-            FeedbackCard(int feedbackId, String status, String category, String text,
+            FeedbackCard(int feedbackId, String status, String category, String title, String text,
                          String location, String date, String author, int votes) {
                 setLayout(new BorderLayout());
                 setBackground(Color.WHITE);
                 setBorder(new CompoundBorder(new RoundedBorder(12),
                         new EmptyBorder(12, 15, 12, 15)));
-                setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+            setAlignmentX(Component.LEFT_ALIGNMENT);
+            setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
+            setPreferredSize(new Dimension(0, 150));
 
                 JPanel mainPanel = new JPanel(new BorderLayout(15, 1));
                 mainPanel.setOpaque(false);
@@ -1083,8 +1179,15 @@ public class AdminDashboard extends JFrame {
                 tagRow.add(createTag(status.toUpperCase(), new Color(220, 235, 255, 50), new Color(0, 90, 180)));
                 tagRow.add(createTag(category, new Color(230, 220, 255, 50), new Color(100, 60, 180)));
 
-                JLabel body = new JLabel("<html>" + text + "</html>");
-                body.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                JTextArea body = new JTextArea((title == null ? "" : title) + "\n" + (text == null ? "" : text));
+                body.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                body.setLineWrap(true);
+                body.setWrapStyleWord(true);
+                body.setOpaque(false);
+                body.setEditable(false);
+                body.setFocusable(false);
+                body.setBorder(null);
+                body.setRows(2);
 
                 JLabel meta = new JLabel(location + " • " + author + " • " + date);
                 meta.setFont(new Font("Segoe UI", Font.PLAIN, 11));
@@ -1487,24 +1590,35 @@ public class AdminDashboard extends JFrame {
         private void loadUsersFromServer() {
             users.clear();
             Object[] response = getUsers();
-            if ("200".equals(response[0]) && response[2] instanceof User[]) {
-                for (User user : (User[]) response[2]) {
-                    if (user == null) continue;
-                    String role = switch (user.getAttr_type()) {
-                        case 0 -> "Admin";
-                        case 1 -> "Brgy Official";
-                        default -> "Citizen";
-                    };
-                    String status = (user.getVerify_status() != null && "PENDING".equalsIgnoreCase(user.getVerify_status()))
-                            ? "Pending"
-                            : "Active";
-                    String phone = (user.getContact() != null && user.getContact().length > 0) ? user.getContact()[0] : "-";
-                    String address = user.getAddress() == null ? "-" : user.getAddress();
-                    users.add(new UserRecord(user.getAttr_id(), String.format("USR_%03d", user.getAttr_id()), role,
-                            user.getName() == null ? user.getUsername() : user.getName(), phone, address, status));
-                }
+            if ("200".equals(response[0]) && response[2] instanceof User[] usersFromServer) {
+                mapUsers(usersFromServer);
             }
             refreshCards();
+        }
+
+        public void onUsersUpdated(User[] latestUsers) {
+            mapUsers(latestUsers);
+            refreshCards();
+        }
+
+        private void mapUsers(User[] sourceUsers) {
+            users.clear();
+            if (sourceUsers == null) return;
+            for (User user : sourceUsers) {
+                if (user == null) continue;
+                String role = switch (user.getAttr_type()) {
+                    case 0 -> "Admin";
+                    case 1 -> "Brgy Official";
+                    default -> "Citizen";
+                };
+                String status = (user.getVerify_status() != null && "PENDING".equalsIgnoreCase(user.getVerify_status()))
+                        ? "Pending"
+                        : "Active";
+                String phone = (user.getContact() != null && user.getContact().length > 0) ? user.getContact()[0] : "-";
+                String address = user.getAddress() == null ? "-" : user.getAddress();
+                users.add(new UserRecord(user.getAttr_id(), String.format("USR_%03d", user.getAttr_id()), role,
+                        user.getName() == null ? user.getUsername() : user.getName(), phone, address, status));
+            }
         }
 
         private Object[] getUsers() {

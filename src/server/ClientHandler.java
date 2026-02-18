@@ -83,6 +83,14 @@ public class ClientHandler extends Thread {
                             out.writeObject(response);
                             out.flush();
                         }
+
+                        if ("200".equals(response[0]) && response[2] != null) {
+                            BroadcastMessage broadcast = new BroadcastMessage(
+                                    BroadcastMessage.BroadcastType.NEW_USER,
+                                    response[2]
+                            );
+                            Server.broadcast(broadcast, this);
+                        }
                     }
                     case Feedbacks f -> {
                         if(CONFIG_DEBUG){

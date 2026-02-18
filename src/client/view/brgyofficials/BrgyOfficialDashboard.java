@@ -25,7 +25,7 @@ public class BrgyOfficialDashboard extends JFrame {
     private static final Color GREEN = new Color(34, 153, 84);
     private static final Color USER_BOX_BG = new Color(248, 250, 252);
 
-    private JPanel contentContainer;
+    private final JPanel contentContainer;
     private User user;
     private BrgyOfficialHeaderPanel header;
 

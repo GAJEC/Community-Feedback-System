@@ -12,7 +12,8 @@ public class BroadcastMessage implements Serializable {
     public enum BroadcastType {
         VOTE_UPDATE,
         NEW_FEEDBACK,
-        STATUS_UPDATE
+        STATUS_UPDATE,
+        NEW_USER
     }
 
     public BroadcastMessage(BroadcastType type, Object data) {

@@ -46,10 +46,10 @@ public class ClientFeedbackDetailDialog extends JDialog {
         int upvotes = feedback.getAttr_upvote() != null ? feedback.getAttr_upvote().length : 0;
         int downvotes = feedback.getAttr_downvote() != null ? feedback.getAttr_downvote().length : 0;
 
-        String content = feedback.getContent() != null ? feedback.getContent() : "";
-        String[] contentParts = splitTitleAndBody(content);
-        String headerTitle = !contentParts[0].isEmpty() ? contentParts[0] : "Feedback Details";
-        String contentBody = !contentParts[1].isEmpty() ? contentParts[1] : content;
+        String headerTitle = feedback.getTitle() != null && !feedback.getTitle().trim().isEmpty()
+            ? feedback.getTitle().trim()
+            : "Feedback Details";
+        String contentBody = feedback.getContent() != null ? feedback.getContent() : "";
 
         CustomPanel main = new CustomPanel(30, background);
         main.setLayout(new BorderLayout());
@@ -185,22 +185,6 @@ public class ClientFeedbackDetailDialog extends JDialog {
         add(main);
     }
 
-    private static String[] splitTitleAndBody(String content) {
-        if (content == null) {
-            return new String[]{"", ""};
-        }
-
-        String trimmed = content.trim();
-        if (trimmed.isEmpty()) {
-            return new String[]{"", ""};
-        }
-
-        String[] parts = trimmed.split("\\R\\R+", 2);
-        String title = parts.length > 0 ? parts[0].trim() : "";
-        String body = parts.length > 1 ? parts[1].trim() : "";
-        return new String[]{title, body};
-    }
-
     private void styleTextArea(JTextArea ta) {
         ta.setLineWrap(true);
         ta.setWrapStyleWord(true);
@@ -265,8 +249,9 @@ public class ClientFeedbackDetailDialog extends JDialog {
                     0,
                     new String[]{"Pending"},
                     new String[]{"Infrastructure"},
+                    "Street lights are not working",
                     "Main Road",
-                    "Street lights are not working.\\n\\nThey've been out for a week.",
+                    "They've been out for a week.",
                     new Date()
             );
             return new ClientFeedbackDetailDialog(frame, demo, "Pending", "Infrastructure", "User #2");

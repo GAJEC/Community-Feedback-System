@@ -549,14 +549,12 @@ public class ResidentDashboard extends JFrame {
             return;
         }
 
-        String fullContent = title + "\n\n" + description;
-
         Object[] response = feedbackController.submitFeedback(
             user.getAttr_id(),
             category,
             title,
             location,
-            fullContent
+            description
         );
 
         String statusCode = (String) response[0];
@@ -611,13 +609,16 @@ public class ResidentDashboard extends JFrame {
                             : "Pending";
                     String category = feedback.getCategories() != null && feedback.getCategories().length > 0
                         ? feedback.getCategories()[0] : "General";
-                    String content = feedback.getContent();
+                        String title = feedback.getTitle() != null && !feedback.getTitle().trim().isEmpty()
+                            ? feedback.getTitle().trim()
+                            : "Untitled Feedback";
+                        String content = feedback.getContent();
                     String location = feedback.getLocation();
                     String date = dateFormat.format(feedback.getIssued_date());
 
                     String authorName = getUserName(feedback.getIssued_by());
 
-                    FeedbackCard card = new FeedbackCard(feedback, status, category, content, location, date, authorName);
+                        FeedbackCard card = new FeedbackCard(feedback, status, category, title, content, location, date, authorName);
                     feedbackCards.put(feedback.getAttr_id(), card);
                     listPanel.add(card);
                     listPanel.add(Box.createVerticalStrut(8));
@@ -702,7 +703,7 @@ public class ResidentDashboard extends JFrame {
         private static final Color UPVOTE_COLOR = new Color(0, 150, 0);
         private static final Color DOWNVOTE_COLOR = new Color(150, 0, 0);
 
-        FeedbackCard(Feedbacks feedback, String status, String category, String text, String location, String date, String author) {
+        FeedbackCard(Feedbacks feedback, String status, String category, String title, String text, String location, String date, String author) {
             this.feedback = feedback;
 
             int userId = user.getAttr_id();
@@ -817,7 +818,7 @@ public class ResidentDashboard extends JFrame {
             JPanel textStack = new JPanel();
             textStack.setLayout(new BoxLayout(textStack, BoxLayout.Y_AXIS));
             textStack.setOpaque(false);
-            JLabel bodyLabel = new JLabel("<html><body style='width: 350px;'><b>" + text + "</b></body></html>");
+            JLabel bodyLabel = new JLabel("<html><body style='width: 350px;'><b>" + title + "</b><br/>" + text + "</body></html>");
             bodyLabel.setFont(SegoeUi(Font.PLAIN, 14));
             JLabel meta = new JLabel(String.format("📍 %s  •  👤 %s  •  📅 %s", location, author, date));
             meta.setForeground(Color.GRAY);

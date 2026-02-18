@@ -24,6 +24,9 @@ public class FeedbackActions {
             if (feedback.getContent() == null || feedback.getContent().trim().isEmpty()) {
                 return new Object[]{"400", "Feedback content is required", null};
             }
+            if (feedback.getTitle() == null || feedback.getTitle().trim().isEmpty()) {
+                return new Object[]{"400", "Feedback title is required", null};
+            }
             if (feedback.getLocation() == null || feedback.getLocation().trim().isEmpty()) {
                 return new Object[]{"400", "Location is required", null};
             }
