@@ -1,8 +1,12 @@
 package server;
 
 import common.BroadcastMessage;
+import common.DeleteUserRequest;
+import common.FeedbackStatusUpdateRequest;
 import common.Feedbacks;
+import common.RegisterRequest;
 import common.User;
+import common.UserStatusUpdateRequest;
 import common.VoteRequest;
 import org.xml.sax.SAXException;
 import server.actions.FeedbackActions;
@@ -68,6 +72,18 @@ public class ClientHandler extends Thread {
                             out.flush();
                         }
                     }
+                    case RegisterRequest rr -> {
+                        if(CONFIG_DEBUG){
+                            System.out.println("Received register request from Client " + clientId);
+                        }
+
+                        Object[] response = LoginActions.handleRegister(rr, clientId);
+
+                        synchronized (out) {
+                            out.writeObject(response);
+                            out.flush();
+                        }
+                    }
                     case Feedbacks f -> {
                         if(CONFIG_DEBUG){
                             System.out.println("Received feedback submission from Client " + clientId);
@@ -106,6 +122,44 @@ public class ClientHandler extends Thread {
                             Server.broadcast(broadcast, this);
                         }
                     }
+                    case UserStatusUpdateRequest usr -> {
+                        if (CONFIG_DEBUG) {
+                            System.out.println("Received user status update request from Client " + clientId);
+                        }
+                        Object[] response = LoginActions.updateUserStatus(usr.getUserId(), usr.getStatus());
+                        synchronized (out) {
+                            out.writeObject(response);
+                            out.flush();
+                        }
+                    }
+                    case DeleteUserRequest dur -> {
+                        if (CONFIG_DEBUG) {
+                            System.out.println("Received delete user request from Client " + clientId);
+                        }
+                        Object[] response = LoginActions.deleteUser(dur.getUserId());
+                        synchronized (out) {
+                            out.writeObject(response);
+                            out.flush();
+                        }
+                    }
+                    case FeedbackStatusUpdateRequest fsr -> {
+                        if (CONFIG_DEBUG) {
+                            System.out.println("Received feedback status update request from Client " + clientId);
+                        }
+                        Object[] response = FeedbackActions.updateFeedbackStatus(fsr.getFeedbackId(), fsr.getStatus());
+                        synchronized (out) {
+                            out.writeObject(response);
+                            out.flush();
+                        }
+
+                        if ("200".equals(response[0]) && response[2] != null) {
+                            BroadcastMessage broadcast = new BroadcastMessage(
+                                    BroadcastMessage.BroadcastType.STATUS_UPDATE,
+                                    response[2]
+                            );
+                            Server.broadcast(broadcast, this);
+                        }
+                    }
                     case String s -> {
                         if ("GET_FEEDBACKS".equals(s)) {
                             if(CONFIG_DEBUG){
@@ -113,6 +167,16 @@ public class ClientHandler extends Thread {
                             }
                             
                             Object[] response = FeedbackActions.getAllFeedbacks();
+                            synchronized (out) {
+                                out.writeObject(response);
+                                out.flush();
+                            }
+                        } else if ("GET_USERS".equals(s)) {
+                            if (CONFIG_DEBUG) {
+                                System.out.println("Received GET_USERS request from Client " + clientId);
+                            }
+
+                            Object[] response = LoginActions.getAllUsers();
                             synchronized (out) {
                                 out.writeObject(response);
                                 out.flush();

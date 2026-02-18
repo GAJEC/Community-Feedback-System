@@ -73,7 +73,7 @@ public class ClientHeaderPanel extends JPanel {
 
         Buttons.applyClick(profileButton, () -> {
             UserProfileDialog UserProfileDialog =
-                    new UserProfileDialog((JFrame) SwingUtilities.getWindowAncestor(headerPanel));
+                    new UserProfileDialog((JFrame) SwingUtilities.getWindowAncestor(headerPanel), user);
             UserProfileDialog.setVisible(true);
         });
 

@@ -1,4 +1,4 @@
-package client.utils;
+package client.model;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

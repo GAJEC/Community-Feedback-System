@@ -4,10 +4,13 @@ import client.view.UiPreview;
 import client.view.common.Buttons;
 import client.view.common.CustomPanel;
 import client.view.strings.Colors;
+import common.Feedbacks;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import static client.view.strings.Fonts.SegoeUi;
 import static client.view.strings.Fonts.SegoeUiSemibold;
@@ -18,12 +21,35 @@ public class ClientFeedbackDetailDialog extends JDialog {
     private static final Color darkTeal = Colors.SUB_PRIMARY;
 
 
-    public ClientFeedbackDetailDialog(Frame frame) {
+    public ClientFeedbackDetailDialog(Frame frame, Feedbacks feedback, String status, String category, String authorName) {
         super(frame, "Feedback Details", true);
         setSize(850, 780);
         setUndecorated(true);
         setLocationRelativeTo(null);
         setBackground(new Color(0, 0, 0, 0));
+
+        if (feedback == null) {
+            throw new IllegalArgumentException("feedback must not be null");
+        }
+
+        String safeStatus = status != null && !status.trim().isEmpty() ? status.trim() : "Pending";
+        String safeCategory = category != null && !category.trim().isEmpty() ? category.trim() : "General";
+
+        String safeAuthorName = authorName != null && !authorName.trim().isEmpty()
+                ? authorName.trim()
+                : (feedback.getIssued_by() > 0 ? "User #" + feedback.getIssued_by() : "Unknown");
+
+        Date issued = feedback.getIssued_date();
+        String issuedDate = issued != null ? new SimpleDateFormat("MMM dd, yyyy").format(issued) : "—";
+        String issuedTime = issued != null ? new SimpleDateFormat("hh:mm a").format(issued) : "—";
+
+        int upvotes = feedback.getAttr_upvote() != null ? feedback.getAttr_upvote().length : 0;
+        int downvotes = feedback.getAttr_downvote() != null ? feedback.getAttr_downvote().length : 0;
+
+        String content = feedback.getContent() != null ? feedback.getContent() : "";
+        String[] contentParts = splitTitleAndBody(content);
+        String headerTitle = !contentParts[0].isEmpty() ? contentParts[0] : "Feedback Details";
+        String contentBody = !contentParts[1].isEmpty() ? contentParts[1] : content;
 
         CustomPanel main = new CustomPanel(30, background);
         main.setLayout(new BorderLayout());
@@ -39,8 +65,8 @@ public class ClientFeedbackDetailDialog extends JDialog {
 
         JPanel badges = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         badges.setOpaque(false);
-        badges.add(new roundedStatusCategory("IN PROGRESS", new Color(255, 255, 255, 60), Colors.WHITE));
-        badges.add(new roundedStatusCategory("Infrastructure", new Color(255, 255, 255, 60), Colors.WHITE));
+        badges.add(new roundedStatusCategory(safeStatus.toUpperCase(), new Color(255, 255, 255, 60), Colors.WHITE));
+        badges.add(new roundedStatusCategory(safeCategory, new Color(255, 255, 255, 60), Colors.WHITE));
 
 
         topHeaderRow.add(badges, BorderLayout.WEST);
@@ -53,12 +79,12 @@ public class ClientFeedbackDetailDialog extends JDialog {
         titlePanel.setBorder(new EmptyBorder(15, 0, 0, 0));
 
 
-        JLabel title = new JLabel("Feedback Details");
+        JLabel title = new JLabel(headerTitle);
         title.setFont(SegoeUi(1, 30));
         title.setForeground(Color.WHITE);
 
 
-        JLabel idLabel = new JLabel("ID: ");
+        JLabel idLabel = new JLabel("ID: " + feedback.getAttr_id());
         idLabel.setFont(SegoeUi(0, 10));
         idLabel.setForeground(new Color(255, 255, 255, 180));
 
@@ -79,10 +105,10 @@ public class ClientFeedbackDetailDialog extends JDialog {
 
         JPanel grid = new JPanel(new GridLayout(2, 2, 15, 15));
         grid.setOpaque(false);
-        grid.add(detailCard("Submitted By", "Maria Garcia", "user_002"));
-        grid.add(detailCard("Location", "Main Road", "District 4"));
-        grid.add(detailCard("Submitted On", "Feb 3, 2026", "05:56 PM"));
-        grid.add(detailCard("Support", "13 upvotes", "High Priority"));
+        grid.add(detailCard("Submitted By", safeAuthorName, "ID: " + feedback.getIssued_by()));
+        grid.add(detailCard("Location", feedback.getLocation() != null && !feedback.getLocation().trim().isEmpty() ? feedback.getLocation().trim() : "—", ""));
+        grid.add(detailCard("Submitted On", issuedDate, issuedTime));
+        grid.add(detailCard("Support", upvotes + " upvotes", downvotes + " downvotes"));
 
 
         JPanel gridWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
@@ -102,7 +128,7 @@ public class ClientFeedbackDetailDialog extends JDialog {
         bodyContainer.add(contentLabel);
         bodyContainer.add(Box.createVerticalStrut(8));
 
-        JTextArea contentArea = new JTextArea("The street lights along Main Road have not been working for the past week.");
+        JTextArea contentArea = new JTextArea(contentBody);
         styleTextArea(contentArea);
 
         CustomPanel contentCard = new CustomPanel(15, cardBackground);
@@ -134,18 +160,19 @@ public class ClientFeedbackDetailDialog extends JDialog {
         respTop.setOpaque(false);
         JPanel nameBadge = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         nameBadge.setOpaque(false);
-        JLabel name = new JLabel("Maria Santos");
+        String officialName = feedback.getAttr_approvedby() > 0 ? ("Official #" + feedback.getAttr_approvedby()) : "—";
+        JLabel name = new JLabel(officialName);
         name.setFont(SegoeUi(1, 15));
         nameBadge.add(name);
         nameBadge.add(new roundedStatusCategory("Barangay Official", new Color(153, 204, 255), new Color(0, 102, 204)));
 
-        JLabel date = new JLabel("Feb 4, 2026 at 05:56 PM");
+        JLabel date = new JLabel("");
         date.setFont(SegoeUi(0, 12));
         date.setForeground(new Color(148, 163, 184));
         respTop.add(nameBadge, BorderLayout.WEST);
         respTop.add(date, BorderLayout.EAST);
 
-        JTextArea respMsg = new JTextArea("Maintenance is scheduled for the street lights next week.");
+        JTextArea respMsg = new JTextArea("No official response yet.");
         styleTextArea(respMsg);
         respMsg.setBorder(new EmptyBorder(6, 0, 0, 0));
 
@@ -156,6 +183,22 @@ public class ClientFeedbackDetailDialog extends JDialog {
         main.add(headerRow, BorderLayout.NORTH);
         main.add(bodyContainer, BorderLayout.CENTER);
         add(main);
+    }
+
+    private static String[] splitTitleAndBody(String content) {
+        if (content == null) {
+            return new String[]{"", ""};
+        }
+
+        String trimmed = content.trim();
+        if (trimmed.isEmpty()) {
+            return new String[]{"", ""};
+        }
+
+        String[] parts = trimmed.split("\\R\\R+", 2);
+        String title = parts.length > 0 ? parts[0].trim() : "";
+        String body = parts.length > 1 ? parts[1].trim() : "";
+        return new String[]{title, body};
     }
 
     private void styleTextArea(JTextArea ta) {
@@ -215,7 +258,19 @@ public class ClientFeedbackDetailDialog extends JDialog {
     }
 
     public static void main(String[] args) {
-        UiPreview.show(ClientFeedbackDetailDialog::new);
+        UiPreview.show(frame -> {
+            Feedbacks demo = new Feedbacks(
+                    1,
+                    2,
+                    0,
+                    new String[]{"Pending"},
+                    new String[]{"Infrastructure"},
+                    "Main Road",
+                    "Street lights are not working.\\n\\nThey've been out for a week.",
+                    new Date()
+            );
+            return new ClientFeedbackDetailDialog(frame, demo, "Pending", "Infrastructure", "User #2");
+        });
     }
 }
 

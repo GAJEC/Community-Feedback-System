@@ -351,7 +351,13 @@ public class ResidentDashboard extends JFrame {
         subTitle.setForeground(Colors.GRAY);
         subTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JPanel userBlock = createUserProfileBlock("Juan Dela Cruz", "2023-8492");
+        String displayName = (user != null && user.getName() != null && !user.getName().trim().isEmpty())
+            ? user.getName().trim()
+            : (user != null && user.getUsername() != null && !user.getUsername().trim().isEmpty()
+                ? user.getUsername().trim()
+                : "Resident");
+        String displayId = (user != null) ? String.valueOf(user.getAttr_id()) : "N/A";
+        JPanel userBlock = createUserProfileBlock(displayName, displayId);
 
         JSeparator separator = new JSeparator();
         separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
@@ -838,7 +844,13 @@ public class ResidentDashboard extends JFrame {
                 Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(detailsBtn);
 
                 if (parentWindow instanceof Frame) {
-                    ClientFeedbackDetailDialog dialog = new ClientFeedbackDetailDialog((Frame) parentWindow);
+                    ClientFeedbackDetailDialog dialog = new ClientFeedbackDetailDialog(
+                            (Frame) parentWindow,
+                            feedback,
+                            status,
+                            category,
+                            author
+                    );
                     dialog.setVisible(true);
                 }
             });

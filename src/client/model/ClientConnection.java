@@ -2,6 +2,7 @@ package client.model;
 
 import common.BroadcastMessage;
 import common.Feedbacks;
+import common.RegisterRequest;
 import common.User;
 import common.VoteRequest;
 
@@ -117,6 +118,25 @@ public class ClientConnection {
         }
     }
 
+    public void sendRegisterRequest(RegisterRequest registerRequest) {
+        if (!connected) {
+            System.err.println("Not connected to server");
+            return;
+        }
+
+        try {
+            synchronized (out) {
+                out.writeObject(registerRequest);
+                out.flush();
+            }
+            if (CONFIG_DEBUG) {
+                System.out.println("Sent register request for username: " + registerRequest.getUsername());
+            }
+        } catch (IOException e) {
+            System.err.println("Error sending register request: " + e.getMessage());
+        }
+    }
+
     public void sendFeedback(Feedbacks feedback) {
         if (!connected) {
             System.err.println("Not connected to server");
@@ -155,7 +175,7 @@ public class ClientConnection {
         }
     }
 
-    public void sendRequest(String request) {
+    public void sendRequest(Object request) {
         if (!connected) {
             System.err.println("Not connected to server");
             return;

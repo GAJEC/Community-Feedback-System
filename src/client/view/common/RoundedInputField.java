@@ -2,12 +2,19 @@ package client.view.common;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.DefaultEditorKit;
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.io.OutputStream;
+import java.io.PrintStream;
 
 public class RoundedInputField extends JPanel {
+    private static final Object CLIPBOARD_ERR_LOCK = new Object();
 
     private JTextField field;
     private String hint;
@@ -44,6 +51,8 @@ public class RoundedInputField extends JPanel {
         field.setOpaque(false);
         field.setForeground(hintColor);
 
+        installSafePasteHandler();
+
         field.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -69,6 +78,59 @@ public class RoundedInputField extends JPanel {
         });
 
         add(field, BorderLayout.CENTER);
+    }
+
+    private void installSafePasteHandler() {
+        Action safePasteAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                pastePlainTextFromClipboard();
+            }
+        };
+
+        field.getActionMap().put(DefaultEditorKit.pasteAction, safePasteAction);
+
+        InputMap inputMap = field.getInputMap();
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK), DefaultEditorKit.pasteAction);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_INSERT, InputEvent.SHIFT_DOWN_MASK), DefaultEditorKit.pasteAction);
+    }
+
+    private void pastePlainTextFromClipboard() {
+        try {
+            Object data;
+            synchronized (CLIPBOARD_ERR_LOCK) {
+                PrintStream originalErr = System.err;
+                try {
+                    System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+                    data = Toolkit.getDefaultToolkit()
+                            .getSystemClipboard()
+                            .getData(DataFlavor.stringFlavor);
+                } finally {
+                    System.setErr(originalErr);
+                }
+            }
+
+            if (!(data instanceof String)) {
+                return;
+            }
+
+            String pasted = (String) data;
+            if (pasted == null) {
+                return;
+            }
+
+            if (showingHint) {
+                field.setText("");
+                field.setForeground(textColor);
+                if (field instanceof JPasswordField) {
+                    ((JPasswordField) field).setEchoChar('•');
+                }
+                showingHint = false;
+            }
+
+            field.replaceSelection(pasted);
+        } catch (Exception ignored) {
+        }
     }
 
     @Override

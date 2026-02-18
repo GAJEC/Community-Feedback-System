@@ -1,7 +1,7 @@
 package client.view.common;
 
 import client.view.UiPreview;
-import client.view.auth.Login;
+import client.view.auth.AuthScreen;
 import client.view.strings.Colors;
 
 import javax.swing.*;
@@ -45,7 +45,7 @@ public class LogoutPopUp extends JDialog {
             }
             // Open Login Screen
             client.model.ClientConnection connection = new client.model.ClientConnection();
-            new Login(connection).setVisible(true);
+            new AuthScreen(connection).setVisible(true);
         });
 
         Buttons.applyClick(noBtn, this::dispose);

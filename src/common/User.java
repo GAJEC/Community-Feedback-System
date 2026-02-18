@@ -16,6 +16,8 @@ public class User implements Serializable {
     String name;
     String address;
     String[] contact;
+    String verify_status;
+    int id_image_ref;
 
 
 
@@ -27,6 +29,8 @@ public class User implements Serializable {
         this.name = null;
         this.address = null;
         this.contact = null;
+        this.verify_status = null;
+        this.id_image_ref = 0;
     }
 
     public User(int id, String username, String password, String name, String address) {
@@ -37,6 +41,8 @@ public class User implements Serializable {
         this.name = name;
         this.address = address;
         this.contact = null;
+        this.verify_status = null;
+        this.id_image_ref = 0;
     }
 
     public User(int id, String username, String password, String name, String address, String[] contact) {
@@ -47,6 +53,8 @@ public class User implements Serializable {
         this.name = name;
         this.address = address;
         this.contact = contact;
+        this.verify_status = null;
+        this.id_image_ref = 0;
     }
 
     public User(int id, int type, String username, String password, String name, String address, String[] contact) {
@@ -57,6 +65,20 @@ public class User implements Serializable {
         this.name = name;
         this.address = address;
         this.contact = contact;
+        this.verify_status = null;
+        this.id_image_ref = 0;
+    }
+
+    public User(int id, int type, String username, String password, String name, String address, String[] contact, String verify_status, int id_image_ref) {
+        this.attr_id = id;
+        this.attr_type = type;
+        this.username = username;
+        this.password = password;
+        this.name = name;
+        this.address = address;
+        this.contact = contact;
+        this.verify_status = verify_status;
+        this.id_image_ref = id_image_ref;
     }
 
     public int getAttr_id() {
@@ -99,6 +121,22 @@ public class User implements Serializable {
         this.contact = contact;
     }
 
+    public String getVerify_status() {
+        return verify_status;
+    }
+
+    public void setVerify_status(String verify_status) {
+        this.verify_status = verify_status;
+    }
+
+    public int getId_image_ref() {
+        return id_image_ref;
+    }
+
+    public void setId_image_ref(int id_image_ref) {
+        this.id_image_ref = id_image_ref;
+    }
+
     public String getUsername() {
         return username;
     }
@@ -125,6 +163,8 @@ public class User implements Serializable {
                 ", name='" + name + '\'' +
                 ", address='" + address + '\'' +
                 ", contact=" + Arrays.toString(contact) +
+                ", verify_status='" + verify_status + '\'' +
+                ", id_image_ref=" + id_image_ref +
                 '}';
     }
 }

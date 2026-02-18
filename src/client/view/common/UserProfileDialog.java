@@ -3,6 +3,7 @@ package client.view.common;
 import client.view.UiPreview;
 import client.view.strings.Colors;
 import client.view.strings.Images;
+import common.User;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -12,8 +13,15 @@ import static client.view.strings.Fonts.SansSerif;
 import static client.view.strings.Images.*;
 
 public class UserProfileDialog extends JDialog {
+    private final User user;
+
     public UserProfileDialog(JFrame parent) {
+        this(parent, null);
+    }
+
+    public UserProfileDialog(JFrame parent, User user) {
         super(parent, true);
+        this.user = user;
 
         int radius = 25;
         CustomPanel mainPanel = new CustomPanel(radius);
@@ -65,11 +73,19 @@ public class UserProfileDialog extends JDialog {
         info.setOpaque(false);
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
 
-        JLabel name = new JLabel("Alan Glen Escobar");
+        String displayName = (user != null && user.getName() != null && !user.getName().trim().isEmpty())
+            ? user.getName().trim()
+            : (user != null && user.getUsername() != null && !user.getUsername().trim().isEmpty()
+            ? user.getUsername().trim()
+            : "User");
+
+        String displayId = (user != null) ? String.valueOf(user.getAttr_id()) : "N/A";
+
+        JLabel name = new JLabel(displayName);
         name.setForeground(WHITE);
         name.setFont(SansSerif(1, 18));
 
-        JLabel id = new JLabel("ID: user_001");
+        JLabel id = new JLabel("ID: " + displayId);
         id.setForeground(LIGHTEST_GRAY);
         id.setFont(SansSerif(0, 14));
 
@@ -86,9 +102,22 @@ public class UserProfileDialog extends JDialog {
         content.setBorder(new EmptyBorder(25, 25, 15, 25));
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
-        InfoRow email = new InfoRow(Images.scaled(EMAIL,28,28), "Email Address", "alan.escobarney@email.com");
-        InfoRow phone = new InfoRow(Images.scaled(PHONE,28,28), "Phone Number", "+63 912 345 6789");
-        InfoRow location = new InfoRow(Images.scaled(LOCATION,28,28), "Barangay", "Luna Burgos");
+        String emailValue = (user != null && user.getUsername() != null && user.getUsername().contains("@"))
+            ? user.getUsername()
+            : "Not provided";
+
+        String phoneValue = "Not provided";
+        if (user != null && user.getContact() != null && user.getContact().length > 0 && user.getContact()[0] != null && !user.getContact()[0].trim().isEmpty()) {
+            phoneValue = user.getContact()[0].trim();
+        }
+
+        String barangayValue = (user != null && user.getAddress() != null && !user.getAddress().trim().isEmpty())
+            ? user.getAddress().trim()
+            : "Not provided";
+
+        InfoRow email = new InfoRow(Images.scaled(EMAIL,28,28), "Email Address", emailValue);
+        InfoRow phone = new InfoRow(Images.scaled(PHONE,28,28), "Phone Number", phoneValue);
+        InfoRow location = new InfoRow(Images.scaled(LOCATION,28,28), "Barangay", barangayValue);
 
         content.add(email);
         content.add(Box.createVerticalStrut(15));

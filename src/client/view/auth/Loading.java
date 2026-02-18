@@ -2,7 +2,8 @@ package client.view.auth;
 
 import client.controller.LoginController;
 import client.model.ClientConnection;
-import client.utils.CredentialManager;
+import client.model.CredentialManager;
+import client.view.admin.AdminDashboard;
 import client.view.residents.ResidentDashboard;
 import common.User;
 
@@ -124,11 +125,23 @@ public class Loading extends JWindow {
                     User loggedInUser = (User) result[1];
 
                     if (loggedInUser != null) {
+                        if ("PENDING".equalsIgnoreCase(loggedInUser.getVerify_status())) {
+                            CredentialManager.deleteCredentials();
+                            JOptionPane.showMessageDialog(
+                                    null,
+                                    "Your account is still pending admin approval.",
+                                    "Account Pending",
+                                    JOptionPane.WARNING_MESSAGE
+                            );
+                            new AuthScreen(connection).setVisible(true);
+                            return;
+                        }
+
                         int userType = loggedInUser.getAttr_type();
 
                         switch (userType) {
                             case 0:
-                                new ResidentDashboard(true, loggedInUser, connection);
+                                new AdminDashboard(connection).setVisible(true);
                                 break;
 //                            case 1: // Barangay Official
 //                                new client.view.brgyofficials.BrgyOfficialDashboard(true, loggedInUser);
@@ -144,13 +157,13 @@ public class Loading extends JWindow {
                                 break;
                         }
                     } else {
-                        new Login(connection).setVisible(true);
+                        new AuthScreen(connection).setVisible(true);
                     }
                 } catch (Exception e) {
                     if (CONFIG_DEBUG) {
                         e.printStackTrace();
                     }
-                    new Login(connection).setVisible(true);
+                    new AuthScreen(connection).setVisible(true);
                 }
             });
         }

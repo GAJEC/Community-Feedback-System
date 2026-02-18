@@ -161,4 +161,41 @@ public class FeedbackActions {
             return new Object[]{"500", "Server error: " + e.getMessage(), null};
         }
     }
+
+    public static Object[] updateFeedbackStatus(int feedbackId, String status) {
+        try {
+            if (status == null || status.trim().isEmpty()) {
+                return new Object[]{"400", "Status is required", null};
+            }
+
+            String normalized = status.trim();
+            if (!("Pending".equalsIgnoreCase(normalized)
+                    || "In Progress".equalsIgnoreCase(normalized)
+                    || "Resolved".equalsIgnoreCase(normalized)
+                    || "Archived".equalsIgnoreCase(normalized))) {
+                return new Object[]{"400", "Invalid status", null};
+            }
+
+            XMLHandler<Feedbacks> feedbackHandler = new XMLHandler<>(
+                    Feedbacks.class,
+                    "src/server/data/database.xml",
+                    "feedback"
+            );
+
+            Feedbacks feedback = feedbackHandler.Read("id", feedbackId);
+            if (feedback == null) {
+                return new Object[]{"404", "Feedback not found", null};
+            }
+
+            feedback.setAttr_status(new String[]{normalized});
+            boolean updated = feedbackHandler.Update("id", feedbackId, feedback);
+            if (!updated) {
+                return new Object[]{"500", "Failed to update feedback status", null};
+            }
+
+            return new Object[]{"200", "Feedback status updated", feedback};
+        } catch (ParserConfigurationException | IOException | SAXException e) {
+            return new Object[]{"500", "Server error: " + e.getMessage(), null};
+        }
+    }
 }
