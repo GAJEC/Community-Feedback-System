@@ -12,11 +12,13 @@ public class Feedbacks implements Serializable {
     String[] attr_downvote;
     String[] categories = {"Event Suggestion", "Missing Person", "Noise Complaint", "Infrastructure", "Other"};
     String title;
+    String priority;
+    String internal_note;
     String location;
     String content;
     Date issued_date;
 
-    public Feedbacks(int attr_id, int issued_by, int attr_approvedby, String[] attr_status, String[] attr_upvote, String[] attr_downvote, String[] categories, String title, String location, String content, Date issued_date) {
+    public Feedbacks(int attr_id, int issued_by, int attr_approvedby, String[] attr_status, String[] attr_upvote, String[] attr_downvote, String[] categories, String title, String priority, String internal_note, String location, String content, Date issued_date) {
         this.attr_id = attr_id;
         this.issued_by = issued_by;
         this.attr_approvedby = attr_approvedby;
@@ -25,12 +27,14 @@ public class Feedbacks implements Serializable {
         this.attr_downvote = attr_downvote;
         this.categories = categories;
         this.title = title;
+        this.priority = priority;
+        this.internal_note = internal_note;
         this.location = location;
         this.content = content;
         this.issued_date = issued_date;
     }
 
-    public Feedbacks(int attr_id, int issued_by, int attr_approvedby, String[] attr_status, String[] categories, String title, String location, String content, Date issued_date) {
+    public Feedbacks(int attr_id, int issued_by, int attr_approvedby, String[] attr_status, String[] categories, String title, String priority, String internal_note, String location, String content, Date issued_date) {
         this.attr_id = attr_id;
         this.issued_by = issued_by;
         this.attr_approvedby = attr_approvedby;
@@ -39,6 +43,8 @@ public class Feedbacks implements Serializable {
         this.attr_downvote = null;
         this.categories = categories;
         this.title = title;
+        this.priority = priority;
+        this.internal_note = internal_note;
         this.location = location;
         this.content = content;
         this.issued_date = issued_date;
@@ -74,6 +80,14 @@ public class Feedbacks implements Serializable {
 
     public String getTitle() {
         return title;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public String getInternal_note() {
+        return internal_note;
     }
 
     public String getLocation() {
@@ -120,6 +134,14 @@ public class Feedbacks implements Serializable {
         this.title = title;
     }
 
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
+    public void setInternal_note(String internal_note) {
+        this.internal_note = internal_note;
+    }
+
     public void setLocation(String location) {
         this.location = location;
     }
@@ -143,6 +165,8 @@ public class Feedbacks implements Serializable {
                 ", attr_downvote=" + Arrays.toString(attr_downvote) +
                 ", categories=" + Arrays.toString(categories) +
                 ", title='" + title + '\'' +
+                ", priority='" + priority + '\'' +
+                ", internal_note='" + internal_note + '\'' +
                 ", location='" + location + '\'' +
                 ", content='" + content + '\'' +
                 ", issued_date=" + issued_date +

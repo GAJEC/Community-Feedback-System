@@ -4,6 +4,7 @@ import client.controller.LoginController;
 import client.model.ClientConnection;
 import client.model.CredentialManager;
 import client.view.admin.AdminDashboard;
+import client.view.brgyofficials.BrgyOfficialDashboard;
 import client.view.common.Buttons;
 import client.view.common.CustomPanel;
 import client.view.common.RoundedInputField;
@@ -201,6 +202,8 @@ public class AuthScreen extends JFrame {
                     SwingUtilities.getWindowAncestor(this).dispose();
                     if (loggedInUser.getAttr_type() == 0) {
                         new AdminDashboard(connection).setVisible(true);
+                    } else if (loggedInUser.getAttr_type() == 1) {
+                        new BrgyOfficialDashboard(loggedInUser, connection).setVisible(true);
                     } else {
                         new ResidentDashboard(true, loggedInUser, connection);
                     }

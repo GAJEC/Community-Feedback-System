@@ -1,9 +1,12 @@
 package client.view.admin;
 
 import client.model.ClientConnection;
+import client.view.common.Buttons;
 import client.view.common.UserProfileDialog;
 import common.BroadcastMessage;
 import common.DeleteUserRequest;
+import common.FeedbackInternalNoteUpdateRequest;
+import common.FeedbackPriorityUpdateRequest;
 import common.FeedbackStatusUpdateRequest;
 import common.Feedbacks;
 import common.User;
@@ -256,6 +259,7 @@ public class AdminDashboard extends JFrame {
                     break;
                 case VOTE_UPDATE:
                 case STATUS_UPDATE:
+                case INTERNAL_NOTE_UPDATE:
                     if (message.getData() instanceof Feedbacks updated) {
                         upsertFeedbackCache(updated);
                         if (manageFeedbackView != null) {
@@ -1098,6 +1102,10 @@ public class AdminDashboard extends JFrame {
                 String content = feedback.getContent() == null ? "" : feedback.getContent();
                 String location = feedback.getLocation() == null ? "" : feedback.getLocation();
                 String author = findUserName(feedback.getIssued_by());
+                String priority = feedback.getPriority() == null || feedback.getPriority().trim().isEmpty()
+                    ? "No priority set"
+                    : feedback.getPriority().trim();
+                String internalNote = feedback.getInternal_note() == null ? "" : feedback.getInternal_note();
 
                 if (!"All Categories".equals(selectedCategory) && !selectedCategory.equalsIgnoreCase(category)) continue;
                 if (!"All Status".equals(selectedStatus) && !selectedStatus.equalsIgnoreCase(status)) continue;
@@ -1107,8 +1115,9 @@ public class AdminDashboard extends JFrame {
 
                 int votes = feedback.getAttr_upvote() == null ? 0 : feedback.getAttr_upvote().length;
                 String date = feedback.getIssued_date() == null ? "-" : dateFormat.format(feedback.getIssued_date());
+                String text = "<b>" + title + "</b><br/>" + content;
 
-                listPanel.add(new FeedbackCard(feedback.getAttr_id(), status, category, title, content, location, date, author, votes));
+                listPanel.add(new FeedbackCard(feedback.getAttr_id(), status, category, priority, internalNote, text, location, date, author, votes));
                 listPanel.add(Box.createVerticalStrut(10));
                 shown++;
             }
@@ -1150,85 +1159,123 @@ public class AdminDashboard extends JFrame {
             return new Object[]{"500", "Invalid server response", null};
         }
 
+        private Object[] updatePriority(int feedbackId, String priority) {
+            if (!connection.isConnected()) {
+                connection.connect();
+            }
+            connection.sendRequest(new FeedbackPriorityUpdateRequest(feedbackId, priority));
+            Object response = connection.receive();
+            if (response instanceof Object[]) {
+                return (Object[]) response;
+            }
+            return new Object[]{"500", "Invalid server response", null};
+        }
+
+        private Object[] updateInternalNote(int feedbackId, String internalNote) {
+            if (!connection.isConnected()) {
+                connection.connect();
+            }
+            connection.sendRequest(new FeedbackInternalNoteUpdateRequest(feedbackId, internalNote));
+            Object response = connection.receive();
+            if (response instanceof Object[]) {
+                return (Object[]) response;
+            }
+            return new Object[]{"500", "Invalid server response", null};
+        }
+
         class FeedbackCard extends JPanel {
-            FeedbackCard(int feedbackId, String status, String category, String title, String text,
+            private final int feedbackId;
+            private String currentPriority;
+            private String currentStatus;
+            private String currentInternalNote;
+
+            FeedbackCard(int feedbackId, String status, String category, String priority, String internalNote, String text,
                          String location, String date, String author, int votes) {
+                this.feedbackId = feedbackId;
+                this.currentPriority = (priority != null && !priority.trim().isEmpty()) ? priority.trim() : "No priority set";
+                this.currentStatus = (status != null && !status.trim().isEmpty()) ? status.trim() : "Pending";
+                this.currentInternalNote = internalNote != null ? internalNote : "";
                 setLayout(new BorderLayout());
                 setBackground(Color.WHITE);
                 setBorder(new CompoundBorder(new RoundedBorder(12),
                         new EmptyBorder(12, 15, 12, 15)));
-            setAlignmentX(Component.LEFT_ALIGNMENT);
-            setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
-            setPreferredSize(new Dimension(0, 150));
+                setAlignmentX(Component.LEFT_ALIGNMENT);
+                setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
                 JPanel mainPanel = new JPanel(new BorderLayout(15, 1));
                 mainPanel.setOpaque(false);
-
-                JLabel voteCount = new JLabel("▲ " + votes);
-                voteCount.setFont(new Font("Segoe UI", Font.BOLD, 13));
-                voteCount.setForeground(new Color(70, 70, 80));
-                voteCount.setBorder(new EmptyBorder(0, 4, 0, 4));
-                mainPanel.add(voteCount, BorderLayout.WEST);
+                mainPanel.add(voteWrapper(votes), BorderLayout.WEST);
 
                 JPanel centerPanel = new JPanel();
                 centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
                 centerPanel.setOpaque(false);
-
-                JPanel tagRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 1));
-                tagRow.setOpaque(false);
-                tagRow.add(createTag(status.toUpperCase(), new Color(220, 235, 255, 50), new Color(0, 90, 180)));
-                tagRow.add(createTag(category, new Color(230, 220, 255, 50), new Color(100, 60, 180)));
-
-                JTextArea body = new JTextArea((title == null ? "" : title) + "\n" + (text == null ? "" : text));
-                body.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-                body.setLineWrap(true);
-                body.setWrapStyleWord(true);
-                body.setOpaque(false);
-                body.setEditable(false);
-                body.setFocusable(false);
-                body.setBorder(null);
-                body.setRows(2);
-
-                JLabel meta = new JLabel(location + " • " + author + " • " + date);
-                meta.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-                meta.setForeground(Color.GRAY);
-
-                JPanel quickStatusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-                quickStatusPanel.setOpaque(false);
-                quickStatusPanel.add(new JLabel("Quick Status:"));
-
-                JButton pendingBtn = buildFlatPillButton("Pending", new Color(255, 243, 224), new Color(230, 81, 0));
-                JButton startBtn = buildFlatPillButton("Start", new Color(200, 220, 255), new Color(40, 70, 140));
-                JButton resolveBtn = buildFlatPillButton("Resolve", new Color(200, 255, 200), new Color(35, 105, 35));
-
-                pendingBtn.addActionListener(e -> handleStatusUpdate(feedbackId, "Pending"));
-                startBtn.addActionListener(e -> handleStatusUpdate(feedbackId, "In Progress"));
-                resolveBtn.addActionListener(e -> handleStatusUpdate(feedbackId, "Resolved"));
-
-                quickStatusPanel.add(pendingBtn);
-                quickStatusPanel.add(startBtn);
-                quickStatusPanel.add(resolveBtn);
-
+                JPanel tagRow = createTagRow(status, category, currentPriority);
+                JPanel textStack = createTextStack(text, location, date, author);
+                tagRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+                textStack.setAlignmentX(Component.LEFT_ALIGNMENT);
                 centerPanel.add(tagRow);
                 centerPanel.add(Box.createVerticalStrut(6));
-                centerPanel.add(body);
+                centerPanel.add(textStack);
+                centerPanel.add(Box.createVerticalStrut(10));
+
+                JPanel bottomPanel = new JPanel();
+                bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
+                bottomPanel.setOpaque(false);
+                bottomPanel.add(priorityAndStatusPanel());
                 centerPanel.add(Box.createVerticalStrut(5));
-                centerPanel.add(meta);
-                centerPanel.add(Box.createVerticalStrut(8));
-                centerPanel.add(quickStatusPanel);
+                bottomPanel.add(addNotesPanel());
+                bottomPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                centerPanel.add(bottomPanel);
 
                 mainPanel.add(centerPanel, BorderLayout.CENTER);
                 add(mainPanel, BorderLayout.CENTER);
             }
 
-            private void handleStatusUpdate(int feedbackId, String status) {
-                Object[] response = updateStatus(feedbackId, status);
-                if (!"200".equals(response[0])) {
-                    JOptionPane.showMessageDialog(this, String.valueOf(response[1]), "Update Failed", JOptionPane.WARNING_MESSAGE);
-                    return;
+            private JPanel voteWrapper(int votes) {
+                JPanel votePanel = new JPanel();
+                votePanel.setLayout(new BoxLayout(votePanel, BoxLayout.Y_AXIS));
+                votePanel.setOpaque(false);
+                JLabel upVote = new JLabel();
+                upVote.setAlignmentX(Component.CENTER_ALIGNMENT);
+                try {
+                    URL iconURL = getClass().getResource("/assets/upvotes_icon.png");
+                    if (iconURL != null) {
+                        Image img = new ImageIcon(iconURL).getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
+                        upVote.setIcon(new ImageIcon(img));
+                    }
+                } catch (Exception ignored) {
                 }
-                refreshAllData();
-                refreshFeedbackList();
+                JLabel voteCount = new JLabel(String.valueOf(votes));
+                voteCount.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                voteCount.setAlignmentX(Component.CENTER_ALIGNMENT);
+                votePanel.add(upVote);
+                votePanel.add(Box.createVerticalStrut(2));
+                votePanel.add(voteCount);
+                JPanel voteWrapper = new JPanel(new GridBagLayout());
+                voteWrapper.setOpaque(false);
+                voteWrapper.setPreferredSize(new Dimension(50, 0));
+                voteWrapper.add(votePanel);
+                return voteWrapper;
+            }
+
+            private JPanel createTagRow(String status, String category, String priority) {
+                JPanel tagRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 1));
+                tagRow.setOpaque(false);
+                tagRow.add(createTag(status, new Color(220, 235, 255, 50), new Color(0, 90, 180)));
+                tagRow.add(createTag(category, new Color(230, 220, 255, 50), new Color(100, 60, 180)));
+                tagRow.add(createPriorityTag(priority));
+                return tagRow;
+            }
+
+            private JLabel createPriorityTag(String priority) {
+                String normalized = priority == null ? "No priority set" : priority.trim();
+                return switch (normalized.toLowerCase()) {
+                    case "urgent" -> createTag("Urgent", new Color(255, 225, 225), new Color(200, 50, 50));
+                    case "high" -> createTag("High", new Color(255, 235, 220), new Color(190, 95, 20));
+                    case "medium" -> createTag("Medium", new Color(255, 245, 210), new Color(160, 120, 20));
+                    case "low" -> createTag("Low", new Color(230, 248, 220), new Color(80, 130, 40));
+                    default -> createTag("No priority set", new Color(230, 230, 230, 50), Color.GRAY);
+                };
             }
 
             private JLabel createTag(String text, Color bg, Color fg) {
@@ -1241,14 +1288,190 @@ public class AdminDashboard extends JFrame {
                 return label;
             }
 
-            private JButton buildFlatPillButton(String text, Color bg, Color fg) {
-                JButton btn = new JButton(text);
-                btn.setFocusPainted(false);
-                btn.setBackground(bg);
-                btn.setForeground(fg);
-                btn.setBorder(new EmptyBorder(3, 8, 3, 8));
-                btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                return btn;
+            private JPanel createTextStack(String text, String location, String date, String author) {
+                JLabel body = new JLabel("<html>" + text + "</html>");
+                body.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                JLabel meta = new JLabel(String.format("📍 %s  •  👤 %s  •  📅 %s", location, author, date));
+                meta.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 11));
+                meta.setForeground(Color.GRAY);
+                JPanel textStack = new JPanel();
+                textStack.setLayout(new BoxLayout(textStack, BoxLayout.Y_AXIS));
+                textStack.setOpaque(false);
+                textStack.setBorder(new EmptyBorder(0, 0, 3, 0));
+                textStack.add(body);
+                textStack.add(Box.createVerticalStrut(5));
+                textStack.add(meta);
+                return textStack;
+            }
+
+            private JPanel priorityAndStatusPanel() {
+                JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+                panel.setOpaque(false);
+                Font btnFont = new Font("Segoe UI", Font.BOLD, 8);
+                Color labelColor = new Color(50, 50, 50);
+                Dimension priorityBtnSize = new Dimension(65, 22);
+                Dimension statusBtnSize = new Dimension(65, 22);
+
+                JPanel priorityPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+                priorityPanel.setOpaque(false);
+                Buttons urgentBtn = new Buttons("Urgent", 6, new Color(255, 180, 180), new Color(230, 100, 90));
+                Buttons highBtn = new Buttons("High", 6, new Color(255, 220, 180), new Color(230, 160, 100));
+                Buttons mediumBtn = new Buttons("Medium", 6, new Color(255, 240, 180), new Color(210, 180, 110));
+                Buttons lowBtn = new Buttons("Low", 6, new Color(220, 240, 200), new Color(170, 200, 140));
+
+                urgentBtn.addActionListener(e -> applyPriority("Urgent"));
+                highBtn.addActionListener(e -> applyPriority("High"));
+                mediumBtn.addActionListener(e -> applyPriority("Medium"));
+                lowBtn.addActionListener(e -> applyPriority("Low"));
+
+                for (Buttons btn : new Buttons[]{urgentBtn, highBtn, mediumBtn, lowBtn}) {
+                    btn.setPreferredSize(priorityBtnSize);
+                    btn.setFont(btnFont);
+                    btn.setForeground(Color.DARK_GRAY);
+                    priorityPanel.add(btn);
+                }
+                JLabel priorityLabel = new JLabel("Set Priority: ");
+                priorityLabel.setForeground(labelColor);
+                priorityLabel.setFont(btnFont);
+                priorityPanel.add(priorityLabel, 0);
+
+                JPanel quickStatusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+                quickStatusPanel.setOpaque(false);
+                Buttons startBtn = new Buttons("Start", 6, new Color(200, 220, 255), new Color(140, 160, 240));
+                Buttons resolveBtn = new Buttons("Resolve", 6, new Color(200, 255, 200), new Color(100, 170, 100));
+                Buttons pendingBtn = new Buttons("Pending", 6, new Color(255, 243, 224), new Color(230, 81, 0));
+
+                pendingBtn.addActionListener(e -> applyStatus("Pending"));
+                startBtn.addActionListener(e -> applyStatus("In Progress"));
+                resolveBtn.addActionListener(e -> applyStatus("Resolved"));
+
+                for (Buttons btn : new Buttons[]{startBtn, resolveBtn}) {
+                    btn.setPreferredSize(statusBtnSize);
+                    btn.setFont(btnFont);
+                    btn.setForeground(new Color(50, 50, 50, 150));
+                    quickStatusPanel.add(btn);
+                }
+                pendingBtn.setPreferredSize(statusBtnSize);
+                pendingBtn.setFont(btnFont);
+                pendingBtn.setForeground(new Color(50, 50, 50, 150));
+                quickStatusPanel.add(pendingBtn);
+                JLabel quickStatusLabel = new JLabel("Quick Status: ");
+                quickStatusLabel.setForeground(labelColor);
+                quickStatusLabel.setFont(btnFont);
+                quickStatusPanel.add(quickStatusLabel, 0);
+
+                JLabel currentStatusLabel = new JLabel("Current: " + currentStatus);
+                currentStatusLabel.setForeground(new Color(0, 90, 180));
+                currentStatusLabel.setFont(new Font("Segoe UI", Font.BOLD, 10));
+                quickStatusPanel.add(currentStatusLabel);
+
+                panel.add(priorityPanel);
+                panel.add(quickStatusPanel);
+                return panel;
+            }
+
+            private void applyStatus(String nextStatus) {
+                Object[] response = updateStatus(feedbackId, nextStatus);
+                if (!"200".equals(response[0])) {
+                    JOptionPane.showMessageDialog(AdminDashboard.this, String.valueOf(response[1]), "Update Failed", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                currentStatus = nextStatus;
+                refreshAllData();
+                refreshFeedbackList();
+            }
+
+            private void applyPriority(String nextPriority) {
+                if (nextPriority.equalsIgnoreCase(currentPriority)) {
+                    return;
+                }
+                Object[] response = updatePriority(feedbackId, nextPriority);
+                if (!"200".equals(response[0])) {
+                    JOptionPane.showMessageDialog(AdminDashboard.this, String.valueOf(response[1]), "Update Failed", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                currentPriority = nextPriority;
+                refreshAllData();
+                refreshFeedbackList();
+            }
+
+            private JPanel addNotesPanel() {
+                JPanel container = new JPanel();
+                container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+                container.setOpaque(false);
+
+                JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+                headerPanel.setOpaque(false);
+                JLabel toggleLabel = new JLabel("Add internal note →");
+                toggleLabel.setForeground(new Color(0, 128, 0));
+                toggleLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                toggleLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                headerPanel.add(toggleLabel);
+                container.add(headerPanel);
+
+                JPanel notePanel = new JPanel();
+                notePanel.setLayout(new BoxLayout(notePanel, BoxLayout.Y_AXIS));
+                notePanel.setOpaque(false);
+                notePanel.setVisible(false);
+
+                JTextArea noteArea = new JTextArea(4, 30);
+                noteArea.setLineWrap(true);
+                noteArea.setWrapStyleWord(true);
+                noteArea.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+                JScrollPane scrollPane = new JScrollPane(noteArea);
+                scrollPane.setPreferredSize(new Dimension(400, 80));
+
+                JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 5));
+                buttonRow.setOpaque(false);
+                JButton saveButton = new JButton("Save");
+                saveButton.setFocusPainted(false);
+                saveButton.setBackground(new Color(34, 153, 84));
+                saveButton.setForeground(Color.WHITE);
+                saveButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                buttonRow.add(saveButton);
+
+                notePanel.add(scrollPane);
+                notePanel.add(buttonRow);
+                container.add(Box.createVerticalStrut(5));
+                container.add(notePanel);
+
+                if (!currentInternalNote.trim().isEmpty()) {
+                    noteArea.setText(currentInternalNote);
+                }
+
+                saveButton.addActionListener(e -> {
+                    String noteText = noteArea.getText().trim();
+                    Object[] response = updateInternalNote(feedbackId, noteText);
+                    if (!"200".equals(response[0])) {
+                        JOptionPane.showMessageDialog(FeedbackCard.this, String.valueOf(response[1]), "Warning", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                    currentInternalNote = noteText;
+                    JOptionPane.showMessageDialog(FeedbackCard.this, "Internal note saved successfully.", "Saved", JOptionPane.INFORMATION_MESSAGE);
+                    refreshAllData();
+                    refreshFeedbackList();
+                });
+
+                toggleLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+                    boolean expanded = false;
+
+                    @Override
+                    public void mouseClicked(java.awt.event.MouseEvent e) {
+                        expanded = !expanded;
+                        notePanel.setVisible(expanded);
+                        if (expanded) {
+                            toggleLabel.setText("Hide note ↓");
+                            noteArea.setText(currentInternalNote);
+                        } else {
+                            toggleLabel.setText("Add internal note →");
+                        }
+                        FeedbackCard.this.revalidate();
+                        FeedbackCard.this.repaint();
+                    }
+                });
+
+                return container;
             }
         }
 
@@ -1349,7 +1572,7 @@ public class AdminDashboard extends JFrame {
         }
     }
 
-    static class AdminConsoleView extends JPanel {
+    public static class AdminConsoleView extends JPanel {
         private static final Color BG_COLOR = new Color(245, 246, 250);
         private static final Color CARD_BORDER = new Color(225, 225, 230);
         private static final Color PURPLE_BAR = new Color(80, 0, 150);

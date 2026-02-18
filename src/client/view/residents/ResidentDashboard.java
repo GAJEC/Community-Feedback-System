@@ -12,6 +12,7 @@ import client.view.residents.panels.ClientFeedbackDetailDialog;
 import client.view.strings.Colors;
 import client.view.strings.Fonts;
 import client.view.strings.Images;
+import common.Announcement;
 import common.BroadcastMessage;
 import common.Feedbacks;
 import common.User;
@@ -26,6 +27,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,6 +51,7 @@ public class ResidentDashboard extends JFrame {
     private Map<Integer, User> userCache = new HashMap<>();
     private Map<Integer, FeedbackCard> feedbackCards = new HashMap<>();
     private JPanel feedbackListPanel;
+    private JPanel announcementCardsPanel;
 
     private RoundedTextField titleField;
     private JComboBox<String> categoryBox;
@@ -117,10 +121,30 @@ public class ResidentDashboard extends JFrame {
                         refreshFeedbackList();
                     }
                     break;
+                case STATUS_UPDATE:
+                case PRIORITY_UPDATE:
+                case INTERNAL_NOTE_UPDATE:
+                    if (isViewMode) {
+                        refreshFeedbackList();
+                    }
+                    break;
+                case NEW_ANNOUNCEMENT:
+                    if (isViewMode) {
+                        refreshAnnouncementWidget();
+                    }
+                    break;
                 default:
                     break;
             }
         });
+    }
+
+    private void refreshAnnouncementWidget() {
+        if (announcementCardsPanel == null) {
+            refreshFeedbackList();
+            return;
+        }
+        loadAnnouncements(announcementCardsPanel);
     }
 
     private void updateFeedbackCard(Feedbacks feedback) {
@@ -254,12 +278,99 @@ public class ResidentDashboard extends JFrame {
         label.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         widget.add(label);
 
-        widget.add(new AnnouncementCard("Barangay Health Mission", "Free medical check-up for residents.", "Hon. Rivera", "Feb 10, 2026"));
-        widget.add(Box.createVerticalStrut(10));
-        widget.add(new AnnouncementCard("Road Maintenance", "Rizal St. closed for asphalt overlay.", "Sec. Santos", "Feb 8, 2026"));
+        announcementCardsPanel = new JPanel();
+        announcementCardsPanel.setLayout(new BoxLayout(announcementCardsPanel, BoxLayout.Y_AXIS));
+        announcementCardsPanel.setOpaque(false);
+        widget.add(announcementCardsPanel);
+        loadAnnouncements(announcementCardsPanel);
 
         sidebar.add(widget, BorderLayout.NORTH);
         return sidebar;
+    }
+
+    private void loadAnnouncements(JPanel targetPanel) {
+        if (targetPanel == null) return;
+        targetPanel.removeAll();
+
+        Announcement[] announcements = fetchAnnouncements();
+        if (announcements.length == 0) {
+            JLabel empty = new JLabel("No announcements yet.");
+            empty.setFont(SegoeUi(Font.ITALIC, 12));
+            empty.setForeground(Color.GRAY);
+            targetPanel.add(empty);
+            targetPanel.revalidate();
+            targetPanel.repaint();
+            return;
+        }
+
+        Arrays.sort(announcements, (a, b) -> {
+            Date da = a != null ? a.getPosted_at() : null;
+            Date db = b != null ? b.getPosted_at() : null;
+            if (da == null && db == null) return 0;
+            if (da == null) return 1;
+            if (db == null) return -1;
+            return db.compareTo(da);
+        });
+
+        int limit = Math.min(5, announcements.length);
+
+        for (int i = 0; i < limit; i++) {
+            Announcement ann = announcements[i];
+            if (ann == null) continue;
+
+            String title = ann.getTitle() != null && !ann.getTitle().trim().isEmpty()
+                    ? ann.getTitle().trim()
+                    : "Announcement";
+            String message = ann.getMessage() != null ? ann.getMessage().trim() : "";
+            String postedBy = ann.getPosted_by_name() != null && !ann.getPosted_by_name().trim().isEmpty()
+                    ? ann.getPosted_by_name().trim()
+                    : (ann.getPosted_by() > 0 ? "Official #" + ann.getPosted_by() : "Barangay Official");
+            String postedAt = formatTimeAgo(ann.getPosted_at());
+
+            targetPanel.add(new AnnouncementCard(title, message, postedBy, postedAt));
+            if (i < limit - 1) {
+                targetPanel.add(Box.createVerticalStrut(10));
+            }
+        }
+
+        targetPanel.revalidate();
+        targetPanel.repaint();
+    }
+
+    private Announcement[] fetchAnnouncements() {
+        if (!connection.isConnected()) {
+            connection.connect();
+        }
+        connection.sendRequest("GET_ANNOUNCEMENTS");
+        Object response = connection.receive();
+        if (response instanceof Object[] arr && arr.length >= 3 && "200".equals(arr[0]) && arr[2] instanceof Announcement[]) {
+            return (Announcement[]) arr[2];
+        }
+        return new Announcement[0];
+    }
+
+    private String formatTimeAgo(Date date) {
+        if (date == null) {
+            return "-";
+        }
+
+        long diffMs = Math.max(0L, System.currentTimeMillis() - date.getTime());
+        long minutes = diffMs / (60 * 1000);
+
+        if (minutes < 1) {
+            return "just now";
+        }
+        if (minutes < 60) {
+            return minutes + "m ago";
+        }
+
+        long hours = minutes / 60;
+        if (hours < 24) {
+            return hours + "h ago";
+        }
+
+        long days = hours / 24;
+        return days + "d ago";
     }
 
     private JPanel createFilterPanel() {
@@ -612,13 +723,16 @@ public class ResidentDashboard extends JFrame {
                         String title = feedback.getTitle() != null && !feedback.getTitle().trim().isEmpty()
                             ? feedback.getTitle().trim()
                             : "Untitled Feedback";
+                        String priority = feedback.getPriority() != null && !feedback.getPriority().trim().isEmpty()
+                            ? feedback.getPriority().trim()
+                            : "No priority set";
                         String content = feedback.getContent();
                     String location = feedback.getLocation();
                     String date = dateFormat.format(feedback.getIssued_date());
 
                     String authorName = getUserName(feedback.getIssued_by());
 
-                        FeedbackCard card = new FeedbackCard(feedback, status, category, title, content, location, date, authorName);
+                        FeedbackCard card = new FeedbackCard(feedback, status, category, priority, title, content, location, date, authorName);
                     feedbackCards.put(feedback.getAttr_id(), card);
                     listPanel.add(card);
                     listPanel.add(Box.createVerticalStrut(8));
@@ -703,7 +817,7 @@ public class ResidentDashboard extends JFrame {
         private static final Color UPVOTE_COLOR = new Color(0, 150, 0);
         private static final Color DOWNVOTE_COLOR = new Color(150, 0, 0);
 
-        FeedbackCard(Feedbacks feedback, String status, String category, String title, String text, String location, String date, String author) {
+        FeedbackCard(Feedbacks feedback, String status, String category, String priority, String title, String text, String location, String date, String author) {
             this.feedback = feedback;
 
             int userId = user.getAttr_id();
@@ -811,6 +925,9 @@ public class ResidentDashboard extends JFrame {
             );
             badgeRow.add(categoryBtn);
 
+                Buttons priorityBtn = createPriorityBadge(priority);
+                badgeRow.add(priorityBtn);
+
             gbc.gridx = 1; gbc.gridy = 0; gbc.gridheight = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
             gbc.insets = new Insets(0, 0, 5, 0);
             add(badgeRow, gbc);
@@ -859,6 +976,50 @@ public class ResidentDashboard extends JFrame {
             gbc.gridx = 1; gbc.gridy = 1;
             gbc.anchor = GridBagConstraints.SOUTHEAST;
             add(detailsBtn, gbc);
+        }
+
+        private Buttons createPriorityBadge(String priority) {
+            String normalized = priority == null ? "No priority set" : priority.trim();
+            Color bg;
+            Color fg;
+            String label;
+
+            switch (normalized.toLowerCase()) {
+                case "urgent" -> {
+                    label = "Urgent";
+                    bg = new Color(255, 225, 225);
+                    fg = new Color(185, 45, 45);
+                }
+                case "high" -> {
+                    label = "High";
+                    bg = new Color(255, 236, 220);
+                    fg = new Color(176, 95, 20);
+                }
+                case "medium" -> {
+                    label = "Medium";
+                    bg = new Color(255, 245, 210);
+                    fg = new Color(150, 120, 20);
+                }
+                case "low" -> {
+                    label = "Low";
+                    bg = new Color(230, 248, 220);
+                    fg = new Color(80, 130, 40);
+                }
+                default -> {
+                    label = "No priority set";
+                    bg = new Color(235, 235, 235);
+                    fg = new Color(110, 110, 110);
+                }
+            }
+
+            return new Buttons(
+                    label,
+                    8,
+                    bg,
+                    fg,
+                    bg,
+                    SegoeUi(Font.PLAIN, 12)
+            );
         }
 
         private int calculateVotes() {

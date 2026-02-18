@@ -1,12 +1,15 @@
 package client.view.brgyofficials.panel;
 
+import client.model.ClientConnection;
 import client.view.common.Buttons;
 import client.view.common.RoundedInputField;
+import common.Announcement;
 
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.util.Date;
 
 public class PostAnnouncementDialog extends JDialog {
 
@@ -18,10 +21,21 @@ public class PostAnnouncementDialog extends JDialog {
     private static final Color INPUT_BG = new Color(248, 249, 250);
 
     private final String userName;
+    private final ClientConnection connection;
+    private final int userId;
+    private RoundedInputField txtSubject;
+    private JTextArea txtDetails;
+    private Buttons btnPost;
 
     public PostAnnouncementDialog(JFrame parent, String userName) {
+        this(parent, userName, new ClientConnection(), 0);
+    }
+
+    public PostAnnouncementDialog(JFrame parent, String userName, ClientConnection connection, int userId) {
         super(parent, "Create Announcement", true);
         this.userName = userName;
+        this.connection = connection;
+        this.userId = userId;
 
         setResizable(true);
         setUndecorated(true);
@@ -42,11 +56,6 @@ public class PostAnnouncementDialog extends JDialog {
         // 3. FOOTER
         add(createFooter(), BorderLayout.SOUTH);
 
-        // Close on click outside
-        this.addWindowFocusListener(new java.awt.event.WindowFocusListener() {
-            @Override public void windowGainedFocus(java.awt.event.WindowEvent e) {}
-            @Override public void windowLostFocus(java.awt.event.WindowEvent e) { dispose(); }
-        });
     }
 
     private JPanel createHeader() {
@@ -144,7 +153,7 @@ public class PostAnnouncementDialog extends JDialog {
         contentPanel.add(lblSubject, gbc);
 
         // --- Subject Field (Using HintTextField) ---
-        RoundedInputField txtSubject = new RoundedInputField(null, "Enter the topic of announcement...", false);
+        txtSubject = new RoundedInputField(null, "Enter the topic of announcement...", false);
         txtSubject.setBackgroundColor(INPUT_BG);
 
         // We keep the border to match the rest of the form
@@ -163,7 +172,7 @@ public class PostAnnouncementDialog extends JDialog {
         contentPanel.add(lblDetails, gbc);
 
         // Details Text Area
-        JTextArea txtDetails = new JTextArea();
+        txtDetails = new JTextArea();
         txtDetails.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         txtDetails.setForeground(TEXT_DARK);
         txtDetails.setBackground(INPUT_BG);
@@ -202,7 +211,7 @@ public class PostAnnouncementDialog extends JDialog {
         btnCancel.setPreferredSize(new Dimension(100, 40));
         btnCancel.addActionListener(e -> dispose());
 
-        Buttons btnPost = new Buttons(
+        btnPost = new Buttons(
                 "Post Now",
                 15,
                 MAIN_GREEN,
@@ -211,14 +220,93 @@ public class PostAnnouncementDialog extends JDialog {
                 btnFont
         );
         btnPost.setPreferredSize(new Dimension(140, 40));
-        btnPost.addActionListener(e -> {
-            System.out.println("Announcement Posted!");
-            dispose();
-        });
+        btnPost.addActionListener(e -> postAnnouncement());
 
         footer.add(btnCancel);
         footer.add(btnPost);
         return footer;
+    }
+
+    private void postAnnouncement() {
+        String subject = txtSubject != null ? txtSubject.getText().trim() : "";
+        String details = txtDetails != null ? txtDetails.getText().trim() : "";
+
+        if (subject.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter an announcement subject.", "Validation", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (details.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter announcement details.", "Validation", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        btnPost.setEnabled(false);
+
+        SwingWorker<Object[], Void> worker = new SwingWorker<>() {
+            @Override
+            protected Object[] doInBackground() {
+                Announcement announcement = new Announcement(0, userId, userName, subject, details, new Date());
+
+                Object[] primary = sendAnnouncement(connection, announcement, false);
+                if (primary != null && "200".equals(String.valueOf(primary[0]))) {
+                    return primary;
+                }
+
+                if (primary != null && !"500".equals(String.valueOf(primary[0]))) {
+                    return primary;
+                }
+
+                ClientConnection dedicatedConnection = new ClientConnection();
+                try {
+                    return sendAnnouncement(dedicatedConnection, announcement, true);
+                } finally {
+                    if (dedicatedConnection.isConnected()) {
+                        dedicatedConnection.disconnect();
+                    }
+                }
+            }
+
+            @Override
+            protected void done() {
+                btnPost.setEnabled(true);
+                try {
+                    Object[] result = get();
+                    if (result != null && result.length >= 2 && "200".equals(String.valueOf(result[0]))) {
+                        JOptionPane.showMessageDialog(PostAnnouncementDialog.this, "Announcement posted.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                        dispose();
+                        return;
+                    }
+
+                    String message = (result != null && result.length > 1 && result[1] != null)
+                            ? String.valueOf(result[1])
+                            : "Failed to post announcement.";
+                    JOptionPane.showMessageDialog(PostAnnouncementDialog.this, message, "Post Failed", JOptionPane.WARNING_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(PostAnnouncementDialog.this,
+                            "Failed to post announcement: " + ex.getMessage(),
+                            "Post Failed",
+                            JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private Object[] sendAnnouncement(ClientConnection targetConnection, Announcement announcement, boolean forceConnect) {
+        if (targetConnection == null) {
+            return new Object[]{"500", "No connection available", null};
+        }
+
+        if ((forceConnect || !targetConnection.isConnected()) && !targetConnection.connect()) {
+            return new Object[]{"500", "Unable to connect to server", null};
+        }
+
+        targetConnection.sendRequest(announcement);
+        Object response = targetConnection.receive();
+        if (response instanceof Object[]) {
+            return (Object[]) response;
+        }
+        return new Object[]{"500", "No valid response from server", null};
     }
 
     // --- HELPER CLASSES ---

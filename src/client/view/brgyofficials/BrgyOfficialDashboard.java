@@ -1,5 +1,7 @@
 package client.view.brgyofficials;
 
+import client.model.ClientConnection;
+import client.view.admin.AdminDashboard;
 import client.view.common.Buttons;
 import client.view.common.LogoutPopUp;
 import client.view.common.RoundedInputField;
@@ -7,6 +9,11 @@ import client.view.common.UserProfileDialog;
 import client.view.brgyofficials.panel.PostAnnouncementDialog;
 import client.view.strings.Colors;
 import client.view.strings.Images;
+import common.BroadcastMessage;
+import common.FeedbackInternalNoteUpdateRequest;
+import common.FeedbackPriorityUpdateRequest;
+import common.FeedbackStatusUpdateRequest;
+import common.Feedbacks;
 import common.User;
 
 import javax.swing.*;
@@ -15,6 +22,9 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
 
 import static client.view.strings.Fonts.SegoeUi;
 
@@ -28,9 +38,25 @@ public class BrgyOfficialDashboard extends JFrame {
     private final JPanel contentContainer;
     private User user;
     private BrgyOfficialHeaderPanel header;
+    private final ClientConnection connection;
+    private Feedbacks[] cachedFeedbacks = new Feedbacks[0];
+    private User[] cachedUsers = new User[0];
+    private AdminDashboard.AdminConsoleView usersView;
+    private String activeTab = "View Feedbacks";
 
     public BrgyOfficialDashboard(User user){
+        this(user, new ClientConnection());
+    }
+
+    public BrgyOfficialDashboard(User user, ClientConnection connection){
         this.user = user;
+        this.connection = connection;
+        if (!this.connection.isConnected()) {
+            this.connection.connect();
+        }
+        this.connection.setBroadcastListener(this::handleBroadcast);
+        refreshDataCaches();
+
         setTitle("Barangay Official Dashboard");
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
         setSize((int) (d.width * 0.8), (int) (d.height * 0.85));
@@ -43,20 +69,24 @@ public class BrgyOfficialDashboard extends JFrame {
         mainPanel.add(header, BorderLayout.NORTH);
 
         header.viewFeedbackBtn.addActionListener(e -> {
+            activeTab = "View Feedbacks";
             header.setActiveTab("View Feedbacks");
             loadDashboard();
         });
-        header.manageFeedbackBtn.addActionListener(e -> {
-            header.setActiveTab("Manage Feedback");
-            loadManageFeedbackView();
-        });
         header.statsBtn.addActionListener(e -> {
+            activeTab = "Statistics";
             header.setActiveTab("Statistics");
             loadStatisticsView();
         });
+        header.usersBtn.addActionListener(e -> {
+            activeTab = "Users";
+            header.setActiveTab("Users");
+            loadUsersView();
+        });
         header.postAnnouncementBtn.addActionListener(e -> {
             String displayName = (user != null && user.getName() != null) ? user.getName() : "Barangay Official";
-            PostAnnouncementDialog dialog = new PostAnnouncementDialog(this, displayName);
+            int userId = user != null ? user.getAttr_id() : 0;
+            PostAnnouncementDialog dialog = new PostAnnouncementDialog(this, displayName, this.connection, userId);
             dialog.setVisible(true);
         });
 
@@ -69,7 +99,154 @@ public class BrgyOfficialDashboard extends JFrame {
         setVisible(true);
     }
 
+    private void handleBroadcast(BroadcastMessage message) {
+        SwingUtilities.invokeLater(() -> {
+            switch (message.getType()) {
+                case NEW_FEEDBACK:
+                case VOTE_UPDATE:
+                case STATUS_UPDATE:
+                case PRIORITY_UPDATE:
+                case INTERNAL_NOTE_UPDATE:
+                    if (message.getData() instanceof Feedbacks feedback) {
+                        upsertFeedbackCache(feedback);
+                        reloadActiveTab();
+                    }
+                    break;
+                case NEW_USER:
+                    if (message.getData() instanceof User newUser) {
+                        upsertUserCache(newUser);
+                        if (usersView != null) {
+                            usersView.onUsersUpdated(cachedUsers);
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        });
+    }
+
+    private void reloadActiveTab() {
+        if ("Statistics".equals(activeTab)) {
+            loadStatisticsView();
+        } else if ("Users".equals(activeTab)) {
+            loadUsersView();
+        } else {
+            loadDashboard();
+        }
+    }
+
+    private void refreshDataCaches() {
+        cachedFeedbacks = fetchFeedbacks();
+        cachedUsers = fetchUsers();
+    }
+
+    private Feedbacks[] fetchFeedbacks() {
+        if (!connection.isConnected()) {
+            connection.connect();
+        }
+        connection.sendRequest("GET_FEEDBACKS");
+        Object response = connection.receive();
+        if (response instanceof Object[] arr && arr.length >= 3 && "200".equals(arr[0]) && arr[2] instanceof Feedbacks[]) {
+            return (Feedbacks[]) arr[2];
+        }
+        return new Feedbacks[0];
+    }
+
+    private User[] fetchUsers() {
+        if (!connection.isConnected()) {
+            connection.connect();
+        }
+        connection.sendRequest("GET_USERS");
+        Object response = connection.receive();
+        if (response instanceof Object[] arr && arr.length >= 3 && "200".equals(arr[0]) && arr[2] instanceof User[]) {
+            return (User[]) arr[2];
+        }
+        return new User[0];
+    }
+
+    private void upsertFeedbackCache(Feedbacks incoming) {
+        if (incoming == null) return;
+        for (int i = 0; i < cachedFeedbacks.length; i++) {
+            Feedbacks existing = cachedFeedbacks[i];
+            if (existing != null && existing.getAttr_id() == incoming.getAttr_id()) {
+                cachedFeedbacks[i] = incoming;
+                return;
+            }
+        }
+        Feedbacks[] expanded = new Feedbacks[cachedFeedbacks.length + 1];
+        System.arraycopy(cachedFeedbacks, 0, expanded, 0, cachedFeedbacks.length);
+        expanded[cachedFeedbacks.length] = incoming;
+        cachedFeedbacks = expanded;
+    }
+
+    private void upsertUserCache(User incoming) {
+        if (incoming == null) return;
+        for (int i = 0; i < cachedUsers.length; i++) {
+            User existing = cachedUsers[i];
+            if (existing != null && existing.getAttr_id() == incoming.getAttr_id()) {
+                cachedUsers[i] = incoming;
+                return;
+            }
+        }
+        User[] expanded = new User[cachedUsers.length + 1];
+        System.arraycopy(cachedUsers, 0, expanded, 0, cachedUsers.length);
+        expanded[cachedUsers.length] = incoming;
+        cachedUsers = expanded;
+    }   
+
+    private Object[] updateStatus(int feedbackId, String status) {
+        if (!connection.isConnected()) {
+            connection.connect();
+        }
+        connection.sendRequest(new FeedbackStatusUpdateRequest(feedbackId, status));
+        Object response = connection.receive();
+        if (response instanceof Object[]) {
+            return (Object[]) response;
+        }
+        return new Object[]{"500", "Invalid server response", null};
+    }
+
+    private Object[] updatePriority(int feedbackId, String priority) {
+        if (!connection.isConnected()) {
+            connection.connect();
+        }
+        connection.sendRequest(new FeedbackPriorityUpdateRequest(feedbackId, priority));
+        Object response = connection.receive();
+        if (response instanceof Object[]) {
+            return (Object[]) response;
+        }
+        return new Object[]{"500", "Invalid server response", null};
+    }
+
+    private Object[] updateInternalNote(int feedbackId, String internalNote) {
+        if (!connection.isConnected()) {
+            connection.connect();
+        }
+        connection.sendRequest(new FeedbackInternalNoteUpdateRequest(feedbackId, internalNote));
+        Object response = connection.receive();
+        if (response instanceof Object[]) {
+            return (Object[]) response;
+        }
+        return new Object[]{"500", "Invalid server response", null};
+    }
+
+    private String getFeedbackStatus(Feedbacks feedback) {
+        if (feedback == null || feedback.getAttr_status() == null || feedback.getAttr_status().length == 0 || feedback.getAttr_status()[0] == null) {
+            return "Pending";
+        }
+        return feedback.getAttr_status()[0].trim();
+    }
+
+    private String formatDate(Date date) {
+        if (date == null) {
+            return "-";
+        }
+        return new SimpleDateFormat("MMM dd, yyyy").format(date);
+    }
+
     private void loadDashboard() {
+        refreshDataCaches();
         contentContainer.removeAll();
         JPanel wrapper = new JPanel(new BorderLayout(0, 20));
         wrapper.setOpaque(false);
@@ -100,6 +277,7 @@ public class BrgyOfficialDashboard extends JFrame {
     }
 
     private void loadManageFeedbackView() {
+        refreshDataCaches();
         contentContainer.removeAll();
 
         JPanel wrapper = new JPanel(new BorderLayout(0, 15));
@@ -127,6 +305,7 @@ public class BrgyOfficialDashboard extends JFrame {
     }
 
     private void loadStatisticsView() {
+        refreshDataCaches();
         contentContainer.removeAll();
 
         JPanel wrapper = new JPanel(new BorderLayout(0, 20));
@@ -162,14 +341,40 @@ public class BrgyOfficialDashboard extends JFrame {
         contentContainer.repaint();
     }
 
+    private void loadUsersView() {
+        refreshDataCaches();
+        contentContainer.removeAll();
+
+        usersView = new AdminDashboard.AdminConsoleView(connection, this::refreshDataCaches);
+        usersView.onUsersUpdated(cachedUsers);
+
+        contentContainer.add(usersView, BorderLayout.CENTER);
+        contentContainer.revalidate();
+        contentContainer.repaint();
+    }
+
     private JPanel statisticsSummaryRow() {
+        int total = cachedFeedbacks.length;
+        int pending = 0;
+        int inProgress = 0;
+        int resolved = 0;
+        int archived = 0;
+
+        for (Feedbacks feedback : cachedFeedbacks) {
+            String status = getFeedbackStatus(feedback);
+            if ("Pending".equalsIgnoreCase(status)) pending++;
+            else if ("In Progress".equalsIgnoreCase(status) || "In-Progress".equalsIgnoreCase(status)) inProgress++;
+            else if ("Resolved".equalsIgnoreCase(status)) resolved++;
+            else if ("Archived".equalsIgnoreCase(status)) archived++;
+        }
+
         JPanel statsRow = new JPanel(new GridLayout(1, 5, 15, 15));
         statsRow.setOpaque(false);
-        statsRow.add(new StatisticsStatCard("Total Feedbacks", "20", Colors.LIGHTEST_GRAY));
-        statsRow.add(new StatisticsStatCard("Pending", "2", new Color(255, 249, 216)));
-        statsRow.add(new StatisticsStatCard("In Progress", "2", new Color(233, 238, 252)));
-        statsRow.add(new StatisticsStatCard("Resolved", "5", new Color(220, 240, 200)));
-        statsRow.add(new StatisticsStatCard("Archived", "0", Colors.LIGHTEST_GRAY));
+        statsRow.add(new StatisticsStatCard("Total Feedbacks", String.valueOf(total), Colors.LIGHTEST_GRAY));
+        statsRow.add(new StatisticsStatCard("Pending", String.valueOf(pending), new Color(255, 249, 216)));
+        statsRow.add(new StatisticsStatCard("In Progress", String.valueOf(inProgress), new Color(233, 238, 252)));
+        statsRow.add(new StatisticsStatCard("Resolved", String.valueOf(resolved), new Color(220, 240, 200)));
+        statsRow.add(new StatisticsStatCard("Archived", String.valueOf(archived), Colors.LIGHTEST_GRAY));
         return statsRow;
     }
 
@@ -190,11 +395,11 @@ public class BrgyOfficialDashboard extends JFrame {
 
         panel.add(title);
         panel.add(Box.createVerticalStrut(20));
-        panel.add(createStatisticsCategoryRow("Infrastructure", 4));
-        panel.add(createStatisticsCategoryRow("Sanitation", 0));
-        panel.add(createStatisticsCategoryRow("Environmental", 6));
-        panel.add(createStatisticsCategoryRow("Public Safety", 3));
-        panel.add(createStatisticsCategoryRow("Health Services", 1));
+        panel.add(createStatisticsCategoryRow("Event Suggestion", countCategory("Event Suggestion")));
+        panel.add(createStatisticsCategoryRow("Missing Person", countCategory("Missing Person")));
+        panel.add(createStatisticsCategoryRow("Noise Complaint", countCategory("Noise Complaint")));
+        panel.add(createStatisticsCategoryRow("Infrastructure", countCategory("Infrastructure")));
+        panel.add(createStatisticsCategoryRow("Other", countCategory("Other")));
 
         return panel;
     }
@@ -286,13 +491,57 @@ public class BrgyOfficialDashboard extends JFrame {
     }
 
     private JPanel statsSummaryRow() {
+        int urgent = 0;
+        int pending = 0;
+        int inProgress = 0;
+
+        for (Feedbacks feedback : cachedFeedbacks) {
+            String status = getFeedbackStatus(feedback);
+            if ("Pending".equalsIgnoreCase(status)) pending++;
+            if ("In Progress".equalsIgnoreCase(status) || "In-Progress".equalsIgnoreCase(status)) inProgress++;
+            if (("Pending".equalsIgnoreCase(status) || "In Progress".equalsIgnoreCase(status) || "In-Progress".equalsIgnoreCase(status))
+                    && feedback != null && feedback.getAttr_upvote() != null && feedback.getAttr_upvote().length >= 10) {
+                urgent++;
+            }
+        }
+
         JPanel statsRow = new JPanel(new GridLayout(1, 4, 15, 15));
         statsRow.setOpaque(false);
-        statsRow.add(new StatCard("Urgent", "0", new Color(252, 232, 232)));
-        statsRow.add(new StatCard("Pending", "2", new Color(255, 249, 216)));
-        statsRow.add(new StatCard("In Progress", "2", new Color(233, 238, 252)));
-        statsRow.add(new StatCard("High Priority", "0", new Color(246, 236, 254)));
+        statsRow.add(new StatCard("Urgent", String.valueOf(urgent), new Color(252, 232, 232)));
+        statsRow.add(new StatCard("Pending", String.valueOf(pending), new Color(255, 249, 216)));
+        statsRow.add(new StatCard("In Progress", String.valueOf(inProgress), new Color(233, 238, 252)));
+        statsRow.add(new StatCard("High Priority", String.valueOf(Math.max(0, urgent - 1)), new Color(246, 236, 254)));
         return statsRow;
+    }
+
+    private int countCategory(String categoryName) {
+        int count = 0;
+        for (Feedbacks feedback : cachedFeedbacks) {
+            if (feedback == null || feedback.getCategories() == null || feedback.getCategories().length == 0 || feedback.getCategories()[0] == null) {
+                continue;
+            }
+            if (categoryName.equalsIgnoreCase(feedback.getCategories()[0].trim())) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private String getUserLabel(int userId) {
+        for (User cachedUser : cachedUsers) {
+            if (cachedUser != null && cachedUser.getAttr_id() == userId) {
+                String fullName = cachedUser.getName();
+                if (fullName != null && !fullName.trim().isEmpty()) {
+                    return fullName.trim();
+                }
+
+                String username = cachedUser.getUsername();
+                if (username != null && !username.trim().isEmpty()) {
+                    return username.trim();
+                }
+            }
+        }
+        return ""+userId;
     }
 
     static class BrgyOfficialHeaderPanel extends JPanel {
@@ -301,7 +550,7 @@ public class BrgyOfficialDashboard extends JFrame {
         private static final Color NAV_COLOR = Colors.WHITE;
         private static final Color ACTIVE_TEXT = new Color(114, 181, 112);
 
-        public Buttons profileButton, logoutButton, viewFeedbackBtn, manageFeedbackBtn, statsBtn, postAnnouncementBtn;
+        public Buttons profileButton, logoutButton, viewFeedbackBtn, statsBtn, usersBtn, postAnnouncementBtn;
 
         private String currentActiveTab;
         private User user;
@@ -355,7 +604,7 @@ public class BrgyOfficialDashboard extends JFrame {
 
             Buttons.applyClick(profileButton, () -> {
                 UserProfileDialog userProfileDialog =
-                        new UserProfileDialog((JFrame) SwingUtilities.getWindowAncestor(headerPanel));
+                        new UserProfileDialog((JFrame) SwingUtilities.getWindowAncestor(headerPanel), user);
                 userProfileDialog.setVisible(true);
             });
 
@@ -384,18 +633,18 @@ public class BrgyOfficialDashboard extends JFrame {
             navBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
 
             viewFeedbackBtn = new Buttons("View Feedbacks", 0);
-            manageFeedbackBtn = new Buttons("Manage Feedback", 0);
             statsBtn = new Buttons("Statistics", 0);
+            usersBtn = new Buttons("Users", 0);
             postAnnouncementBtn = new Buttons("Post Announcement", 0);
 
             styleTab(viewFeedbackBtn, "View Feedbacks".equals(currentActiveTab));
-            styleTab(manageFeedbackBtn, "Manage Feedback".equals(currentActiveTab));
             styleTab(statsBtn, "Statistics".equals(currentActiveTab));
+            styleTab(usersBtn, "Users".equals(currentActiveTab));
             styleTab(postAnnouncementBtn, "Post Announcement".equals(currentActiveTab));
 
             navBar.add(viewFeedbackBtn);
-            navBar.add(manageFeedbackBtn);
             navBar.add(statsBtn);
+            navBar.add(usersBtn);
             navBar.add(postAnnouncementBtn);
 
             add(navBar);
@@ -404,8 +653,8 @@ public class BrgyOfficialDashboard extends JFrame {
         public void setActiveTab(String tabName) {
             currentActiveTab = tabName;
             styleTab(viewFeedbackBtn, "View Feedbacks".equals(currentActiveTab));
-            styleTab(manageFeedbackBtn, "Manage Feedback".equals(currentActiveTab));
             styleTab(statsBtn, "Statistics".equals(currentActiveTab));
+            styleTab(usersBtn, "Users".equals(currentActiveTab));
             styleTab(postAnnouncementBtn, "Post Announcement".equals(currentActiveTab));
             repaint();
         }
@@ -461,14 +710,51 @@ public class BrgyOfficialDashboard extends JFrame {
         JPanel list = new JPanel();
         list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
         list.setOpaque(false);
-        // SAMPLE SET
-        list.add(new FeedbackCard("IN PROGRESS", "Infrastructure",
-                "Street lights along Main Road not working",
-                "Main Road", "Feb 7, 2026", "Maria Garcia", 12));
-        list.add(Box.createVerticalStrut(10));
-        list.add(new FeedbackCard("PENDING", "Safety",
-                "Broken drainage cover near school gate",
-                "Central School", "Feb 6, 2026", "Juan Reyes", 8));
+
+        Feedbacks[] ordered = Arrays.copyOf(cachedFeedbacks, cachedFeedbacks.length);
+        Arrays.sort(ordered, (a, b) -> {
+            Date da = a != null ? a.getIssued_date() : null;
+            Date db = b != null ? b.getIssued_date() : null;
+            if (da == null && db == null) return 0;
+            if (da == null) return 1;
+            if (db == null) return -1;
+            return db.compareTo(da);
+        });
+
+        int rendered = 0;
+        for (Feedbacks feedback : ordered) {
+            if (feedback == null) continue;
+
+            String status = getFeedbackStatus(feedback);
+            String category = (feedback.getCategories() != null && feedback.getCategories().length > 0 && feedback.getCategories()[0] != null)
+                    ? feedback.getCategories()[0]
+                    : "Others";
+            String title = feedback.getTitle() != null && !feedback.getTitle().trim().isEmpty()
+                    ? feedback.getTitle().trim()
+                    : "Untitled Feedback";
+                String priority = feedback.getPriority() != null && !feedback.getPriority().trim().isEmpty()
+                    ? feedback.getPriority().trim()
+                    : "No priority set";
+                    String internalNote = feedback.getInternal_note() != null ? feedback.getInternal_note() : "";
+            String content = feedback.getContent() != null ? feedback.getContent() : "";
+            String text = "<b>" + title + "</b><br/>" + content;
+            String location = feedback.getLocation() != null ? feedback.getLocation() : "-";
+                    String author = getUserLabel(feedback.getIssued_by());
+            String date = formatDate(feedback.getIssued_date());
+            int votes = feedback.getAttr_upvote() != null ? feedback.getAttr_upvote().length : 0;
+
+                    list.add(new FeedbackCard(feedback.getAttr_id(), status, category, priority, internalNote, text, location, date, author, votes));
+            list.add(Box.createVerticalStrut(10));
+            rendered++;
+        }
+
+        if (rendered == 0) {
+            JLabel empty = new JLabel("No feedbacks available.");
+            empty.setFont(SegoeUi(Font.PLAIN, 13));
+            empty.setForeground(Color.GRAY);
+            list.add(empty);
+        }
+
         JScrollPane scroll = new JScrollPane(list);
         scroll.setBorder(null);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
@@ -551,10 +837,17 @@ public class BrgyOfficialDashboard extends JFrame {
         }
     }
 
-    static class FeedbackCard extends JPanel {
+    class FeedbackCard extends JPanel {
 
-        FeedbackCard(String status, String category, String text,
+        private final int feedbackId;
+        private String currentPriority;
+        private String currentInternalNote;
+
+        FeedbackCard(int feedbackId, String status, String category, String priority, String internalNote, String text,
                      String location, String date, String author, int votes) {
+            this.feedbackId = feedbackId;
+            this.currentPriority = (priority != null && !priority.trim().isEmpty()) ? priority.trim() : "No priority set";
+            this.currentInternalNote = internalNote != null ? internalNote : "";
             setLayout(new BorderLayout());
             setBackground(Color.WHITE);
             setBorder(new CompoundBorder(new RoundedBorder(12),
@@ -568,7 +861,7 @@ public class BrgyOfficialDashboard extends JFrame {
             JPanel centerPanel = new JPanel();
             centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
             centerPanel.setOpaque(false);
-            JPanel tagRow = createTagRow(status, category);
+            JPanel tagRow = createTagRow(status, category, currentPriority);
             JPanel textStack = createTextStack(text, location, date, author);
             tagRow.setAlignmentX(Component.LEFT_ALIGNMENT);
             textStack.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -617,13 +910,24 @@ public class BrgyOfficialDashboard extends JFrame {
             return voteWrapper;
         }
 
-        private JPanel createTagRow(String status, String category) {
+        private JPanel createTagRow(String status, String category, String priority) {
             JPanel tagRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 1));
             tagRow.setOpaque(false);
             tagRow.add(createTag(status, new Color(220,235,255, 50), new Color(0,90,180)));
             tagRow.add(createTag(category, new Color(230,220,255, 50), new Color(100,60,180)));
-            tagRow.add(createTag("No priority set", new Color(230,230,230, 50), Color.GRAY));
+            tagRow.add(createPriorityTag(priority));
             return tagRow;
+        }
+
+        private JLabel createPriorityTag(String priority) {
+            String normalized = priority == null ? "No priority set" : priority.trim();
+            return switch (normalized.toLowerCase()) {
+                case "urgent" -> createTag("Urgent", new Color(255, 225, 225), new Color(200, 50, 50));
+                case "high" -> createTag("High", new Color(255, 235, 220), new Color(190, 95, 20));
+                case "medium" -> createTag("Medium", new Color(255, 245, 210), new Color(160, 120, 20));
+                case "low" -> createTag("Low", new Color(230, 248, 220), new Color(80, 130, 40));
+                default -> createTag("No priority set", new Color(230,230,230, 50), Color.GRAY);
+            };
         }
 
         private JLabel createTag(String text, Color bg, Color fg) {
@@ -639,8 +943,8 @@ public class BrgyOfficialDashboard extends JFrame {
         private JPanel createTextStack(String text, String location, String date, String author) {
             JLabel body = new JLabel("<html>" + text + "</html>");
             body.setFont(SegoeUi(Font.BOLD, 14));
-            JLabel meta = new JLabel("📍 " + location + " • 👤 " + author + " • 📅 " + date);
-            meta.setFont(SegoeUi(Font.PLAIN, 11));
+            JLabel meta = new JLabel(String.format("📍 %s  •  👤 %s  •  📅 %s", location, author, date));
+            meta.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 11));
             meta.setForeground(Color.GRAY);
             JPanel textStack = new JPanel();
             textStack.setLayout(new BoxLayout(textStack, BoxLayout.Y_AXIS));
@@ -665,6 +969,12 @@ public class BrgyOfficialDashboard extends JFrame {
             Buttons highBtn = new Buttons("High", 6, new Color(255, 220, 180), new Color(230, 160, 100));
             Buttons mediumBtn = new Buttons("Medium", 6, new Color(255, 240, 180), new Color(210, 180, 110));
             Buttons lowBtn = new Buttons("Low", 6, new Color(220, 240, 200), new Color(170, 200, 140));
+
+            urgentBtn.addActionListener(e -> applyPriority("Urgent"));
+            highBtn.addActionListener(e -> applyPriority("High"));
+            mediumBtn.addActionListener(e -> applyPriority("Medium"));
+            lowBtn.addActionListener(e -> applyPriority("Low"));
+
             for (Buttons btn : new Buttons[]{urgentBtn, highBtn, mediumBtn, lowBtn}) {
                 btn.setPreferredSize(priorityBtnSize);
                 btn.setFont(btnFont);
@@ -681,12 +991,23 @@ public class BrgyOfficialDashboard extends JFrame {
                     new Color(200, 220, 255), new Color(140, 160, 240));
             Buttons resolveBtn = new Buttons("Resolve", 6,
                     new Color(200, 255, 200), new Color(100, 170, 100));
+            Buttons pendingBtn = new Buttons("Pending", 6,
+                    new Color(255, 243, 224), new Color(230, 81, 0));
+
+            pendingBtn.addActionListener(e -> applyStatus("Pending"));
+            startBtn.addActionListener(e -> applyStatus("In Progress"));
+            resolveBtn.addActionListener(e -> applyStatus("Resolved"));
+
             for (Buttons btn : new Buttons[]{startBtn, resolveBtn}) {
                 btn.setPreferredSize(statusBtnSize);
                 btn.setFont(btnFont);
                 btn.setForeground(new Color(50, 50, 50, 150));
                 quickStatusPanel.add(btn);
             }
+            pendingBtn.setPreferredSize(statusBtnSize);
+            pendingBtn.setFont(btnFont);
+            pendingBtn.setForeground(new Color(50, 50, 50, 150));
+            quickStatusPanel.add(pendingBtn);
             JLabel quickStatusLabel = new JLabel("Quick Status: ");
             quickStatusLabel.setForeground(labelColor);
             quickStatusLabel.setFont(btnFont);
@@ -694,6 +1015,36 @@ public class BrgyOfficialDashboard extends JFrame {
             panel.add(priorityPanel);
             panel.add(quickStatusPanel);
             return panel;
+        }
+
+        private void applyStatus(String nextStatus) {
+            Object[] response = updateStatus(feedbackId, nextStatus);
+            if (!"200".equals(response[0])) {
+                JOptionPane.showMessageDialog(BrgyOfficialDashboard.this,
+                        String.valueOf(response[1]),
+                        "Update Failed",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            refreshDataCaches();
+            reloadActiveTab();
+        }
+
+        private void applyPriority(String nextPriority) {
+            if (nextPriority.equalsIgnoreCase(currentPriority)) {
+                return;
+            }
+            Object[] response = updatePriority(feedbackId, nextPriority);
+            if (!"200".equals(response[0])) {
+                JOptionPane.showMessageDialog(BrgyOfficialDashboard.this,
+                        String.valueOf(response[1]),
+                        "Update Failed",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            currentPriority = nextPriority;
+            refreshDataCaches();
+            reloadActiveTab();
         }
 
         private JPanel addNotesPanel() {
@@ -734,18 +1085,23 @@ public class BrgyOfficialDashboard extends JFrame {
             container.add(Box.createVerticalStrut(5));
             container.add(notePanel);
 
-            final String[] savedNote = { null };
+            if (!currentInternalNote.trim().isEmpty()) {
+                noteArea.setText(currentInternalNote);
+            }
 
             saveButton.addActionListener(e -> {
                 String text = noteArea.getText().trim();
-                if (text.isEmpty()) {
+                Object[] response = updateInternalNote(feedbackId, text);
+                if (!"200".equals(response[0])) {
                     JOptionPane.showMessageDialog(FeedbackCard.this,
-                            "Note cannot be empty.", "Warning", JOptionPane.WARNING_MESSAGE);
+                            String.valueOf(response[1]), "Warning", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                savedNote[0] = text;
+                currentInternalNote = text;
                 JOptionPane.showMessageDialog(FeedbackCard.this,
                         "Internal note saved successfully.", "Saved", JOptionPane.INFORMATION_MESSAGE);
+                refreshDataCaches();
+                reloadActiveTab();
             });
 
             toggleLabel.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -756,12 +1112,9 @@ public class BrgyOfficialDashboard extends JFrame {
                     notePanel.setVisible(expanded);
                     if (expanded) {
                         toggleLabel.setText("Hide note ↓");
-                        noteArea.setText(savedNote[0] != null ? savedNote[0] : "");
+                        noteArea.setText(currentInternalNote);
                     } else {
                         toggleLabel.setText("Add internal note →");
-                        if (savedNote[0] == null) {
-                            noteArea.setText("");
-                        }
                     }
                     FeedbackCard.this.revalidate();
                     FeedbackCard.this.repaint();

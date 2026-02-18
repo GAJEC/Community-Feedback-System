@@ -34,7 +34,7 @@ public class FeedbackController {
         String[] categories = {category};
         Date currentDate = new Date();
         
-        Feedbacks feedback = new Feedbacks(0, userId, 0, initialStatus, categories, title, location, content, currentDate);
+        Feedbacks feedback = new Feedbacks(0, userId, 0, initialStatus, categories, title, "No priority set", "", location, content, currentDate);
 
         return feedbackModel.submitFeedback(feedback);
     }

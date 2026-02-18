@@ -31,6 +31,13 @@ public class FeedbackActions {
                 return new Object[]{"400", "Location is required", null};
             }
 
+            if (feedback.getPriority() == null || feedback.getPriority().trim().isEmpty()) {
+                feedback.setPriority("No priority set");
+            }
+            if (feedback.getInternal_note() == null) {
+                feedback.setInternal_note("");
+            }
+
             int newId = feedbackHandler.getCurrentLength("feedback") + 1;
             feedback.setAttr_id(newId);
 
@@ -197,6 +204,71 @@ public class FeedbackActions {
             }
 
             return new Object[]{"200", "Feedback status updated", feedback};
+        } catch (ParserConfigurationException | IOException | SAXException e) {
+            return new Object[]{"500", "Server error: " + e.getMessage(), null};
+        }
+    }
+
+    public static Object[] updateFeedbackPriority(int feedbackId, String priority) {
+        try {
+            if (priority == null || priority.trim().isEmpty()) {
+                return new Object[]{"400", "Priority is required", null};
+            }
+
+            String normalized = priority.trim();
+            if (!("Urgent".equalsIgnoreCase(normalized)
+                    || "High".equalsIgnoreCase(normalized)
+                    || "Medium".equalsIgnoreCase(normalized)
+                    || "Low".equalsIgnoreCase(normalized)
+                    || "No priority set".equalsIgnoreCase(normalized))) {
+                return new Object[]{"400", "Invalid priority", null};
+            }
+
+            XMLHandler<Feedbacks> feedbackHandler = new XMLHandler<>(
+                    Feedbacks.class,
+                    "src/server/data/database.xml",
+                    "feedback"
+            );
+
+            Feedbacks feedback = feedbackHandler.Read("id", feedbackId);
+            if (feedback == null) {
+                return new Object[]{"404", "Feedback not found", null};
+            }
+
+            feedback.setPriority(normalized);
+            boolean updated = feedbackHandler.Update("id", feedbackId, feedback);
+            if (!updated) {
+                return new Object[]{"500", "Failed to update feedback priority", null};
+            }
+
+            return new Object[]{"200", "Feedback priority updated", feedback};
+        } catch (ParserConfigurationException | IOException | SAXException e) {
+            return new Object[]{"500", "Server error: " + e.getMessage(), null};
+        }
+    }
+
+    public static Object[] updateFeedbackInternalNote(int feedbackId, String internalNote) {
+        try {
+            String normalized = internalNote == null ? "" : internalNote.trim();
+
+            XMLHandler<Feedbacks> feedbackHandler = new XMLHandler<>(
+                    Feedbacks.class,
+                    "src/server/data/database.xml",
+                    "feedback"
+            );
+
+            Feedbacks feedback = feedbackHandler.Read("id", feedbackId);
+            if (feedback == null) {
+                return new Object[]{"404", "Feedback not found", null};
+            }
+
+            feedback.setInternal_note(normalized);
+            boolean updated = feedbackHandler.Update("id", feedbackId, feedback);
+            if (!updated) {
+                return new Object[]{"500", "Failed to update feedback internal note", null};
+            }
+
+            return new Object[]{"200", "Feedback internal note updated", feedback};
         } catch (ParserConfigurationException | IOException | SAXException e) {
             return new Object[]{"500", "Server error: " + e.getMessage(), null};
         }

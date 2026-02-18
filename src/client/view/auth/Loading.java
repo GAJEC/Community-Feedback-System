@@ -4,6 +4,7 @@ import client.controller.LoginController;
 import client.model.ClientConnection;
 import client.model.CredentialManager;
 import client.view.admin.AdminDashboard;
+import client.view.brgyofficials.BrgyOfficialDashboard;
 import client.view.residents.ResidentDashboard;
 import common.User;
 
@@ -143,9 +144,9 @@ public class Loading extends JWindow {
                             case 0:
                                 new AdminDashboard(connection).setVisible(true);
                                 break;
-//                            case 1: // Barangay Official
-//                                new client.view.brgyofficials.BrgyOfficialDashboard(true, loggedInUser);
-//                                break;
+                            case 1: // Barangay Official
+                                new BrgyOfficialDashboard(loggedInUser, connection).setVisible(true);
+                                break;
                             case 2: // Resident
                                 new ResidentDashboard(true, loggedInUser, connection);
                                 break;

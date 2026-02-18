@@ -13,7 +13,10 @@ public class BroadcastMessage implements Serializable {
         VOTE_UPDATE,
         NEW_FEEDBACK,
         STATUS_UPDATE,
-        NEW_USER
+        PRIORITY_UPDATE,
+        INTERNAL_NOTE_UPDATE,
+        NEW_USER,
+        NEW_ANNOUNCEMENT
     }
 
     public BroadcastMessage(BroadcastType type, Object data) {

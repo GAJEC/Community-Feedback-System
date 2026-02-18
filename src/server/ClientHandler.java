@@ -1,13 +1,17 @@
 package server;
 
+import common.Announcement;
 import common.BroadcastMessage;
 import common.DeleteUserRequest;
+import common.FeedbackInternalNoteUpdateRequest;
+import common.FeedbackPriorityUpdateRequest;
 import common.FeedbackStatusUpdateRequest;
 import common.Feedbacks;
 import common.RegisterRequest;
 import common.User;
 import common.UserStatusUpdateRequest;
 import common.VoteRequest;
+import server.actions.AnnouncementActions;
 import org.xml.sax.SAXException;
 import server.actions.FeedbackActions;
 import server.actions.LoginActions;
@@ -111,6 +115,25 @@ public class ClientHandler extends Thread {
                             Server.broadcast(broadcast, this);
                         }
                     }
+                    case Announcement announcement -> {
+                        if(CONFIG_DEBUG){
+                            System.out.println("Received announcement post request from Client " + clientId);
+                        }
+
+                        Object[] response = AnnouncementActions.postAnnouncement(announcement, clientId);
+                        synchronized (out) {
+                            out.writeObject(response);
+                            out.flush();
+                        }
+
+                        if ("200".equals(response[0]) && response[2] != null) {
+                            BroadcastMessage broadcast = new BroadcastMessage(
+                                    BroadcastMessage.BroadcastType.NEW_ANNOUNCEMENT,
+                                    response[2]
+                            );
+                            Server.broadcast(broadcast, this);
+                        }
+                    }
                     case VoteRequest vr -> {
                         if(CONFIG_DEBUG){
                             System.out.println("Received vote request from Client " + clientId + ": " + vr);
@@ -168,6 +191,42 @@ public class ClientHandler extends Thread {
                             Server.broadcast(broadcast, this);
                         }
                     }
+                    case FeedbackPriorityUpdateRequest fpr -> {
+                        if (CONFIG_DEBUG) {
+                            System.out.println("Received feedback priority update request from Client " + clientId);
+                        }
+                        Object[] response = FeedbackActions.updateFeedbackPriority(fpr.getFeedbackId(), fpr.getPriority());
+                        synchronized (out) {
+                            out.writeObject(response);
+                            out.flush();
+                        }
+
+                        if ("200".equals(response[0]) && response[2] != null) {
+                            BroadcastMessage broadcast = new BroadcastMessage(
+                                    BroadcastMessage.BroadcastType.PRIORITY_UPDATE,
+                                    response[2]
+                            );
+                            Server.broadcast(broadcast, this);
+                        }
+                    }
+                    case FeedbackInternalNoteUpdateRequest fnr -> {
+                        if (CONFIG_DEBUG) {
+                            System.out.println("Received feedback internal note update request from Client " + clientId);
+                        }
+                        Object[] response = FeedbackActions.updateFeedbackInternalNote(fnr.getFeedbackId(), fnr.getInternalNote());
+                        synchronized (out) {
+                            out.writeObject(response);
+                            out.flush();
+                        }
+
+                        if ("200".equals(response[0]) && response[2] != null) {
+                            BroadcastMessage broadcast = new BroadcastMessage(
+                                    BroadcastMessage.BroadcastType.INTERNAL_NOTE_UPDATE,
+                                    response[2]
+                            );
+                            Server.broadcast(broadcast, this);
+                        }
+                    }
                     case String s -> {
                         if ("GET_FEEDBACKS".equals(s)) {
                             if(CONFIG_DEBUG){
@@ -185,6 +244,16 @@ public class ClientHandler extends Thread {
                             }
 
                             Object[] response = LoginActions.getAllUsers();
+                            synchronized (out) {
+                                out.writeObject(response);
+                                out.flush();
+                            }
+                        } else if ("GET_ANNOUNCEMENTS".equals(s)) {
+                            if (CONFIG_DEBUG) {
+                                System.out.println("Received GET_ANNOUNCEMENTS request from Client " + clientId);
+                            }
+
+                            Object[] response = AnnouncementActions.getAllAnnouncements();
                             synchronized (out) {
                                 out.writeObject(response);
                                 out.flush();

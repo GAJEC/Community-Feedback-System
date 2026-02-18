@@ -160,7 +160,9 @@ public class ClientFeedbackDetailDialog extends JDialog {
 
         respTop.add(nameBadge, BorderLayout.WEST);
 
-        JTextArea respMsg = new JTextArea("No official response yet.");
+        String internalNote = feedback.getInternal_note() != null ? feedback.getInternal_note().trim() : "";
+        String responseText = internalNote.isEmpty() ? "No official response yet." : internalNote;
+        JTextArea respMsg = new JTextArea(responseText);
         styleTextArea(respMsg);
         respMsg.setBorder(new EmptyBorder(4, 0, 0, 0));
 
@@ -228,6 +230,8 @@ public class ClientFeedbackDetailDialog extends JDialog {
                     new String[]{"Pending"},
                     new String[]{"Infrastructure"},
                     "Street lights are not working",
+                    "No priority set",
+                    "",
                     "Main Road",
                     "They've been out for a week.",
                     new Date()
