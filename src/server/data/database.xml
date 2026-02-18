@@ -1,14 +1,26 @@
 <dataset>
     <user id="0" type="0">
-        <name>System Administrator</name>
-        <address>Municipal Hall, IT Dept.</address>
         <username>admin</username>
         <password>admin123</password>
-    </user>
-    <user id="1" type="0">
-        <name>JoshLei</name>
+        <name>System Administrator</name>
         <address>Municipal Hall, IT Dept.</address>
-        <username>joshlei</username>
-        <password>123</password>
+        <contact>09999999999</contact>
+        <verify_status>APPROVED</verify_status>
+    </user>
+    <user id="1" type="1">
+        <username>BrgyOfficial</username>
+        <password>bo123</password>
+        <name>BrgyOfficial</name>
+        <address>Municipal Hall, IT Dept.</address>
+        <contact>09999999999</contact>
+        <verify_status>APPROVED</verify_status>
+    </user>
+    <user id="2" type="2">
+        <username>resident1</username>
+        <password>r123</password>
+        <name>Resident</name>
+        <address>Block 1, Corner Lot</address>
+        <contact>09999999999</contact>
+        <verify_status>APPROVED</verify_status>
     </user>
 </dataset>
