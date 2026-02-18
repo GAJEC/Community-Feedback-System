@@ -4,7 +4,6 @@ import client.model.ClientConnection;
 import client.model.FeedbackModel;
 import client.model.AdminFeedbackModel;
 import client.model.BrgyOfficialFeedbackModel;
-import common.Feedbacks;
 import common.VoteRequest;
 
 public class FeedbackController {

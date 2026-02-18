@@ -1,6 +1,5 @@
 package client.model;
 
-import common.Feedbacks;
 import common.FeedbackStatusUpdateRequest;
 import common.FeedbackPriorityUpdateRequest;
 import common.FeedbackInternalNoteUpdateRequest;
