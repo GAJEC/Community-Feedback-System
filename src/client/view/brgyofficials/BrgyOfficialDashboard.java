@@ -633,9 +633,13 @@ public class BrgyOfficialDashboard extends JFrame {
             navBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
 
             viewFeedbackBtn = new Buttons("View Feedbacks", 0);
+            viewFeedbackBtn.setBackgroundColor(new Color(0,0,0,0));
             statsBtn = new Buttons("Statistics", 0);
+            statsBtn.setBackgroundColor(new Color( 0,0,0,0));
             usersBtn = new Buttons("Users", 0);
+            usersBtn.setBackgroundColor(new Color(0,0,0,0));
             postAnnouncementBtn = new Buttons("Post Announcement", 0);
+            postAnnouncementBtn.setBackgroundColor(new Color( 0,0,0,0));
 
             styleTab(viewFeedbackBtn, "View Feedbacks".equals(currentActiveTab));
             styleTab(statsBtn, "Statistics".equals(currentActiveTab));

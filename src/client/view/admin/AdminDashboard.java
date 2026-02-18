@@ -3,6 +3,7 @@ package client.view.admin;
 import client.model.ClientConnection;
 import client.view.common.Buttons;
 import client.view.common.UserProfileDialog;
+import client.view.strings.Images;
 import common.BroadcastMessage;
 import common.DeleteUserRequest;
 import common.FeedbackInternalNoteUpdateRequest;
@@ -78,11 +79,7 @@ public class AdminDashboard extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        URL iconURL = AdminDashboard.class.getResource("/res/assets/app_icon.png");
-        if (iconURL == null) iconURL = AdminDashboard.class.getResource("/assets/app_icon.png");
-        if (iconURL != null) {
-            setIconImage(new ImageIcon(iconURL).getImage());
-        }
+        this.setIconImage(Images.ICON.getImage());
 
         JPanel northContainer = new JPanel();
         northContainer.setLayout(new BoxLayout(northContainer, BoxLayout.Y_AXIS));
