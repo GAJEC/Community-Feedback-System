@@ -1208,12 +1208,4 @@ public class ResidentDashboard extends JFrame {
             add(bl);
         }
     }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            ClientConnection testConnection = new ClientConnection();
-            testConnection.connect();
-            new ResidentDashboard(true, new User("testuser", "password"), testConnection);
-        });
-    }
 }

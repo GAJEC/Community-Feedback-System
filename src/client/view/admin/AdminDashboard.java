@@ -2,6 +2,7 @@ package client.view.admin;
 
 import client.model.ClientConnection;
 import client.view.common.Buttons;
+import client.view.common.LogoutPopUp;
 import client.view.common.UserProfileDialog;
 import client.view.strings.Images;
 import common.BroadcastMessage;
@@ -155,8 +156,9 @@ public class AdminDashboard extends JFrame {
         JButton logoutButton = new RoundedButton("Logout", 20, LOGOUT_RED);
         logoutButton.setPreferredSize(new Dimension(110, 40));
         logoutButton.addActionListener(e -> {
-            dispose();
-            new client.view.auth.AuthScreen(new client.model.ClientConnection()).setVisible(true);
+            LogoutPopUp logoutDialog =
+                    new LogoutPopUp((JFrame) SwingUtilities.getWindowAncestor(headerPanel));
+            logoutDialog.setVisible(true);
         });
 
         gbcR.insets = new Insets(0, 0, 0, 20);
@@ -1100,8 +1102,8 @@ public class AdminDashboard extends JFrame {
                 String location = feedback.getLocation() == null ? "" : feedback.getLocation();
                 String author = findUserName(feedback.getIssued_by());
                 String priority = feedback.getPriority() == null || feedback.getPriority().trim().isEmpty()
-                    ? "No priority set"
-                    : feedback.getPriority().trim();
+                        ? "No priority set"
+                        : feedback.getPriority().trim();
                 String internalNote = feedback.getInternal_note() == null ? "" : feedback.getInternal_note();
 
                 if (!"All Categories".equals(selectedCategory) && !selectedCategory.equalsIgnoreCase(category)) continue;
@@ -1702,7 +1704,7 @@ public class AdminDashboard extends JFrame {
             rightGroup.add(deleteBtn);
 
             searchField = new JTextField();
-                searchField.setPreferredSize(new Dimension(260, 24));
+            searchField.setPreferredSize(new Dimension(260, 24));
             searchField.setToolTipText("Search by name, role, status, phone, or address");
             searchField.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(new Color(220, 220, 225)),
@@ -1979,11 +1981,11 @@ public class AdminDashboard extends JFrame {
                 topBadgeRow.add(createRoleBadge(user.role));
 
                 Color statusBg = "Active".equalsIgnoreCase(user.status)
-                    ? new Color(232, 245, 233)
-                    : new Color(255, 243, 224);
+                        ? new Color(232, 245, 233)
+                        : new Color(255, 243, 224);
                 Color statusFg = "Active".equalsIgnoreCase(user.status)
-                    ? new Color(46, 125, 50)
-                    : new Color(230, 81, 0);
+                        ? new Color(46, 125, 50)
+                        : new Color(230, 81, 0);
                 topBadgeRow.add(createPill(user.status, statusBg, statusFg));
 
                 JLabel meta = new JLabel("• " + user.phone + " • " + user.address);
@@ -2042,7 +2044,7 @@ public class AdminDashboard extends JFrame {
                 btn.setContentAreaFilled(true);
                 btn.setBorder(BorderFactory.createCompoundBorder(
                         BorderFactory.createLineBorder(fg, 1, true),
-                    new EmptyBorder(2, 8, 2, 8)
+                        new EmptyBorder(2, 8, 2, 8)
                 ));
                 return btn;
             }
@@ -2275,9 +2277,5 @@ public class AdminDashboard extends JFrame {
             box.add(d, BorderLayout.CENTER);
             return box;
         }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new AdminDashboard().setVisible(true));
     }
 }

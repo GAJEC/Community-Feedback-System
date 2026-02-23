@@ -169,14 +169,4 @@ public class Loading extends JWindow {
             });
         }
     }
-
-    public static void main(String[] args) {
-        EventQueue.invokeLater(() -> {
-            ClientConnection testConnection = new ClientConnection();
-            if (CONFIG_DEBUG) {
-                System.out.println("[DEBUG MODE] Connecting to localhost...");
-            }
-            new Loading(testConnection).launch();
-        });
-    }
 }

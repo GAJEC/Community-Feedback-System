@@ -1,6 +1,5 @@
 package client.view.residents.panels;
 
-import client.view.UiPreview;
 import client.view.common.Buttons;
 import client.view.common.CustomPanel;
 import client.view.strings.Colors;
@@ -221,22 +220,5 @@ public class ClientFeedbackDetailDialog extends JDialog {
             g2.dispose();
             super.paintComponent(g);
         }
-    }
-
-    public static void main(String[] args) {
-        UiPreview.show(frame -> {
-            Feedbacks demo = new Feedbacks(
-                    1, 2, 0,
-                    new String[]{"Pending"},
-                    new String[]{"Infrastructure"},
-                    "Street lights are not working",
-                    "No priority set",
-                    "",
-                    "Main Road",
-                    "They've been out for a week.",
-                    new Date()
-            );
-            return new ClientFeedbackDetailDialog(frame, demo, "Pending", "Infrastructure", "User #2");
-        });
     }
 }

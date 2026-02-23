@@ -6,7 +6,6 @@ import client.view.common.Buttons;
 import client.view.common.LogoutPopUp;
 import client.view.common.RoundedInputField;
 import client.view.common.UserProfileDialog;
-import client.view.brgyofficials.panel.PostAnnouncementDialog;
 import client.view.strings.Colors;
 import client.view.strings.Images;
 import common.BroadcastMessage;
@@ -193,7 +192,7 @@ public class BrgyOfficialDashboard extends JFrame {
         System.arraycopy(cachedUsers, 0, expanded, 0, cachedUsers.length);
         expanded[cachedUsers.length] = incoming;
         cachedUsers = expanded;
-    }   
+    }
 
     private Object[] updateStatus(int feedbackId, String status) {
         if (!connection.isConnected()) {
@@ -736,18 +735,18 @@ public class BrgyOfficialDashboard extends JFrame {
             String title = feedback.getTitle() != null && !feedback.getTitle().trim().isEmpty()
                     ? feedback.getTitle().trim()
                     : "Untitled Feedback";
-                String priority = feedback.getPriority() != null && !feedback.getPriority().trim().isEmpty()
+            String priority = feedback.getPriority() != null && !feedback.getPriority().trim().isEmpty()
                     ? feedback.getPriority().trim()
                     : "No priority set";
-                    String internalNote = feedback.getInternal_note() != null ? feedback.getInternal_note() : "";
+            String internalNote = feedback.getInternal_note() != null ? feedback.getInternal_note() : "";
             String content = feedback.getContent() != null ? feedback.getContent() : "";
             String text = "<b>" + title + "</b><br/>" + content;
             String location = feedback.getLocation() != null ? feedback.getLocation() : "-";
-                    String author = getUserLabel(feedback.getIssued_by());
+            String author = getUserLabel(feedback.getIssued_by());
             String date = formatDate(feedback.getIssued_date());
             int votes = feedback.getAttr_upvote() != null ? feedback.getAttr_upvote().length : 0;
 
-                    list.add(new FeedbackCard(feedback.getAttr_id(), status, category, priority, internalNote, text, location, date, author, votes));
+            list.add(new FeedbackCard(feedback.getAttr_id(), status, category, priority, internalNote, text, location, date, author, votes));
             list.add(Box.createVerticalStrut(10));
             rendered++;
         }
@@ -1141,11 +1140,5 @@ public class BrgyOfficialDashboard extends JFrame {
             g2.drawRoundRect(x, y, w - 1, h - 1, radius, radius);
             g2.dispose();
         }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() ->
-                new BrgyOfficialDashboard(new User("brgyofficial", "password"))
-        );
     }
 }

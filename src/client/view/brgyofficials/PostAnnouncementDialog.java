@@ -1,4 +1,4 @@
-package client.view.brgyofficials.panel;
+package client.view.brgyofficials;
 
 import client.model.ClientConnection;
 import client.view.common.Buttons;
@@ -47,13 +47,10 @@ public class PostAnnouncementDialog extends JDialog {
         root.setBorder(new LocalShadowBorder(5));
         setContentPane(root);
 
-        // 1. HEADER
         add(createHeader(), BorderLayout.NORTH);
 
-        // 2. MAIN CONTENT
         add(createContent(), BorderLayout.CENTER);
 
-        // 3. FOOTER
         add(createFooter(), BorderLayout.SOUTH);
 
     }
@@ -102,7 +99,6 @@ public class PostAnnouncementDialog extends JDialog {
         gbc.weightx = 1.0;
         gbc.gridx = 0;
 
-        // --- A. USER PROFILE SECTION ---
         JPanel profilePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         profilePanel.setOpaque(false);
 
@@ -142,9 +138,6 @@ public class PostAnnouncementDialog extends JDialog {
         gbc.insets = new Insets(0, 0, 25, 0);
         contentPanel.add(profilePanel, gbc);
 
-        // --- B. INPUT FIELDS ---
-
-        // Subject Label
         JLabel lblSubject = new JLabel("SUBJECT");
         lblSubject.setFont(new Font("Segoe UI", Font.BOLD, 11));
         lblSubject.setForeground(TEXT_GRAY);
@@ -152,18 +145,15 @@ public class PostAnnouncementDialog extends JDialog {
         gbc.insets = new Insets(0, 0, 8, 0);
         contentPanel.add(lblSubject, gbc);
 
-        // --- Subject Field (Using HintTextField) ---
         txtSubject = new RoundedInputField(null, "Enter the topic of announcement...", false);
         txtSubject.setBackgroundColor(INPUT_BG);
 
-        // We keep the border to match the rest of the form
         txtSubject.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         gbc.gridy = 2;
         gbc.insets = new Insets(0, 0, 20, 0);
         contentPanel.add(txtSubject, gbc);
 
-        // Details Label
         JLabel lblDetails = new JLabel("ANNOUNCEMENT DETAILS");
         lblDetails.setFont(new Font("Segoe UI", Font.BOLD, 11));
         lblDetails.setForeground(TEXT_GRAY);
@@ -171,7 +161,6 @@ public class PostAnnouncementDialog extends JDialog {
         gbc.insets = new Insets(0, 0, 8, 0);
         contentPanel.add(lblDetails, gbc);
 
-        // Details Text Area
         txtDetails = new JTextArea();
         txtDetails.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         txtDetails.setForeground(TEXT_DARK);
@@ -309,7 +298,6 @@ public class PostAnnouncementDialog extends JDialog {
         return new Object[]{"500", "No valid response from server", null};
     }
 
-    // --- HELPER CLASSES ---
     static class LocalShadowBorder extends AbstractBorder {
         private final int padding;
         public LocalShadowBorder(int padding) { this.padding = padding; }
@@ -323,11 +311,5 @@ public class PostAnnouncementDialog extends JDialog {
         }
         @Override
         public Insets getBorderInsets(Component c) { return new Insets(padding, padding, padding, padding); }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new PostAnnouncementDialog(null, "Juan Dela Cruz").setVisible(true);
-        });
     }
 }

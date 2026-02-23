@@ -33,9 +33,6 @@ public class Client {
         connection.connectAsync();
         
         SwingUtilities.invokeLater(() -> {
-//            Login loginView = new Login(connection);
-//            loginView.setVisible(true);
-
             Loading loadingView = new Loading(connection);
             loadingView.launch();
         });

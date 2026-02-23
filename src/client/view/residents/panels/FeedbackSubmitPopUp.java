@@ -1,6 +1,5 @@
 package client.view.residents.panels;
 
-import client.view.UiPreview;
 import client.view.common.Buttons;
 import client.view.common.CustomPanel;
 import client.view.strings.Colors;
@@ -45,9 +44,5 @@ public class FeedbackSubmitPopUp extends JDialog {
         main.add(buttonPanel, BorderLayout.SOUTH);
 
         add(main);
-    }
-
-    public static void main(String[] args) {
-        UiPreview.show(FeedbackSubmitPopUp::new);
     }
 }

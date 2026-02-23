@@ -8,7 +8,6 @@ public final class Images {
 
     private Images() {} // prevent instantiation
 
-    // Tinry ko kase yung bat, eto naman para sa images. Ginawa ko na static final para parang constants na siya, tapos may helper method para sa scaling. Yung resource method is to handle the case na hindi mahanap yung image sa isang path, so it tries multiple paths (e.g. for different build setups). Yung safeIcon naman is to return an empty icon instead of null if hindi mahanap yung image, para maiwasan yung null pointer exceptions sa UI.
     private static URL resource(String... paths) {
         for (String path : paths) {
             URL url = Images.class.getResource(path);

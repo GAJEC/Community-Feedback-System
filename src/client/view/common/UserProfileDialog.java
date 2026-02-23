@@ -1,6 +1,5 @@
 package client.view.common;
 
-import client.view.UiPreview;
 import client.view.strings.Colors;
 import client.view.strings.Images;
 import common.User;
@@ -145,9 +144,5 @@ public class UserProfileDialog extends JDialog {
         content.add(note);
 
         return content;
-    }
-
-    public static void main(String[] args) {
-        UiPreview.show(UserProfileDialog::new);
     }
 }

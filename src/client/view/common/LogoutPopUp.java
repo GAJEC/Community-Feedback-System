@@ -1,6 +1,5 @@
 package client.view.common;
 
-import client.view.UiPreview;
 import client.view.auth.AuthScreen;
 import client.view.strings.Colors;
 
@@ -59,9 +58,5 @@ public class LogoutPopUp extends JDialog {
         container.add(buttonPanel, BorderLayout.SOUTH);
 
         add(container);
-    }
-
-    public static void main(String[] args) {
-        UiPreview.show(LogoutPopUp::new);
     }
 }
