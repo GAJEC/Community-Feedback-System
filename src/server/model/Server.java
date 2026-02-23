@@ -1,6 +1,7 @@
 package server.model;
 
 import common.BroadcastMessage;
+import server.model.ClientHandler;
 import server.view.ServerUi;
 
 import java.io.IOException;
