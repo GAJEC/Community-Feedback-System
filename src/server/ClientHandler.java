@@ -15,6 +15,7 @@ import server.actions.AnnouncementActions;
 import org.xml.sax.SAXException;
 import server.actions.FeedbackActions;
 import server.actions.LoginActions;
+import server.components.XMLHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
