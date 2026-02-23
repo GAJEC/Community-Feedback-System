@@ -332,7 +332,7 @@ public class AuthScreen extends JFrame {
             Buttons.applyClick(createAccountBtn, () -> {
                 if (fullName.getText().trim().isEmpty() ||
                         location.getText().trim().isEmpty() ||
-                    phone.getText().trim().isEmpty() ||
+                        phone.getText().trim().isEmpty() ||
                         username.getText().trim().isEmpty() ||
                         password.getText().trim().isEmpty() ||
                         confirmPassword.getText().trim().isEmpty() ||

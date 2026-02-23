@@ -279,7 +279,7 @@ public class XMLHandler<T> {
      * Retrieve all entries from the XML
      * @return Array of all objects
      */
-    public T[] ReadAll() {
+    public T[] ReadAll(String tagName) {
         NodeList list = doc.getElementsByTagName(tagName);
         @SuppressWarnings("unchecked")
         T[] result = (T[]) java.lang.reflect.Array.newInstance(clazz, list.getLength());
@@ -290,7 +290,9 @@ public class XMLHandler<T> {
         }
         return result;
     }
-
+    public T[] ReadAll(){
+        return ReadAll(tagName);
+    }
     /** Read
      * To map shet di ko alam paano sa words per eto sample
      * Diba sa users merong id, name, address, contact
