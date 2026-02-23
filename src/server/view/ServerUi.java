@@ -4,19 +4,22 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.OutputStream;
+import java.io.PrintStream;
 
 public class ServerUi extends JFrame {
+
     private JButton startButton;
     private JButton stopButton;
     private JTable logTable;
     private DefaultTableModel tableModel;
+    private JTextArea consoleTextArea;
 
     public ServerUi() {
         setTitle("Server Control Panel");
-        setSize(700, 400);
+        setSize(800, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
 
         JPanel controlPanel = new JPanel();
         startButton = new JButton("Start Server");
@@ -26,15 +29,27 @@ public class ServerUi extends JFrame {
         controlPanel.add(stopButton);
         add(controlPanel, BorderLayout.SOUTH);
 
+        JTabbedPane tabbedPane = new JTabbedPane();
+
         String[] columns = {"Timestamp", "User", "Transaction", "Data Affected"};
         tableModel = new DefaultTableModel(columns, 0);
         logTable = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(logTable);
-        add(scrollPane, BorderLayout.CENTER);
+        JScrollPane logScrollPane = new JScrollPane(logTable);
+        tabbedPane.addTab("Logs", logScrollPane);
+
+        consoleTextArea = new JTextArea();
+        consoleTextArea.setEditable(false);
+        consoleTextArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        JScrollPane consoleScrollPane = new JScrollPane(consoleTextArea);
+        tabbedPane.addTab("Console", consoleScrollPane);
+
+        add(tabbedPane, BorderLayout.CENTER);
+
+        redirectSystemStreams();
     }
 
     public void addLogEntry(String timestamp, String user, String transaction, String dataAffected) {
-        tableModel.addRow(new Object[]{timestamp, user, transaction, dataAffected});
+        SwingUtilities.invokeLater(() -> tableModel.addRow(new Object[]{timestamp, user, transaction, dataAffected}));
     }
 
     public void setServerRunning(boolean running) {
@@ -54,11 +69,23 @@ public class ServerUi extends JFrame {
         SwingUtilities.invokeLater(() -> setVisible(true));
     }
 
-    public static void main(String[] args) {
-        ServerUi view = new ServerUi();
-        view.showView();
+    private void redirectSystemStreams() {
+        OutputStream out = new OutputStream() {
+            @Override
+            public void write(int b) {
+                updateConsole(String.valueOf((char) b));
+            }
 
-        view.addLogEntry("2026-02-23 12:00:00", "Resident", "Feedback", "Feedback");
-        view.addLogEntry("2026-02-23 12:05:00", "Official", "Announcement", "Announcement");
+            @Override
+            public void write(byte[] b, int off, int len) {
+                updateConsole(new String(b, off, len));
+            }
+        };
+        System.setOut(new PrintStream(out, true));
+        System.setErr(new PrintStream(out, true));
+    }
+
+    private void updateConsole(final String text) {
+        SwingUtilities.invokeLater(() -> consoleTextArea.append(text));
     }
 }

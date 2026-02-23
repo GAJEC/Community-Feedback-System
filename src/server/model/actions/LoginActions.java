@@ -1,4 +1,4 @@
-package server.actions;
+package server.model.actions;
 
 import common.RegisterRequest;
 import common.User;
