@@ -90,7 +90,7 @@ public class AdminDashboard extends JFrame {
         contentPanel = new JPanel(contentLayout);
 
         summaryPanel = createSummaryPanel();
-        usersPanel = createUsersPanel();
+        usersPanel = new AdminConsoleView(adminDashboardController, this::refreshAllData);
         manageFeedbackPanel = createManageFeedbackPanel();
         contentPanel.add(summaryPanel, "Summary");
         contentPanel.add(usersPanel, "Users");
@@ -208,7 +208,7 @@ public class AdminDashboard extends JFrame {
             if (usersPanel != null) {
                 contentPanel.remove(usersPanel);
             }
-            usersPanel = createUsersPanel();
+            usersPanel = new AdminConsoleView(adminDashboardController, this::refreshAllData);
             contentPanel.add(usersPanel, "Users");
 
             if (manageFeedbackPanel != null) {
@@ -222,10 +222,6 @@ public class AdminDashboard extends JFrame {
         }
     }
 
-    private JPanel createUsersPanel() {
-        usersView = new AdminConsoleView(adminDashboardController, this::refreshAllData);
-        return usersView;
-    }
 
     private void handleBroadcast(BroadcastMessage message) {
         SwingUtilities.invokeLater(() -> {
@@ -264,16 +260,8 @@ public class AdminDashboard extends JFrame {
     }
 
     private void refreshDataCaches() {
-        cachedUsers = fetchUsers();
-        cachedFeedbacks = fetchFeedbacks();
-    }
-
-    private User[] fetchUsers() {
-        return adminDashboardController.fetchUsers();
-    }
-
-    private Feedbacks[] fetchFeedbacks() {
-        return adminDashboardController.fetchFeedbacks();
+        cachedUsers = adminDashboardController.fetchUsers();
+        cachedFeedbacks = adminDashboardController.fetchFeedbacks();
     }
 
     private void styleTab(JButton btn, boolean active) {
@@ -1076,18 +1064,6 @@ public class AdminDashboard extends JFrame {
             return "User #" + userId;
         }
 
-        private Object[] updateStatus(int feedbackId, String status) {
-            return adminDashboardController.updateFeedbackStatus(feedbackId, status);
-        }
-
-        private Object[] updatePriority(int feedbackId, String priority) {
-            return adminDashboardController.updateFeedbackPriority(feedbackId, priority);
-        }
-
-        private Object[] updateInternalNote(int feedbackId, String internalNote) {
-            return adminDashboardController.updateFeedbackInternalNote(feedbackId, internalNote);
-        }
-
         class FeedbackCard extends JPanel {
             private final int feedbackId;
             private String currentPriority;
@@ -1276,7 +1252,7 @@ public class AdminDashboard extends JFrame {
             }
 
             private void applyStatus(String nextStatus) {
-                Object[] response = updateStatus(feedbackId, nextStatus);
+                Object[] response = adminDashboardController.updateFeedbackStatus(feedbackId, nextStatus);
                 if (!"200".equals(response[0])) {
                     JOptionPane.showMessageDialog(AdminDashboard.this, String.valueOf(response[1]), "Update Failed", JOptionPane.WARNING_MESSAGE);
                     return;
@@ -1290,7 +1266,7 @@ public class AdminDashboard extends JFrame {
                 if (nextPriority.equalsIgnoreCase(currentPriority)) {
                     return;
                 }
-                Object[] response = updatePriority(feedbackId, nextPriority);
+                Object[] response = adminDashboardController.updateFeedbackPriority(feedbackId, nextPriority);
                 if (!"200".equals(response[0])) {
                     JOptionPane.showMessageDialog(AdminDashboard.this, String.valueOf(response[1]), "Update Failed", JOptionPane.WARNING_MESSAGE);
                     return;
@@ -1347,7 +1323,7 @@ public class AdminDashboard extends JFrame {
 
                 saveButton.addActionListener(e -> {
                     String noteText = noteArea.getText().trim();
-                    Object[] response = updateInternalNote(feedbackId, noteText);
+                    Object[] response = adminDashboardController.updateFeedbackInternalNote(feedbackId, noteText);
                     if (!"200".equals(response[0])) {
                         JOptionPane.showMessageDialog(FeedbackCard.this, String.valueOf(response[1]), "Warning", JOptionPane.WARNING_MESSAGE);
                         return;
@@ -1598,7 +1574,7 @@ public class AdminDashboard extends JFrame {
                     return;
                 }
 
-                Object[] response = deleteUser(selectedUser.numericId);
+                Object[] response = adminDashboardController.deleteUser(selectedUser.numericId);
                 if (!"200".equals(response[0])) {
                     JOptionPane.showMessageDialog(this, String.valueOf(response[1]), "Delete Failed", JOptionPane.WARNING_MESSAGE);
                     return;
@@ -1717,7 +1693,7 @@ public class AdminDashboard extends JFrame {
 
         private void loadUsersFromServer() {
             users.clear();
-            Object[] response = getUsers();
+            Object[] response = new Object[]{"200", "OK", adminDashboardController.fetchUsers()};
             if ("200".equals(response[0]) && response[2] instanceof User[] usersFromServer) {
                 mapUsers(usersFromServer);
             }
@@ -1747,19 +1723,6 @@ public class AdminDashboard extends JFrame {
                 users.add(new UserRecord(user.getAttr_id(), String.format("USR_%03d", user.getAttr_id()), role,
                         user.getName() == null ? user.getUsername() : user.getName(), phone, address, status));
             }
-        }
-
-        private Object[] getUsers() {
-            User[] users = adminDashboardController.fetchUsers();
-            return new Object[]{"200", "OK", users};
-        }
-
-        private Object[] updateUserStatus(int userId, String status) {
-            return adminDashboardController.updateUserStatus(userId, status);
-        }
-
-        private Object[] deleteUser(int userId) {
-            return adminDashboardController.deleteUser(userId);
         }
 
         private boolean matchesSearch(UserRecord user, String query) {
@@ -1898,7 +1861,7 @@ public class AdminDashboard extends JFrame {
                 if ("Pending".equalsIgnoreCase(user.status)) {
                     JButton approveBtn = createMiniAction("Approve", new Color(232, 245, 233), new Color(46, 125, 50));
                     approveBtn.addActionListener(e -> {
-                        Object[] response = updateUserStatus(user.numericId, "APPROVED");
+                        Object[] response = adminDashboardController.updateUserStatus(user.numericId, "APPROVED");
                         if (!"200".equals(response[0])) {
                             JOptionPane.showMessageDialog(this, String.valueOf(response[1]), "Approve Failed", JOptionPane.WARNING_MESSAGE);
                             return;
