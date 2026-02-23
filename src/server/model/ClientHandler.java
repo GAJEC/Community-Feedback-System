@@ -12,11 +12,6 @@ import common.User;
 import common.UserStatusUpdateRequest;
 import common.VoteRequest;
 import common.XmlMessageCodec;
-import server.model.Server;
-import server.model.actions.AnnouncementActions;
-import server.model.actions.AnnouncementActions;
-import common.XmlMessageCodec;
-import common.XmlMessageCodec;
 import server.model.actions.AnnouncementActions;
 import org.xml.sax.SAXException;
 import server.model.actions.FeedbackActions;
@@ -66,7 +61,11 @@ public class ClientHandler extends Thread {
             System.out.println("Client " + clientId + " connected from " + socket.getInetAddress());
 
             while (running) {
-                Object received = in.readObject();
+                Object receivedRaw = in.readObject();
+                Object received = XmlMessageCodec.decodeInboundObject(receivedRaw);
+                if (received == null) {
+                    continue;
+                }
 
                 switch (received) {
                     case User u -> {
