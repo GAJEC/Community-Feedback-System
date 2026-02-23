@@ -133,7 +133,7 @@ public class XMLHandler<T> {
         }
     }
 
-    // CRUD bois
+    // CRUD
 
     private static boolean looksLikeJavaArrayToString(String val) {
         if (val == null) return false;
@@ -294,7 +294,7 @@ public class XMLHandler<T> {
         return ReadAll(tagName);
     }
     /** Read
-     * To map shet di ko alam paano sa words per eto sample
+     * To map
      * Diba sa users merong id, name, address, contact
      * eto scrap nya yung element na binigay sa parameter tapos
      * imamap nya o ilalagay nya sa tamang data example attr_id=11, attr_type=0. Gets?
