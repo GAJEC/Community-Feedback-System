@@ -1,8 +1,6 @@
-package server.model;
+package server;
 
 import common.BroadcastMessage;
-import server.model.ClientHandler;
-import server.view.ServerUi;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -16,9 +14,10 @@ import static common.Config.SOCKET_PORT;
 
 public class Server {
 
-    public static ServerUi ui;
+    public static ServerMain.ServerUi ui;
     private static int clientCounter = 0;
     private static final List<ClientHandler> activeClients = new ArrayList<>();
+    private static ServerSocket serverSocket;
 
     public static synchronized void addClient(ClientHandler client) {
         activeClients.add(client);
@@ -51,9 +50,8 @@ public class Server {
     }
 
     public static void startServer() {
-        logEvent("System", "Server Start", "Server is starting...");
-        try (ServerSocket serverSocket = new ServerSocket(SOCKET_PORT)) {
-            logEvent("System", "Listening", "Port " + SOCKET_PORT);
+        try {
+            serverSocket = new ServerSocket(SOCKET_PORT);
 
             while (!Thread.currentThread().isInterrupted()) {
                 try {
@@ -64,16 +62,35 @@ public class Server {
                     handler.start();
                     addClient(handler);
 
-                    logEvent("System", "Client Served", "Total clients: " + clientCounter);
 
                 } catch (IOException e) {
+                    if (serverSocket.isClosed()) {
+                        logEvent("System", "Server Stop", "ServerSocket closed, stopping server loop");
+                        break;
+                    }
                     System.err.println("Connection error: " + e.getMessage());
-                    break;
                 }
             }
         } catch (IOException e) {
             System.err.println("Server error: " + e.getMessage());
+        } finally {
+            stopServer();
         }
-        logEvent("System", "Server Stop", "Server has stopped");
+    }
+
+    public static void stopServer() {
+        try {
+            for (ClientHandler client : new ArrayList<>(activeClients)) {
+                client.shutdown();
+            }
+            activeClients.clear();
+
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error stopping server: " + e.getMessage());
+        }
     }
 }

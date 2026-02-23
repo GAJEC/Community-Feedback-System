@@ -1,4 +1,4 @@
-package server.model;
+package server;
 
 import common.Announcement;
 import common.BroadcastMessage;
@@ -12,10 +12,10 @@ import common.User;
 import common.UserStatusUpdateRequest;
 import common.VoteRequest;
 import common.XmlMessageCodec;
-import server.model.actions.AnnouncementActions;
+import server.actions.AnnouncementActions;
 import org.xml.sax.SAXException;
-import server.model.actions.FeedbackActions;
-import server.model.actions.LoginActions;
+import server.actions.FeedbackActions;
+import server.actions.LoginActions;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
@@ -33,6 +33,15 @@ public class ClientHandler extends Thread {
     public ClientHandler(Socket socket, int clientId) {
         this.socket = socket;
         this.clientId = clientId;
+    }
+
+    public void shutdown() {
+        try {
+            socket.close();  // closes the client socket
+            interrupt();     // stops the thread if it's blocked
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // Para makapagsend tayo ng broadcast. Returns false if may error sa pag send (e.g. client disconnected)

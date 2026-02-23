@@ -1,8 +1,9 @@
-package server.model.actions;
+package server.actions;
 
 import common.Feedbacks;
 import common.VoteRequest;
 import org.xml.sax.SAXException;
+import server.Server;
 import server.components.XMLHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -44,7 +45,11 @@ public class FeedbackActions {
             feedbackHandler.Store("feedback", feedback);
             feedbackHandler.saveToXML();
 
-            System.out.println("Feedback #" + newId + " saved from Client " + clientId);
+            Server.logEvent(
+                    "Client " + clientId,
+                    "Submit Feedback",
+                    "Feedback #" + newId + " submitted"
+            );
 
             return new Object[]{"200", "Feedback submitted successfully", feedback};
 
@@ -161,8 +166,11 @@ public class FeedbackActions {
                 return new Object[]{"500", "Failed to update feedback in database", null};
             }
 
-            System.out.println("Vote processed for Feedback #" + voteRequest.getFeedbackId() + 
-                             " by User #" + userId + " (" + voteRequest.getVoteType() + ")");
+            Server.logEvent(
+                    "Client " + clientId,
+                    "Vote Feedback",
+                    "Feedback #" + voteRequest.getFeedbackId() + " (" + voteRequest.getVoteType() + ")"
+            );
 
             return new Object[]{"200", "Vote recorded successfully", targetFeedback};
 

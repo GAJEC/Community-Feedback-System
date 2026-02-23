@@ -1,9 +1,10 @@
-package server.model.actions;
+package server.actions;
 
 import common.RegisterRequest;
 import common.User;
 import common.UserIdImage;
 import org.xml.sax.SAXException;
+import server.Server;
 import server.components.XMLHandler;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
@@ -26,6 +27,11 @@ public class LoginActions {
         }
 
         if(ResultUser.getPassword().equals(user.getPassword())){
+            Server.logEvent(
+                    "Client " + clientId,
+                    "Login",
+                    "User " + user.getUsername() + " logged in"
+            );
             return new Object[]{"200", "Login successful", ResultUser};
         }else{
             return new Object[]{"400", "Wrong password", null};
@@ -111,6 +117,12 @@ public class LoginActions {
         );
 
         login.Store(newUser);
+
+        Server.logEvent(
+                "Client " + clientId,
+                "Register",
+                "User " + newUser.getUsername() + " registered"
+        );
 
         return new Object[]{"200", "Registration successful. Awaiting admin verification.", newUser};
     }

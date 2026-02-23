@@ -1,7 +1,8 @@
-package server.model.actions;
+package server.actions;
 
 import common.Announcement;
 import org.xml.sax.SAXException;
+import server.Server;
 import server.components.XMLHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -67,8 +68,11 @@ public class AnnouncementActions {
             handler.Store("announcement", announcement);
             handler.saveToXML();
 
-            System.out.println("Announcement #" + newId + " posted by Client " + clientId);
-            return new Object[]{"200", "Announcement posted successfully", announcement};
+            Server.logEvent(
+                    "Client " + clientId,
+                    "Post Announcement",
+                    "Announcement #" + newId + " posted"
+            );            return new Object[]{"200", "Announcement posted successfully", announcement};
         } catch (ParserConfigurationException | IOException | SAXException e) {
             return new Object[]{"500", "Server error: " + e.getMessage(), null};
         }
