@@ -129,28 +129,8 @@ public class BrgyOfficialDashboard extends JFrame {
     }
 
     private void refreshDataCaches() {
-        cachedFeedbacks = fetchFeedbacks();
-        cachedUsers = fetchUsers();
-    }
-
-    private Feedbacks[] fetchFeedbacks() {
-        return brgyOfficialDashboardController.fetchFeedbacks();
-    }
-
-    private User[] fetchUsers() {
-        return brgyOfficialDashboardController.fetchUsers();
-    }
-
-    private Object[] updateStatus(int feedbackId, String status) {
-        return brgyOfficialDashboardController.updateFeedbackStatus(feedbackId, status);
-    }
-
-    private Object[] updatePriority(int feedbackId, String priority) {
-        return brgyOfficialDashboardController.updateFeedbackPriority(feedbackId, priority);
-    }
-
-    private Object[] updateInternalNote(int feedbackId, String internalNote) {
-        return brgyOfficialDashboardController.updateFeedbackInternalNote(feedbackId, internalNote);
+        cachedFeedbacks = brgyOfficialDashboardController.fetchFeedbacks();
+        cachedUsers = brgyOfficialDashboardController.fetchUsers();
     }
 
     private String getFeedbackStatus(Feedbacks feedback) {
@@ -943,7 +923,7 @@ public class BrgyOfficialDashboard extends JFrame {
         }
 
         private void applyStatus(String nextStatus) {
-            Object[] response = updateStatus(feedbackId, nextStatus);
+            Object[] response = brgyOfficialDashboardController.updateFeedbackStatus(feedbackId, nextStatus);
             if (!"200".equals(response[0])) {
                 JOptionPane.showMessageDialog(BrgyOfficialDashboard.this,
                         String.valueOf(response[1]),
@@ -959,7 +939,7 @@ public class BrgyOfficialDashboard extends JFrame {
             if (nextPriority.equalsIgnoreCase(currentPriority)) {
                 return;
             }
-            Object[] response = updatePriority(feedbackId, nextPriority);
+            Object[] response = brgyOfficialDashboardController.updateFeedbackPriority(feedbackId, nextPriority);
             if (!"200".equals(response[0])) {
                 JOptionPane.showMessageDialog(BrgyOfficialDashboard.this,
                         String.valueOf(response[1]),
@@ -1016,7 +996,7 @@ public class BrgyOfficialDashboard extends JFrame {
 
             saveButton.addActionListener(e -> {
                 String text = noteArea.getText().trim();
-                Object[] response = updateInternalNote(feedbackId, text);
+                Object[] response = brgyOfficialDashboardController.updateFeedbackInternalNote(feedbackId, text);
                 if (!"200".equals(response[0])) {
                     JOptionPane.showMessageDialog(FeedbackCard.this,
                             String.valueOf(response[1]), "Warning", JOptionPane.WARNING_MESSAGE);
