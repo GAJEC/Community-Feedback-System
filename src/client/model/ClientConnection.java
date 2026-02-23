@@ -5,6 +5,7 @@ import common.Feedbacks;
 import common.RegisterRequest;
 import common.User;
 import common.VoteRequest;
+import common.XmlMessageCodec;
 
 import java.io.*;
 import java.net.Socket;
@@ -74,7 +75,11 @@ public class ClientConnection {
         listenerThread = new Thread(() -> {
             while (connected) {
                 try {
-                    Object received = in.readObject();
+                    Object receivedRaw = in.readObject();
+                    Object received = XmlMessageCodec.decodeInboundObject(receivedRaw);
+                    if (received == null) {
+                        continue;
+                    }
                     
                     if (received instanceof BroadcastMessage) {
                         BroadcastMessage broadcast = (BroadcastMessage) received;
@@ -100,79 +105,19 @@ public class ClientConnection {
     }
 
     public void sendUser(User user) {
-        if (!connected) {
-            System.err.println("Not connected to server");
-            return;
-        }
-        
-        try {
-            synchronized (out) {
-                out.writeObject(user);
-                out.flush();
-            }
-            if(CONFIG_DEBUG){
-                System.out.println("Sent user: " + user);
-            }
-        } catch (IOException e) {
-            System.err.println("Error sending user: " + e.getMessage());
-        }
+        sendRequest(user);
     }
 
     public void sendRegisterRequest(RegisterRequest registerRequest) {
-        if (!connected) {
-            System.err.println("Not connected to server");
-            return;
-        }
-
-        try {
-            synchronized (out) {
-                out.writeObject(registerRequest);
-                out.flush();
-            }
-            if (CONFIG_DEBUG) {
-                System.out.println("Sent register request for username: " + registerRequest.getUsername());
-            }
-        } catch (IOException e) {
-            System.err.println("Error sending register request: " + e.getMessage());
-        }
+        sendRequest(registerRequest);
     }
 
     public void sendFeedback(Feedbacks feedback) {
-        if (!connected) {
-            System.err.println("Not connected to server");
-            return;
-        }
-        
-        try {
-            synchronized (out) {
-                out.writeObject(feedback);
-                out.flush();
-            }
-            if(CONFIG_DEBUG){
-                System.out.println("Sent feedback: " + feedback);
-            }
-        } catch (IOException e) {
-            System.err.println("Error sending feedback: " + e.getMessage());
-        }
+        sendRequest(feedback);
     }
 
     public void sendVoteRequest(VoteRequest voteRequest) {
-        if (!connected) {
-            System.err.println("Not connected to server");
-            return;
-        }
-        
-        try {
-            synchronized (out) {
-                out.writeObject(voteRequest);
-                out.flush();
-            }
-            if(CONFIG_DEBUG){
-                System.out.println("Sent vote request: " + voteRequest);
-            }
-        } catch (IOException e) {
-            System.err.println("Error sending vote request: " + e.getMessage());
-        }
+        sendRequest(voteRequest);
     }
 
     public void sendRequest(Object request) {
@@ -182,10 +127,7 @@ public class ClientConnection {
         }
         
         try {
-            synchronized (out) {
-                out.writeObject(request);
-                out.flush();
-            }
+            writeXmlObject(request);
             if(CONFIG_DEBUG){
                 System.out.println("Sent request: " + request);
             }
@@ -215,13 +157,10 @@ public class ClientConnection {
 
     public void disconnect() {
         try {
-            connected = false;
             if (out != null) {
-                synchronized (out) {
-                    out.writeObject("DISCONNECT");
-                    out.flush();
-                }
+                writeXmlObject("DISCONNECT");
             }
+            connected = false;
             if (listenerThread != null) {
                 listenerThread.interrupt();
             }
@@ -240,5 +179,17 @@ public class ClientConnection {
 
     public boolean isConnected() {
         return connected;
+    }
+
+    private void writeXmlObject(Object object) throws IOException {
+        String xmlMessage = XmlMessageCodec.encodeObject(object);
+        if (xmlMessage == null) {
+            throw new IOException("Error encoding request to XML");
+        }
+
+        synchronized (out) {
+            out.writeObject(xmlMessage);
+            out.flush();
+        }
     }
 }

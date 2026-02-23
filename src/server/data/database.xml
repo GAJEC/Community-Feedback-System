@@ -23,4 +23,71 @@
         <contact>09999999999</contact>
         <verify_status>APPROVED</verify_status>
     </user>
+    <user id="3" type="2">
+        <username>resident2</username>
+        <password>r123</password>
+        <name>Resident</name>
+        <address>Block 1, Corner Lot</address>
+        <contact>09999999999</contact>
+        <verify_status>APPROVED</verify_status>
+    </user>
+    <feedback approvedby="0" id="1" status="Pending">
+        <issued_by>3</issued_by>
+        <categories>Missing Person</categories>
+        <title>Issues</title>
+        <priority>No priority set</priority>
+        <location>Location</location>
+        <content>Detailed Description</content>
+        <issued_date>Mon Feb 23 20:33:13 PST 2026</issued_date>
+    </feedback>
+    
+    <feedback approvedby="0" id="2" status="Pending">
+        <issued_by>5</issued_by>
+        <categories>Public Safety</categories>
+        <title>Poor Street Lighting</title>
+        <priority>High</priority>
+        <location>Barangay Main Road</location>
+        <content>Several street lights are not functioning, making the area unsafe for pedestrians at night and increasing risk of accidents and crimes.</content>
+        <issued_date>Mon Feb 23 21:10:05 PST 2026</issued_date>
+    </feedback>
+
+    <feedback approvedby="0" id="3" status="Pending">
+        <issued_by>2</issued_by>
+        <categories>Sanitation</categories>
+        <title>Uncollected Garbage</title>
+        <priority>Medium</priority>
+        <location>Market Area</location>
+        <content>Garbage has not been collected for several days, causing foul odor and attracting stray animals.</content>
+        <issued_date>Mon Feb 23 21:15:44 PST 2026</issued_date>
+    </feedback>
+
+    <feedback approvedby="0" id="4" status="Pending">
+        <issued_by>6</issued_by>
+        <categories>Road Damage</categories>
+        <title>Potholes Along Main Street</title>
+        <priority>High</priority>
+        <location>Main Street Intersection</location>
+        <content>Large potholes are causing traffic congestion and damaging vehicles passing through the area.</content>
+        <issued_date>Mon Feb 23 21:20:11 PST 2026</issued_date>
+    </feedback>
+
+    <feedback approvedby="0" id="5" status="Pending">
+        <issued_by>4</issued_by>
+        <categories>Water Supply</categories>
+        <title>Irregular Water Service</title>
+        <priority>High</priority>
+        <location>Residential Zone Block B</location>
+        <content>Residents experience frequent water interruptions, especially during morning hours.</content>
+        <issued_date>Mon Feb 23 21:25:32 PST 2026</issued_date>
+    </feedback>
+
+    <feedback approvedby="0" id="6" status="Pending">
+        <issued_by>1</issued_by>
+        <categories>Noise Complaint</categories>
+        <title>Loud Music at Night</title>
+        <priority>Low</priority>
+        <location>Community Covered Court</location>
+        <content>Repeated late-night events with loud music disturb nearby residents and students.</content>
+        <issued_date>Mon Feb 23 21:30:08 PST 2026</issued_date>
+    </feedback>
 </dataset>

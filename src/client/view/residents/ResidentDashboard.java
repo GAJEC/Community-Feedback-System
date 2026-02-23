@@ -1,6 +1,7 @@
 package client.view.residents;
 
 import client.controller.FeedbackController;
+import client.controller.ResidentDashboardController;
 import client.model.ClientConnection;
 import client.view.common.Buttons;
 import client.view.common.CustomPanel;
@@ -27,7 +28,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,12 +46,14 @@ public class ResidentDashboard extends JFrame {
     private JPanel contentContainer;
     private boolean isViewMode;
     private User user;
-    private FeedbackController feedbackController;
-    private ClientConnection connection;
+    private ResidentDashboardController residentDashboardController;
     private Map<Integer, User> userCache = new HashMap<>();
     private Map<Integer, FeedbackCard> feedbackCards = new HashMap<>();
     private JPanel feedbackListPanel;
     private JPanel announcementCardsPanel;
+    private RoundedInputField feedbackSearchField;
+    private JComboBox<String> categoryFilterBox;
+    private JComboBox<String> statusFilterBox;
 
     private RoundedTextField titleField;
     private JComboBox<String> categoryBox;
@@ -59,8 +61,8 @@ public class ResidentDashboard extends JFrame {
     private JTextArea descArea;
 
     public ResidentDashboard(boolean viewMode, User user, ClientConnection connection) {
-        this.connection = connection;
-        this.feedbackController = new FeedbackController(connection);
+        FeedbackController feedbackController = new FeedbackController(connection);
+        this.residentDashboardController = new ResidentDashboardController(feedbackController, user);
         // Cache the logged-in user
         userCache.put(user.getAttr_id(), user);
         this.isViewMode = viewMode;
@@ -109,32 +111,13 @@ public class ResidentDashboard extends JFrame {
 
     private void handleBroadcast(BroadcastMessage message) {
         SwingUtilities.invokeLater(() -> {
-            switch (message.getType()) {
-                case VOTE_UPDATE:
-                    if (message.getData() instanceof Feedbacks) {
-                        Feedbacks updatedFeedback = (Feedbacks) message.getData();
-                        updateFeedbackCard(updatedFeedback);
-                    }
-                    break;
-                case NEW_FEEDBACK:
-                    if (isViewMode) {
-                        refreshFeedbackList();
-                    }
-                    break;
-                case STATUS_UPDATE:
-                case PRIORITY_UPDATE:
-                case INTERNAL_NOTE_UPDATE:
-                    if (isViewMode) {
-                        refreshFeedbackList();
-                    }
-                    break;
-                case NEW_ANNOUNCEMENT:
-                    if (isViewMode) {
-                        refreshAnnouncementWidget();
-                    }
-                    break;
-                default:
-                    break;
+            ResidentDashboardController.BroadcastUiAction action = residentDashboardController.routeBroadcast(message, isViewMode);
+            switch (action) {
+                case APPLY_FILTERS -> applyFilters();
+                case REFRESH_FEEDBACKS -> refreshFeedbackList();
+                case REFRESH_ANNOUNCEMENTS -> refreshAnnouncementWidget();
+                default -> {
+                }
             }
         });
     }
@@ -145,41 +128,6 @@ public class ResidentDashboard extends JFrame {
             return;
         }
         loadAnnouncements(announcementCardsPanel);
-    }
-
-    private void updateFeedbackCard(Feedbacks feedback) {
-        FeedbackCard card = feedbackCards.get(feedback.getAttr_id());
-        if (card != null) {
-            card.updateVotes(feedback);
-            resortFeedbackListByVotes();
-        } else {
-            System.out.println("[Update] Card not found for feedback #" + feedback.getAttr_id());
-        }
-    }
-
-    private void resortFeedbackListByVotes() {
-        if (!isViewMode || feedbackListPanel == null || feedbackCards.isEmpty()) {
-            return;
-        }
-
-        java.util.List<FeedbackCard> cards = new java.util.ArrayList<>(feedbackCards.values());
-        cards.sort((a, b) -> Integer.compare(b.getVoteScore(), a.getVoteScore()));
-
-        feedbackListPanel.removeAll();
-        feedbackListPanel.add(Box.createVerticalStrut(5));
-        for (FeedbackCard c : cards) {
-            feedbackListPanel.add(c);
-            feedbackListPanel.add(Box.createVerticalStrut(8));
-        }
-
-        feedbackListPanel.revalidate();
-        feedbackListPanel.repaint();
-    }
-
-    private int voteScore(Feedbacks feedback) {
-        int upvotes = feedback.getAttr_upvote() != null ? feedback.getAttr_upvote().length : 0;
-        int downvotes = feedback.getAttr_downvote() != null ? feedback.getAttr_downvote().length : 0;
-        return upvotes - downvotes;
     }
 
     private void refreshFeedbackList() {
@@ -246,7 +194,8 @@ public class ResidentDashboard extends JFrame {
 
         listPanel.add(Box.createVerticalStrut(5));
 
-        loadFeedbacks(listPanel);
+        residentDashboardController.loadFeedbacks();
+        applyFilters();
 
         JScrollPane scroll = new JScrollPane(listPanel);
         scroll.setBorder(null);
@@ -292,7 +241,7 @@ public class ResidentDashboard extends JFrame {
         if (targetPanel == null) return;
         targetPanel.removeAll();
 
-        Announcement[] announcements = fetchAnnouncements();
+        Announcement[] announcements = residentDashboardController.getLatestAnnouncements(5);
         if (announcements.length == 0) {
             JLabel empty = new JLabel("No announcements yet.");
             empty.setFont(SegoeUi(Font.ITALIC, 12));
@@ -303,18 +252,7 @@ public class ResidentDashboard extends JFrame {
             return;
         }
 
-        Arrays.sort(announcements, (a, b) -> {
-            Date da = a != null ? a.getPosted_at() : null;
-            Date db = b != null ? b.getPosted_at() : null;
-            if (da == null && db == null) return 0;
-            if (da == null) return 1;
-            if (db == null) return -1;
-            return db.compareTo(da);
-        });
-
-        int limit = Math.min(5, announcements.length);
-
-        for (int i = 0; i < limit; i++) {
+        for (int i = 0; i < announcements.length; i++) {
             Announcement ann = announcements[i];
             if (ann == null) continue;
 
@@ -325,52 +263,16 @@ public class ResidentDashboard extends JFrame {
             String postedBy = ann.getPosted_by_name() != null && !ann.getPosted_by_name().trim().isEmpty()
                     ? ann.getPosted_by_name().trim()
                     : (ann.getPosted_by() > 0 ? "Official #" + ann.getPosted_by() : "Barangay Official");
-            String postedAt = formatTimeAgo(ann.getPosted_at());
+            String postedAt = residentDashboardController.formatTimeAgo(ann.getPosted_at());
 
             targetPanel.add(new AnnouncementCard(title, message, postedBy, postedAt));
-            if (i < limit - 1) {
+            if (i < announcements.length - 1) {
                 targetPanel.add(Box.createVerticalStrut(10));
             }
         }
 
         targetPanel.revalidate();
         targetPanel.repaint();
-    }
-
-    private Announcement[] fetchAnnouncements() {
-        if (!connection.isConnected()) {
-            connection.connect();
-        }
-        connection.sendRequest("GET_ANNOUNCEMENTS");
-        Object response = connection.receive();
-        if (response instanceof Object[] arr && arr.length >= 3 && "200".equals(arr[0]) && arr[2] instanceof Announcement[]) {
-            return (Announcement[]) arr[2];
-        }
-        return new Announcement[0];
-    }
-
-    private String formatTimeAgo(Date date) {
-        if (date == null) {
-            return "-";
-        }
-
-        long diffMs = Math.max(0L, System.currentTimeMillis() - date.getTime());
-        long minutes = diffMs / (60 * 1000);
-
-        if (minutes < 1) {
-            return "just now";
-        }
-        if (minutes < 60) {
-            return minutes + "m ago";
-        }
-
-        long hours = minutes / 60;
-        if (hours < 24) {
-            return hours + "h ago";
-        }
-
-        long days = hours / 24;
-        return days + "d ago";
     }
 
     private JPanel createFilterPanel() {
@@ -388,21 +290,26 @@ public class ResidentDashboard extends JFrame {
         JPanel searchContainer = new JPanel(new BorderLayout(0, 5));
         searchContainer.setOpaque(false);
 
-        RoundedInputField searchField = new RoundedInputField(Images.scaled(Images.SEARCH, 15, 15), "Search feedbacks...", false);
-        searchField.setFieldSize(0, 35);
-        searchContainer.add(searchField, BorderLayout.CENTER);
+        feedbackSearchField = new RoundedInputField(Images.scaled(Images.SEARCH, 15, 15), "Search feedbacks...", false);
+        feedbackSearchField.setFieldSize(0, 35);
+        feedbackSearchField.addTextChangeListener(this::applyFilters);
+        searchContainer.add(feedbackSearchField, BorderLayout.CENTER);
         panel.add(searchContainer, gbc);
 
         gbc.gridx = 1; gbc.weightx = 0.2;
         JPanel catContainer = new JPanel(new BorderLayout(0, 5));
         catContainer.setOpaque(false);
-        catContainer.add(dropdownBox(new String[]{"All Categories", "Infrastructure", "Health", "Safety"}), BorderLayout.CENTER);
+        categoryFilterBox = dropdownBox(new String[]{"All Categories", "Infrastructure", "Health", "Safety", "Environment", "Public Services", "Transportation", "Utilities", "Community Welfare", "Missing Person", "Others"});
+        categoryFilterBox.addActionListener(e -> applyFilters());
+        catContainer.add(categoryFilterBox, BorderLayout.CENTER);
         panel.add(catContainer, gbc);
 
         gbc.gridx = 2; gbc.weightx = 0.2;
         JPanel statContainer = new JPanel(new BorderLayout(0, 5));
         statContainer.setOpaque(false);
-        statContainer.add(dropdownBox(new String[]{"All Status", "Pending", "In Progress", "Resolved"}), BorderLayout.CENTER);
+        statusFilterBox = dropdownBox(new String[]{"All Status", "Pending", "In Progress", "Resolved"});
+        statusFilterBox.addActionListener(e -> applyFilters());
+        statContainer.add(statusFilterBox, BorderLayout.CENTER);
         panel.add(statContainer, gbc);
 
         JPanel sortRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
@@ -636,37 +543,7 @@ public class ResidentDashboard extends JFrame {
         String location = locationField.getText().trim();
         String description = descArea.getText().trim();
 
-        if (title.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                "Please enter a title for your feedback.",
-                "Validation Error",
-                JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        if (location.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                "Please enter a location.",
-                "Validation Error",
-                JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        if (description.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                "Please provide a detailed description.",
-                "Validation Error",
-                JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        Object[] response = feedbackController.submitFeedback(
-            user.getAttr_id(),
-            category,
-            title,
-            location,
-            description
-        );
+        Object[] response = residentDashboardController.submitFeedback(title, category, location, description);
 
         String statusCode = (String) response[0];
         String message = (String) response[1];
@@ -678,6 +555,11 @@ public class ResidentDashboard extends JFrame {
 
             clearForm();
             switchToView();
+        } else if ("400".equals(statusCode)) {
+            JOptionPane.showMessageDialog(this,
+                message,
+                "Validation Error",
+                JOptionPane.WARNING_MESSAGE);
         } else {
             JOptionPane.showMessageDialog(this,
                 message,
@@ -693,58 +575,105 @@ public class ResidentDashboard extends JFrame {
         if (descArea != null) descArea.setText("");
     }
 
-    private void loadFeedbacks(JPanel listPanel) {
+    private void applyFilters() {
+        if (feedbackListPanel == null) {
+            return;
+        }
+
+        feedbackListPanel.removeAll();
         feedbackCards.clear();
-        Object[] response = feedbackController.getAllFeedbacks();
-        String statusCode = (String) response[0];
-        String message = (String) response[1];
+        feedbackListPanel.add(Box.createVerticalStrut(5));
 
-        if ("200".equals(statusCode) && response[2] != null) {
-            Feedbacks[] feedbacks = (Feedbacks[]) response[2];
-
-            if (feedbacks.length == 0) {
-                JLabel noDataLabel = new JLabel("No feedbacks available yet. Be the first to submit!");
-                noDataLabel.setFont(SegoeUi(Font.ITALIC, 14));
-                noDataLabel.setForeground(Color.GRAY);
-                noDataLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-                listPanel.add(noDataLabel);
-            } else {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy");
-
-                java.util.Arrays.sort(feedbacks, (a, b) -> Integer.compare(voteScore(b), voteScore(a)));
-
-                for (Feedbacks feedback : feedbacks) {
-                    String[] statuses = feedback.getAttr_status();
-                    String status = (statuses != null && statuses.length > 0 && statuses[0] != null && !statuses[0].trim().isEmpty())
-                            ? statuses[0]
-                            : "Pending";
-                    String category = feedback.getCategories() != null && feedback.getCategories().length > 0
-                        ? feedback.getCategories()[0] : "General";
-                        String title = feedback.getTitle() != null && !feedback.getTitle().trim().isEmpty()
-                            ? feedback.getTitle().trim()
-                            : "Untitled Feedback";
-                        String priority = feedback.getPriority() != null && !feedback.getPriority().trim().isEmpty()
-                            ? feedback.getPriority().trim()
-                            : "No priority set";
-                        String content = feedback.getContent();
-                    String location = feedback.getLocation();
-                    String date = dateFormat.format(feedback.getIssued_date());
-
-                    String authorName = getUserName(feedback.getIssued_by());
-
-                        FeedbackCard card = new FeedbackCard(feedback, status, category, priority, title, content, location, date, authorName);
-                    feedbackCards.put(feedback.getAttr_id(), card);
-                    listPanel.add(card);
-                    listPanel.add(Box.createVerticalStrut(8));
-                }
-            }
-        } else {
-            JLabel errorLabel = new JLabel("Error loading feedbacks: " + message);
+        String feedbackLoadErrorMessage = residentDashboardController.getFeedbackLoadErrorMessage();
+        if (feedbackLoadErrorMessage != null) {
+            JLabel errorLabel = new JLabel("Error loading feedbacks: " + feedbackLoadErrorMessage);
             errorLabel.setFont(SegoeUi(Font.PLAIN, 14));
             errorLabel.setForeground(Color.RED);
             errorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            listPanel.add(errorLabel);
+            feedbackListPanel.add(errorLabel);
+            feedbackListPanel.revalidate();
+            feedbackListPanel.repaint();
+            return;
         }
+
+        if (!residentDashboardController.hasFeedbacks()) {
+            JLabel noDataLabel = new JLabel("No feedbacks available yet. Be the first to submit!");
+            noDataLabel.setFont(SegoeUi(Font.ITALIC, 14));
+            noDataLabel.setForeground(Color.GRAY);
+            noDataLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            feedbackListPanel.add(noDataLabel);
+            feedbackListPanel.revalidate();
+            feedbackListPanel.repaint();
+            return;
+        }
+
+        String selectedCategory = categoryFilterBox != null && categoryFilterBox.getSelectedItem() != null
+            ? categoryFilterBox.getSelectedItem().toString().trim()
+            : "All Categories";
+        String selectedStatus = statusFilterBox != null && statusFilterBox.getSelectedItem() != null
+            ? statusFilterBox.getSelectedItem().toString().trim()
+            : "All Status";
+        String query = feedbackSearchField != null ? feedbackSearchField.getText() : "";
+
+        java.util.List<Feedbacks> filteredFeedbacks = residentDashboardController.getFilteredAndSortedFeedbacks(
+            selectedCategory,
+            selectedStatus,
+            query,
+            this::getUserName
+        );
+
+        if (filteredFeedbacks.isEmpty()) {
+            JLabel emptyFilterLabel = new JLabel("No feedbacks matched your filters.");
+            emptyFilterLabel.setFont(SegoeUi(Font.ITALIC, 14));
+            emptyFilterLabel.setForeground(Color.GRAY);
+            emptyFilterLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            feedbackListPanel.add(emptyFilterLabel);
+            feedbackListPanel.revalidate();
+            feedbackListPanel.repaint();
+            return;
+        }
+
+        for (Feedbacks feedback : filteredFeedbacks) {
+            FeedbackCard card = buildFeedbackCard(feedback);
+            feedbackCards.put(feedback.getAttr_id(), card);
+            feedbackListPanel.add(card);
+            feedbackListPanel.add(Box.createVerticalStrut(8));
+        }
+
+        feedbackListPanel.revalidate();
+        feedbackListPanel.repaint();
+    }
+
+    private FeedbackCard buildFeedbackCard(Feedbacks feedback) {
+        String status = firstNonEmpty(feedback.getAttr_status(), "Pending");
+        String category = firstNonEmpty(feedback.getCategories(), "General");
+        String title = feedback.getTitle() != null && !feedback.getTitle().trim().isEmpty()
+                ? feedback.getTitle().trim()
+                : "Untitled Feedback";
+        String priority = feedback.getPriority() != null && !feedback.getPriority().trim().isEmpty()
+                ? feedback.getPriority().trim()
+                : "No priority set";
+        String content = feedback.getContent();
+        String location = feedback.getLocation();
+        String authorName = getUserName(feedback.getIssued_by());
+
+        Date issuedDate = feedback.getIssued_date();
+        String date = issuedDate != null
+                ? new SimpleDateFormat("MMM dd, yyyy").format(issuedDate)
+                : "-";
+
+        return new FeedbackCard(feedback, status, category, priority, title, content, location, date, authorName);
+    }
+
+    private String firstNonEmpty(String[] values, String fallback) {
+        if (values != null) {
+            for (String value : values) {
+                if (value != null && !value.trim().isEmpty()) {
+                    return value.trim();
+                }
+            }
+        }
+        return fallback;
     }
 
     private String getUserName(int userId) {
@@ -1028,10 +957,6 @@ public class ResidentDashboard extends JFrame {
             return upvotes - downvotes;
         }
 
-        public int getVoteScore() {
-            return calculateVotes();
-        }
-
         private void updateButtonColor(JButton btn, boolean active, Color baseColor) {
             if (active) {
                 btn.setForeground(baseColor);
@@ -1069,7 +994,7 @@ public class ResidentDashboard extends JFrame {
 
             new Thread(() -> {
                 try {
-                    Object[] response = feedbackController.vote(feedback.getAttr_id(), user.getAttr_id(), voteType);
+                    Object[] response = residentDashboardController.vote(feedback.getAttr_id(), user.getAttr_id(), voteType);
 
                     if (response == null) {
                         throw new IllegalStateException("No response from server");
@@ -1115,7 +1040,7 @@ public class ResidentDashboard extends JFrame {
             // Never block the Swing EDT with network I/O. UI will update via broadcast (VOTE_UPDATE).
             new Thread(() -> {
                 try {
-                    Object[] response = feedbackController.vote(feedback.getAttr_id(), user.getAttr_id(), voteType);
+                    Object[] response = residentDashboardController.vote(feedback.getAttr_id(), user.getAttr_id(), voteType);
 
                     if (response == null) {
                         throw new IllegalStateException("No response from server");
@@ -1144,49 +1069,6 @@ public class ResidentDashboard extends JFrame {
             }, "vote-downvote-" + feedback.getAttr_id()).start();
         }
 
-        public void updateVotes(Feedbacks updatedFeedback) {
-            feedback.setAttr_upvote(updatedFeedback.getAttr_upvote());
-            feedback.setAttr_downvote(updatedFeedback.getAttr_downvote());
-
-            int userId = user.getAttr_id();
-
-            boolean newUpvoted = false;
-            boolean newDownvoted = false;
-
-            if (updatedFeedback.getAttr_upvote() != null) {
-                String uid = String.valueOf(userId);
-                for (String id : updatedFeedback.getAttr_upvote()) {
-                    if (uid.equals(id)) {
-                        newUpvoted = true;
-                        break;
-                    }
-                }
-            }
-            if (updatedFeedback.getAttr_downvote() != null) {
-                String uid = String.valueOf(userId);
-                for (String id : updatedFeedback.getAttr_downvote()) {
-                    if (uid.equals(id)) {
-                        newDownvoted = true;
-                        break;
-                    }
-                }
-            }
-
-            hasUpvoted = newUpvoted;
-            hasDownvoted = newDownvoted;
-
-            voteInFlight = false;
-            setVoteButtonsEnabled(true);
-
-            int totalVotes = calculateVotes();
-
-            voteCountLabel.setText(String.valueOf(totalVotes));
-            updateButtonColor(upvoteBtn, hasUpvoted, UPVOTE_COLOR);
-            updateButtonColor(downvoteBtn, hasDownvoted, DOWNVOTE_COLOR);
-
-            revalidate();
-            repaint();
-        }
     }
 
     static class AnnouncementCard extends JPanel {

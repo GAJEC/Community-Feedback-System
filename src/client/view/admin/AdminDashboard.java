@@ -1,18 +1,14 @@
 package client.view.admin;
 
+import client.controller.AdminDashboardController;
 import client.model.ClientConnection;
 import client.view.common.Buttons;
 import client.view.common.LogoutPopUp;
 import client.view.common.UserProfileDialog;
 import client.view.strings.Images;
 import common.BroadcastMessage;
-import common.DeleteUserRequest;
-import common.FeedbackInternalNoteUpdateRequest;
-import common.FeedbackPriorityUpdateRequest;
-import common.FeedbackStatusUpdateRequest;
 import common.Feedbacks;
 import common.User;
-import common.UserStatusUpdateRequest;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -59,6 +55,7 @@ public class AdminDashboard extends JFrame {
     private ManageFeedbackView manageFeedbackView;
     private String activeTab = "Summary";
     private final ClientConnection connection;
+    private final AdminDashboardController adminDashboardController;
     private User[] cachedUsers = new User[0];
     private Feedbacks[] cachedFeedbacks = new Feedbacks[0];
 
@@ -68,6 +65,7 @@ public class AdminDashboard extends JFrame {
 
     public AdminDashboard(ClientConnection connection) {
         this.connection = connection;
+        this.adminDashboardController = new AdminDashboardController(connection);
         if (!this.connection.isConnected()) {
             this.connection.connect();
         }
@@ -225,85 +223,37 @@ public class AdminDashboard extends JFrame {
     }
 
     private JPanel createUsersPanel() {
-        usersView = new AdminConsoleView(connection, this::refreshAllData);
+        usersView = new AdminConsoleView(adminDashboardController, this::refreshAllData);
         return usersView;
     }
 
     private void handleBroadcast(BroadcastMessage message) {
         SwingUtilities.invokeLater(() -> {
-            switch (message.getType()) {
-                case NEW_USER:
-                    if (message.getData() instanceof User newUser) {
-                        upsertUserCache(newUser);
-                        if (usersView != null) {
-                            usersView.onUsersUpdated(cachedUsers);
-                        }
-                        rebuildSummaryPanel();
-                        if ("Summary".equals(activeTab)) {
-                            contentLayout.show(contentPanel, "Summary");
-                        }
-                    }
-                    break;
-                case NEW_FEEDBACK:
-                    if (message.getData() instanceof Feedbacks feedback) {
-                        upsertFeedbackCache(feedback);
-                        if (manageFeedbackView != null) {
-                            manageFeedbackView.onFeedbacksUpdated();
-                        }
-                        rebuildSummaryPanel();
-                        if ("Summary".equals(activeTab)) {
-                            contentLayout.show(contentPanel, "Summary");
-                        }
-                    }
-                    break;
-                case VOTE_UPDATE:
-                case STATUS_UPDATE:
-                case INTERNAL_NOTE_UPDATE:
-                    if (message.getData() instanceof Feedbacks updated) {
-                        upsertFeedbackCache(updated);
-                        if (manageFeedbackView != null) {
-                            manageFeedbackView.onFeedbacksUpdated();
-                        }
-                        rebuildSummaryPanel();
-                        if ("Summary".equals(activeTab)) {
-                            contentLayout.show(contentPanel, "Summary");
-                        }
-                    }
-                    break;
-                default:
-                    break;
+            AdminDashboardController.BroadcastUiAction action = adminDashboardController.routeBroadcast(message);
+
+            if (action == AdminDashboardController.BroadcastUiAction.USERS_UPDATED && message.getData() instanceof User newUser) {
+                cachedUsers = adminDashboardController.applyUserBroadcast(cachedUsers, newUser);
+                if (usersView != null) {
+                    usersView.onUsersUpdated(cachedUsers);
+                }
+                rebuildSummaryPanel();
+                if ("Summary".equals(activeTab)) {
+                    contentLayout.show(contentPanel, "Summary");
+                }
+                return;
+            }
+
+            if (action == AdminDashboardController.BroadcastUiAction.FEEDBACKS_UPDATED && message.getData() instanceof Feedbacks updated) {
+                cachedFeedbacks = adminDashboardController.applyFeedbackBroadcast(cachedFeedbacks, updated);
+                if (manageFeedbackView != null) {
+                    manageFeedbackView.onFeedbacksUpdated();
+                }
+                rebuildSummaryPanel();
+                if ("Summary".equals(activeTab)) {
+                    contentLayout.show(contentPanel, "Summary");
+                }
             }
         });
-    }
-
-    private void upsertUserCache(User incoming) {
-        if (incoming == null) return;
-        for (int i = 0; i < cachedUsers.length; i++) {
-            User existing = cachedUsers[i];
-            if (existing != null && existing.getAttr_id() == incoming.getAttr_id()) {
-                cachedUsers[i] = incoming;
-                return;
-            }
-        }
-        User[] expanded = new User[cachedUsers.length + 1];
-        System.arraycopy(cachedUsers, 0, expanded, 0, cachedUsers.length);
-        expanded[cachedUsers.length] = incoming;
-        cachedUsers = expanded;
-    }
-
-    private void upsertFeedbackCache(Feedbacks incoming) {
-        if (incoming == null) return;
-        for (int i = 0; i < cachedFeedbacks.length; i++) {
-            Feedbacks existing = cachedFeedbacks[i];
-            if (existing != null && existing.getAttr_id() == incoming.getAttr_id()) {
-                cachedFeedbacks[i] = incoming;
-                return;
-            }
-        }
-        Feedbacks[] expanded = new Feedbacks[cachedFeedbacks.length + 1];
-        System.arraycopy(cachedFeedbacks, 0, expanded, 0, cachedFeedbacks.length);
-        expanded[cachedFeedbacks.length] = incoming;
-        cachedFeedbacks = expanded;
     }
 
     private void rebuildSummaryPanel() {
@@ -319,27 +269,11 @@ public class AdminDashboard extends JFrame {
     }
 
     private User[] fetchUsers() {
-        if (!connection.isConnected()) {
-            connection.connect();
-        }
-        connection.sendRequest("GET_USERS");
-        Object response = connection.receive();
-        if (response instanceof Object[] arr && arr.length >= 3 && "200".equals(arr[0]) && arr[2] instanceof User[]) {
-            return (User[]) arr[2];
-        }
-        return new User[0];
+        return adminDashboardController.fetchUsers();
     }
 
     private Feedbacks[] fetchFeedbacks() {
-        if (!connection.isConnected()) {
-            connection.connect();
-        }
-        connection.sendRequest("GET_FEEDBACKS");
-        Object response = connection.receive();
-        if (response instanceof Object[] arr && arr.length >= 3 && "200".equals(arr[0]) && arr[2] instanceof Feedbacks[]) {
-            return (Feedbacks[]) arr[2];
-        }
-        return new Feedbacks[0];
+        return adminDashboardController.fetchFeedbacks();
     }
 
     private void styleTab(JButton btn, boolean active) {
@@ -1042,14 +976,10 @@ public class AdminDashboard extends JFrame {
                 public void changedUpdate(DocumentEvent e) { refreshFeedbackList(); }
             });
 
-            categoryBox = new JComboBox<>(new String[]{
-                    "All Categories", "Infrastructure", "Sanitation", "Environmental", "Public Safety", "Health Services", "Others"
-            });
+            categoryBox = new JComboBox<>(new String[]{"All Categories", "Infrastructure", "Health", "Safety", "Environment", "Public Services", "Transportation", "Utilities", "Community Welfare", "Missing Person", "Others"});
             categoryBox.addActionListener(e -> refreshFeedbackList());
 
-            statusBox = new JComboBox<>(new String[]{
-                    "All Status", "Pending", "In Progress", "Resolved", "Archived"
-            });
+            statusBox = new JComboBox<>(new String[]{"All Status", "Pending", "In Progress", "Resolved"});
             statusBox.addActionListener(e -> refreshFeedbackList());
 
             gbc.gridx = 0;
@@ -1147,39 +1077,15 @@ public class AdminDashboard extends JFrame {
         }
 
         private Object[] updateStatus(int feedbackId, String status) {
-            if (!connection.isConnected()) {
-                connection.connect();
-            }
-            connection.sendRequest(new FeedbackStatusUpdateRequest(feedbackId, status));
-            Object response = connection.receive();
-            if (response instanceof Object[]) {
-                return (Object[]) response;
-            }
-            return new Object[]{"500", "Invalid server response", null};
+            return adminDashboardController.updateFeedbackStatus(feedbackId, status);
         }
 
         private Object[] updatePriority(int feedbackId, String priority) {
-            if (!connection.isConnected()) {
-                connection.connect();
-            }
-            connection.sendRequest(new FeedbackPriorityUpdateRequest(feedbackId, priority));
-            Object response = connection.receive();
-            if (response instanceof Object[]) {
-                return (Object[]) response;
-            }
-            return new Object[]{"500", "Invalid server response", null};
+            return adminDashboardController.updateFeedbackPriority(feedbackId, priority);
         }
 
         private Object[] updateInternalNote(int feedbackId, String internalNote) {
-            if (!connection.isConnected()) {
-                connection.connect();
-            }
-            connection.sendRequest(new FeedbackInternalNoteUpdateRequest(feedbackId, internalNote));
-            Object response = connection.receive();
-            if (response instanceof Object[]) {
-                return (Object[]) response;
-            }
-            return new Object[]{"500", "Invalid server response", null};
+            return adminDashboardController.updateFeedbackInternalNote(feedbackId, internalNote);
         }
 
         class FeedbackCard extends JPanel {
@@ -1585,14 +1491,14 @@ public class AdminDashboard extends JFrame {
 
         private final java.util.List<UserRecord> users = new java.util.ArrayList<>();
         private final java.util.List<ConsoleUserCard> cards = new java.util.ArrayList<>();
-        private final ClientConnection connection;
+        private final AdminDashboardController adminDashboardController;
         private final Runnable onDataChanged;
         private JPanel listPanel;
         private JTextField searchField;
         private UserRecord selectedUser;
 
-        public AdminConsoleView(ClientConnection connection, Runnable onDataChanged) {
-            this.connection = connection;
+        public AdminConsoleView(AdminDashboardController adminDashboardController, Runnable onDataChanged) {
+            this.adminDashboardController = adminDashboardController;
             this.onDataChanged = onDataChanged;
             setLayout(new BorderLayout(0, 15));
             setBackground(BG_COLOR);
@@ -1844,39 +1750,16 @@ public class AdminDashboard extends JFrame {
         }
 
         private Object[] getUsers() {
-            if (!connection.isConnected()) {
-                connection.connect();
-            }
-            connection.sendRequest("GET_USERS");
-            Object response = connection.receive();
-            if (response instanceof Object[]) {
-                return (Object[]) response;
-            }
-            return new Object[]{"500", "Invalid server response", null};
+            User[] users = adminDashboardController.fetchUsers();
+            return new Object[]{"200", "OK", users};
         }
 
         private Object[] updateUserStatus(int userId, String status) {
-            if (!connection.isConnected()) {
-                connection.connect();
-            }
-            connection.sendRequest(new UserStatusUpdateRequest(userId, status));
-            Object response = connection.receive();
-            if (response instanceof Object[]) {
-                return (Object[]) response;
-            }
-            return new Object[]{"500", "Invalid server response", null};
+            return adminDashboardController.updateUserStatus(userId, status);
         }
 
         private Object[] deleteUser(int userId) {
-            if (!connection.isConnected()) {
-                connection.connect();
-            }
-            connection.sendRequest(new DeleteUserRequest(userId));
-            Object response = connection.receive();
-            if (response instanceof Object[]) {
-                return (Object[]) response;
-            }
-            return new Object[]{"500", "Invalid server response", null};
+            return adminDashboardController.deleteUser(userId);
         }
 
         private boolean matchesSearch(UserRecord user, String query) {

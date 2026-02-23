@@ -1,5 +1,7 @@
 package client.view.brgyofficials;
 
+import client.controller.AdminDashboardController;
+import client.controller.BrgyOfficialDashboardController;
 import client.model.ClientConnection;
 import client.view.admin.AdminDashboard;
 import client.view.common.Buttons;
@@ -9,9 +11,6 @@ import client.view.common.UserProfileDialog;
 import client.view.strings.Colors;
 import client.view.strings.Images;
 import common.BroadcastMessage;
-import common.FeedbackInternalNoteUpdateRequest;
-import common.FeedbackPriorityUpdateRequest;
-import common.FeedbackStatusUpdateRequest;
 import common.Feedbacks;
 import common.User;
 
@@ -38,6 +37,7 @@ public class BrgyOfficialDashboard extends JFrame {
     private User user;
     private BrgyOfficialHeaderPanel header;
     private final ClientConnection connection;
+    private final BrgyOfficialDashboardController brgyOfficialDashboardController;
     private Feedbacks[] cachedFeedbacks = new Feedbacks[0];
     private User[] cachedUsers = new User[0];
     private AdminDashboard.AdminConsoleView usersView;
@@ -50,6 +50,7 @@ public class BrgyOfficialDashboard extends JFrame {
     public BrgyOfficialDashboard(User user, ClientConnection connection){
         this.user = user;
         this.connection = connection;
+        this.brgyOfficialDashboardController = new BrgyOfficialDashboardController(connection);
         if (!this.connection.isConnected()) {
             this.connection.connect();
         }
@@ -100,27 +101,19 @@ public class BrgyOfficialDashboard extends JFrame {
 
     private void handleBroadcast(BroadcastMessage message) {
         SwingUtilities.invokeLater(() -> {
-            switch (message.getType()) {
-                case NEW_FEEDBACK:
-                case VOTE_UPDATE:
-                case STATUS_UPDATE:
-                case PRIORITY_UPDATE:
-                case INTERNAL_NOTE_UPDATE:
-                    if (message.getData() instanceof Feedbacks feedback) {
-                        upsertFeedbackCache(feedback);
-                        reloadActiveTab();
-                    }
-                    break;
-                case NEW_USER:
-                    if (message.getData() instanceof User newUser) {
-                        upsertUserCache(newUser);
-                        if (usersView != null) {
-                            usersView.onUsersUpdated(cachedUsers);
-                        }
-                    }
-                    break;
-                default:
-                    break;
+            BrgyOfficialDashboardController.BroadcastUiAction action = brgyOfficialDashboardController.routeBroadcast(message);
+
+            if (action == BrgyOfficialDashboardController.BroadcastUiAction.FEEDBACKS_UPDATED && message.getData() instanceof Feedbacks feedback) {
+                cachedFeedbacks = brgyOfficialDashboardController.applyFeedbackBroadcast(cachedFeedbacks, feedback);
+                reloadActiveTab();
+                return;
+            }
+
+            if (action == BrgyOfficialDashboardController.BroadcastUiAction.USERS_UPDATED && message.getData() instanceof User newUser) {
+                cachedUsers = brgyOfficialDashboardController.applyUserBroadcast(cachedUsers, newUser);
+                if (usersView != null) {
+                    usersView.onUsersUpdated(cachedUsers);
+                }
             }
         });
     }
@@ -141,93 +134,23 @@ public class BrgyOfficialDashboard extends JFrame {
     }
 
     private Feedbacks[] fetchFeedbacks() {
-        if (!connection.isConnected()) {
-            connection.connect();
-        }
-        connection.sendRequest("GET_FEEDBACKS");
-        Object response = connection.receive();
-        if (response instanceof Object[] arr && arr.length >= 3 && "200".equals(arr[0]) && arr[2] instanceof Feedbacks[]) {
-            return (Feedbacks[]) arr[2];
-        }
-        return new Feedbacks[0];
+        return brgyOfficialDashboardController.fetchFeedbacks();
     }
 
     private User[] fetchUsers() {
-        if (!connection.isConnected()) {
-            connection.connect();
-        }
-        connection.sendRequest("GET_USERS");
-        Object response = connection.receive();
-        if (response instanceof Object[] arr && arr.length >= 3 && "200".equals(arr[0]) && arr[2] instanceof User[]) {
-            return (User[]) arr[2];
-        }
-        return new User[0];
-    }
-
-    private void upsertFeedbackCache(Feedbacks incoming) {
-        if (incoming == null) return;
-        for (int i = 0; i < cachedFeedbacks.length; i++) {
-            Feedbacks existing = cachedFeedbacks[i];
-            if (existing != null && existing.getAttr_id() == incoming.getAttr_id()) {
-                cachedFeedbacks[i] = incoming;
-                return;
-            }
-        }
-        Feedbacks[] expanded = new Feedbacks[cachedFeedbacks.length + 1];
-        System.arraycopy(cachedFeedbacks, 0, expanded, 0, cachedFeedbacks.length);
-        expanded[cachedFeedbacks.length] = incoming;
-        cachedFeedbacks = expanded;
-    }
-
-    private void upsertUserCache(User incoming) {
-        if (incoming == null) return;
-        for (int i = 0; i < cachedUsers.length; i++) {
-            User existing = cachedUsers[i];
-            if (existing != null && existing.getAttr_id() == incoming.getAttr_id()) {
-                cachedUsers[i] = incoming;
-                return;
-            }
-        }
-        User[] expanded = new User[cachedUsers.length + 1];
-        System.arraycopy(cachedUsers, 0, expanded, 0, cachedUsers.length);
-        expanded[cachedUsers.length] = incoming;
-        cachedUsers = expanded;
+        return brgyOfficialDashboardController.fetchUsers();
     }
 
     private Object[] updateStatus(int feedbackId, String status) {
-        if (!connection.isConnected()) {
-            connection.connect();
-        }
-        connection.sendRequest(new FeedbackStatusUpdateRequest(feedbackId, status));
-        Object response = connection.receive();
-        if (response instanceof Object[]) {
-            return (Object[]) response;
-        }
-        return new Object[]{"500", "Invalid server response", null};
+        return brgyOfficialDashboardController.updateFeedbackStatus(feedbackId, status);
     }
 
     private Object[] updatePriority(int feedbackId, String priority) {
-        if (!connection.isConnected()) {
-            connection.connect();
-        }
-        connection.sendRequest(new FeedbackPriorityUpdateRequest(feedbackId, priority));
-        Object response = connection.receive();
-        if (response instanceof Object[]) {
-            return (Object[]) response;
-        }
-        return new Object[]{"500", "Invalid server response", null};
+        return brgyOfficialDashboardController.updateFeedbackPriority(feedbackId, priority);
     }
 
     private Object[] updateInternalNote(int feedbackId, String internalNote) {
-        if (!connection.isConnected()) {
-            connection.connect();
-        }
-        connection.sendRequest(new FeedbackInternalNoteUpdateRequest(feedbackId, internalNote));
-        Object response = connection.receive();
-        if (response instanceof Object[]) {
-            return (Object[]) response;
-        }
-        return new Object[]{"500", "Invalid server response", null};
+        return brgyOfficialDashboardController.updateFeedbackInternalNote(feedbackId, internalNote);
     }
 
     private String getFeedbackStatus(Feedbacks feedback) {
@@ -344,7 +267,7 @@ public class BrgyOfficialDashboard extends JFrame {
         refreshDataCaches();
         contentContainer.removeAll();
 
-        usersView = new AdminDashboard.AdminConsoleView(connection, this::refreshDataCaches);
+        usersView = new AdminDashboard.AdminConsoleView(new AdminDashboardController(connection), this::refreshDataCaches);
         usersView.onUsersUpdated(cachedUsers);
 
         contentContainer.add(usersView, BorderLayout.CENTER);
@@ -700,8 +623,7 @@ public class BrgyOfficialDashboard extends JFrame {
         panel.add(new RoundedInputField(Images.scaled(Images.SEARCH, 15, 15), "Search feedbacks...", false), gbc);
         gbc.gridx = 1;
         gbc.weightx = 0.2;
-        panel.add(new JComboBox<>(new String[]{"All Categories", "Infrastructure", "Sanitation",
-                "Environmental", "Public Safety", "Health Services", "Others"}), gbc);
+        panel.add(new JComboBox<>(new String[]{"All Categories", "Infrastructure", "Health", "Safety", "Environment", "Public Services", "Transportation", "Utilities", "Community Welfare", "Missing Person", "Others"}), gbc);
         gbc.gridx = 2;
         gbc.weightx = 0.2;
         panel.add(new JComboBox<>(new String[]{"All Status", "Pending", "In Progress",

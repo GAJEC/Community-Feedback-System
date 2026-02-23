@@ -2,6 +2,8 @@ package client.view.common;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.DefaultEditorKit;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
@@ -162,6 +164,29 @@ public class RoundedInputField extends JPanel {
         showingHint = (text == null || text.isEmpty());
         field.setText(showingHint ? hint : text);
         field.setForeground(showingHint ? hintColor : textColor);
+    }
+
+    public void addTextChangeListener(Runnable listener) {
+        if (listener == null) {
+            return;
+        }
+
+        field.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                listener.run();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                listener.run();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                listener.run();
+            }
+        });
     }
 
     // Styling setters

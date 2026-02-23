@@ -1,15 +1,14 @@
 package client.view.brgyofficials;
 
+import client.controller.PostAnnouncementController;
 import client.model.ClientConnection;
 import client.view.common.Buttons;
 import client.view.common.RoundedInputField;
-import common.Announcement;
 
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.util.Date;
 
 public class PostAnnouncementDialog extends JDialog {
 
@@ -23,6 +22,7 @@ public class PostAnnouncementDialog extends JDialog {
     private final String userName;
     private final ClientConnection connection;
     private final int userId;
+    private final PostAnnouncementController postAnnouncementController;
     private RoundedInputField txtSubject;
     private JTextArea txtDetails;
     private Buttons btnPost;
@@ -36,6 +36,7 @@ public class PostAnnouncementDialog extends JDialog {
         this.userName = userName;
         this.connection = connection;
         this.userId = userId;
+        this.postAnnouncementController = new PostAnnouncementController();
 
         setResizable(true);
         setUndecorated(true);
@@ -234,25 +235,7 @@ public class PostAnnouncementDialog extends JDialog {
         SwingWorker<Object[], Void> worker = new SwingWorker<>() {
             @Override
             protected Object[] doInBackground() {
-                Announcement announcement = new Announcement(0, userId, userName, subject, details, new Date());
-
-                Object[] primary = sendAnnouncement(connection, announcement, false);
-                if (primary != null && "200".equals(String.valueOf(primary[0]))) {
-                    return primary;
-                }
-
-                if (primary != null && !"500".equals(String.valueOf(primary[0]))) {
-                    return primary;
-                }
-
-                ClientConnection dedicatedConnection = new ClientConnection();
-                try {
-                    return sendAnnouncement(dedicatedConnection, announcement, true);
-                } finally {
-                    if (dedicatedConnection.isConnected()) {
-                        dedicatedConnection.disconnect();
-                    }
-                }
+                return postAnnouncementController.postAnnouncementWithFallback(connection, userId, userName, subject, details);
             }
 
             @Override
@@ -279,23 +262,6 @@ public class PostAnnouncementDialog extends JDialog {
             }
         };
         worker.execute();
-    }
-
-    private Object[] sendAnnouncement(ClientConnection targetConnection, Announcement announcement, boolean forceConnect) {
-        if (targetConnection == null) {
-            return new Object[]{"500", "No connection available", null};
-        }
-
-        if ((forceConnect || !targetConnection.isConnected()) && !targetConnection.connect()) {
-            return new Object[]{"500", "Unable to connect to server", null};
-        }
-
-        targetConnection.sendRequest(announcement);
-        Object response = targetConnection.receive();
-        if (response instanceof Object[]) {
-            return (Object[]) response;
-        }
-        return new Object[]{"500", "No valid response from server", null};
     }
 
     static class LocalShadowBorder extends AbstractBorder {

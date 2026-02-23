@@ -11,6 +11,8 @@ import common.RegisterRequest;
 import common.User;
 import common.UserStatusUpdateRequest;
 import common.VoteRequest;
+import common.XmlMessageCodec;
+import server.model.actions.AnnouncementActions;
 import server.model.actions.AnnouncementActions;
 import org.xml.sax.SAXException;
 import server.model.actions.FeedbackActions;
@@ -38,7 +40,11 @@ public class ClientHandler extends Thread {
     public boolean sendBroadcast(BroadcastMessage message) {
         try {
             synchronized (out) {
-                out.writeObject(message);
+                String xmlMessage = XmlMessageCodec.encodeObject(message);
+                if (xmlMessage == null) {
+                    return false;
+                }
+                out.writeObject(xmlMessage);
                 out.flush();
             }
             return true;
@@ -60,7 +66,11 @@ public class ClientHandler extends Thread {
             System.out.println("Client " + clientId + " connected from " + socket.getInetAddress());
 
             while (running) {
-                Object received = in.readObject();
+                Object receivedRaw = in.readObject();
+                Object received = XmlMessageCodec.decodeInboundObject(receivedRaw);
+                if (received == null) {
+                    continue;
+                }
 
                 switch (received) {
                     case User u -> {
@@ -71,10 +81,7 @@ public class ClientHandler extends Thread {
                         Object[] response = LoginActions.handleLogin(u, clientId);
 
                         // Gumamit tayo ng synchronized block para sure na walang sabayang access sa output stream
-                        synchronized (out) {
-                            out.writeObject(response);
-                            out.flush();
-                        }
+                        writeXmlObject(response);
                     }
                     case RegisterRequest rr -> {
                         if(CONFIG_DEBUG){
@@ -83,10 +90,7 @@ public class ClientHandler extends Thread {
 
                         Object[] response = LoginActions.handleRegister(rr, clientId);
 
-                        synchronized (out) {
-                            out.writeObject(response);
-                            out.flush();
-                        }
+                        writeXmlObject(response);
 
                         if ("200".equals(response[0]) && response[2] != null) {
                             BroadcastMessage broadcast = new BroadcastMessage(
@@ -102,10 +106,7 @@ public class ClientHandler extends Thread {
                         }
 
                         Object[] response = FeedbackActions.handleFeedbackSubmission(f, clientId);
-                        synchronized (out) {
-                            out.writeObject(response);
-                            out.flush();
-                        }
+                        writeXmlObject(response);
 
                         if ("200".equals(response[0])) {
                             BroadcastMessage broadcast = new BroadcastMessage(
@@ -121,10 +122,7 @@ public class ClientHandler extends Thread {
                         }
 
                         Object[] response = AnnouncementActions.postAnnouncement(announcement, clientId);
-                        synchronized (out) {
-                            out.writeObject(response);
-                            out.flush();
-                        }
+                        writeXmlObject(response);
 
                         if ("200".equals(response[0]) && response[2] != null) {
                             BroadcastMessage broadcast = new BroadcastMessage(
@@ -140,10 +138,7 @@ public class ClientHandler extends Thread {
                         }
                         
                         Object[] response = FeedbackActions.handleVote(vr, clientId);
-                        synchronized (out) {
-                            out.writeObject(response);
-                            out.flush();
-                        }
+                        writeXmlObject(response);
 
                         if ("200".equals(response[0]) && response[2] != null) {
                             BroadcastMessage broadcast = new BroadcastMessage(
@@ -158,30 +153,21 @@ public class ClientHandler extends Thread {
                             System.out.println("Received user status update request from Client " + clientId);
                         }
                         Object[] response = LoginActions.updateUserStatus(usr.getUserId(), usr.getStatus());
-                        synchronized (out) {
-                            out.writeObject(response);
-                            out.flush();
-                        }
+                        writeXmlObject(response);
                     }
                     case DeleteUserRequest dur -> {
                         if (CONFIG_DEBUG) {
                             System.out.println("Received delete user request from Client " + clientId);
                         }
                         Object[] response = LoginActions.deleteUser(dur.getUserId());
-                        synchronized (out) {
-                            out.writeObject(response);
-                            out.flush();
-                        }
+                        writeXmlObject(response);
                     }
                     case FeedbackStatusUpdateRequest fsr -> {
                         if (CONFIG_DEBUG) {
                             System.out.println("Received feedback status update request from Client " + clientId);
                         }
                         Object[] response = FeedbackActions.updateFeedbackStatus(fsr.getFeedbackId(), fsr.getStatus());
-                        synchronized (out) {
-                            out.writeObject(response);
-                            out.flush();
-                        }
+                        writeXmlObject(response);
 
                         if ("200".equals(response[0]) && response[2] != null) {
                             BroadcastMessage broadcast = new BroadcastMessage(
@@ -196,10 +182,7 @@ public class ClientHandler extends Thread {
                             System.out.println("Received feedback priority update request from Client " + clientId);
                         }
                         Object[] response = FeedbackActions.updateFeedbackPriority(fpr.getFeedbackId(), fpr.getPriority());
-                        synchronized (out) {
-                            out.writeObject(response);
-                            out.flush();
-                        }
+                        writeXmlObject(response);
 
                         if ("200".equals(response[0]) && response[2] != null) {
                             BroadcastMessage broadcast = new BroadcastMessage(
@@ -214,10 +197,7 @@ public class ClientHandler extends Thread {
                             System.out.println("Received feedback internal note update request from Client " + clientId);
                         }
                         Object[] response = FeedbackActions.updateFeedbackInternalNote(fnr.getFeedbackId(), fnr.getInternalNote());
-                        synchronized (out) {
-                            out.writeObject(response);
-                            out.flush();
-                        }
+                        writeXmlObject(response);
 
                         if ("200".equals(response[0]) && response[2] != null) {
                             BroadcastMessage broadcast = new BroadcastMessage(
@@ -234,30 +214,21 @@ public class ClientHandler extends Thread {
                             }
                             
                             Object[] response = FeedbackActions.getAllFeedbacks();
-                            synchronized (out) {
-                                out.writeObject(response);
-                                out.flush();
-                            }
+                            writeXmlObject(response);
                         } else if ("GET_USERS".equals(s)) {
                             if (CONFIG_DEBUG) {
                                 System.out.println("Received GET_USERS request from Client " + clientId);
                             }
 
                             Object[] response = LoginActions.getAllUsers();
-                            synchronized (out) {
-                                out.writeObject(response);
-                                out.flush();
-                            }
+                            writeXmlObject(response);
                         } else if ("GET_ANNOUNCEMENTS".equals(s)) {
                             if (CONFIG_DEBUG) {
                                 System.out.println("Received GET_ANNOUNCEMENTS request from Client " + clientId);
                             }
 
                             Object[] response = AnnouncementActions.getAllAnnouncements();
-                            synchronized (out) {
-                                out.writeObject(response);
-                                out.flush();
-                            }
+                            writeXmlObject(response);
                         } else if ("DISCONNECT".equals(s)) {
                             System.out.println("Client " + clientId + " requested disconnect");
                             running = false;
@@ -291,5 +262,17 @@ public class ClientHandler extends Thread {
             System.err.println("Error during cleanup: " + e.getMessage());
         }
         System.out.println("Client " + clientId + " handler terminated");
+    }
+
+    private void writeXmlObject(Object object) throws IOException {
+        String xmlMessage = XmlMessageCodec.encodeObject(object);
+        if (xmlMessage == null) {
+            throw new IOException("Failed to encode outbound object as XML");
+        }
+
+        synchronized (out) {
+            out.writeObject(xmlMessage);
+            out.flush();
+        }
     }
 }
