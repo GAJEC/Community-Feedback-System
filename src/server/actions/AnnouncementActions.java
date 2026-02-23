@@ -6,21 +6,35 @@ import server.Server;
 import server.components.XMLHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.util.Arrays;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 
 public class AnnouncementActions {
-
     public static Object[] postAnnouncement(Announcement announcement, int clientId) {
         try {
             if (announcement == null) {
+                Server.logEvent(
+                        "Client " + clientId,
+                        "Post Announcement Failed",
+                        "Announcement payload is required"
+                );
                 return new Object[]{"400", "Announcement payload is required", null};
             }
             if (announcement.getTitle() == null || announcement.getTitle().trim().isEmpty()) {
+                Server.logEvent(
+                        "Client " + clientId,
+                        "Post Announcement Failed",
+                        "Announcement title is required"
+                );
                 return new Object[]{"400", "Announcement title is required", null};
             }
             if (announcement.getMessage() == null || announcement.getMessage().trim().isEmpty()) {
+                Server.logEvent(
+                        "Client " + clientId,
+                        "Post Announcement Failed",
+                        "Announcement message is required"
+                );
                 return new Object[]{"400", "Announcement message is required", null};
             }
 
@@ -31,6 +45,7 @@ public class AnnouncementActions {
             );
 
             Announcement[] current = handler.ReadAll();
+
             if (current != null && current.length >= 3) {
                 Announcement oldest = Arrays.stream(current)
                         .filter(a -> a != null)
@@ -48,6 +63,11 @@ public class AnnouncementActions {
                 if (oldest != null) {
                     handler.Delete("id", oldest.getAttr_id());
                     current = handler.ReadAll();
+                    Server.logEvent(
+                            "System",
+                            "Post Announcement Cleanup",
+                            "Oldest announcement #" + oldest.getAttr_id() + " deleted to maintain max 3 announcements"
+                    );
                 }
             }
 
@@ -72,8 +92,16 @@ public class AnnouncementActions {
                     "Client " + clientId,
                     "Post Announcement",
                     "Announcement #" + newId + " posted"
-            );            return new Object[]{"200", "Announcement posted successfully", announcement};
+            );
+
+            return new Object[]{"200", "Announcement posted successfully", announcement};
+
         } catch (ParserConfigurationException | IOException | SAXException e) {
+            Server.logEvent(
+                    "Client " + clientId,
+                    "Post Announcement Exception",
+                    e.getClass().getSimpleName() + ": " + e.getMessage()
+            );
             return new Object[]{"500", "Server error: " + e.getMessage(), null};
         }
     }
@@ -85,9 +113,23 @@ public class AnnouncementActions {
                     "src/server/data/database.xml",
                     "announcement"
             );
+
             Announcement[] announcements = handler.ReadAll();
+
+            Server.logEvent(
+                    "System",
+                    "Retrieve Announcements",
+                    "Retrieved " + (announcements != null ? announcements.length : 0) + " announcements"
+            );
+
             return new Object[]{"200", "Announcements retrieved successfully", announcements};
+
         } catch (ParserConfigurationException | IOException | SAXException e) {
+            Server.logEvent(
+                    "System",
+                    "Retrieve Announcements Exception",
+                    e.getClass().getSimpleName() + ": " + e.getMessage()
+            );
             return new Object[]{"500", "Server error: " + e.getMessage(), null};
         }
     }

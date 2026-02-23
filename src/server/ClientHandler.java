@@ -286,8 +286,6 @@ public class ClientHandler extends Thread {
 
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Client " + clientId + " disconnected: " + e.getMessage());
-        } catch (ParserConfigurationException | SAXException e) {
-            System.err.println("Error processing request: " + e.getMessage());
         } finally {
             cleanup();
         }

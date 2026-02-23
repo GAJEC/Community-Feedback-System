@@ -4,8 +4,9 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.*;
+
+import static common.Config.SOCKET_PORT;
 
 public class ServerMain {
     public static void main(String[] args) {
@@ -21,6 +22,7 @@ public class ServerMain {
         private final JTable logTable;
         private final DefaultTableModel tableModel;
         private final JTextArea consoleTextArea;
+        private final File logFile;
 
         public ServerUi() {
             setTitle("Server Control Panel");
@@ -28,7 +30,13 @@ public class ServerMain {
             setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             setLocationRelativeTo(null);
 
-            // Control panel
+            logFile = new File("src/server/data/logs.log");
+            try {
+                if (!logFile.exists()) logFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             JPanel controlPanel = new JPanel();
             startButton = new JButton("Start Server");
             stopButton = new JButton("Stop Server");
@@ -37,17 +45,14 @@ public class ServerMain {
             controlPanel.add(stopButton);
             add(controlPanel, BorderLayout.SOUTH);
 
-            // Tabbed Pane
             JTabbedPane tabbedPane = new JTabbedPane();
 
-            // Logs Table
             String[] columns = {"Timestamp", "User", "Transaction", "Data Affected"};
             tableModel = new DefaultTableModel(columns, 0);
             logTable = new JTable(tableModel);
             JScrollPane logScrollPane = new JScrollPane(logTable);
             tabbedPane.addTab("Logs", logScrollPane);
 
-            // Console TextArea
             consoleTextArea = new JTextArea();
             consoleTextArea.setEditable(false);
             consoleTextArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -56,12 +61,18 @@ public class ServerMain {
 
             add(tabbedPane, BorderLayout.CENTER);
 
-            // Redirect System.out and System.err
             redirectSystemStreams();
         }
 
         public void addLogEntry(String timestamp, String user, String transaction, String dataAffected) {
             SwingUtilities.invokeLater(() -> tableModel.addRow(new Object[]{timestamp, user, transaction, dataAffected}));
+
+            try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(logFile, true))) {
+                String logLine = timestamp + "|" + user + "|" + transaction + "|" + dataAffected + "\n";
+                dos.writeUTF(logLine);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         public void setServerRunning(boolean running) {
@@ -131,7 +142,7 @@ public class ServerMain {
                     }
                 });
                 serverThread.start();
-                System.out.println("Server started!");
+                System.out.println("Server started at port: " + SOCKET_PORT);
             }
 
             private void stopServer() {
