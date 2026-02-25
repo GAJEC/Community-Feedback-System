@@ -34,4 +34,4 @@ if exist "res\assets" (
 
 echo.
 echo Starting server...
-java -cp "%OUT%;.;lib\*" server.Server
+java -cp "%OUT%;.;lib\*" server.ServerMain
