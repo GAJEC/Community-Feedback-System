@@ -1,4 +1,4 @@
-package server;
+package server.model;
 
 import common.Announcement;
 import common.BroadcastMessage;
@@ -12,12 +12,10 @@ import common.User;
 import common.UserStatusUpdateRequest;
 import common.VoteRequest;
 import common.XmlMessageCodec;
-import server.actions.AnnouncementActions;
-import org.xml.sax.SAXException;
-import server.actions.FeedbackActions;
-import server.actions.LoginActions;
+import server.model.actions.AnnouncementActions;
+import server.model.actions.FeedbackActions;
+import server.model.actions.LoginActions;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.Socket;
 

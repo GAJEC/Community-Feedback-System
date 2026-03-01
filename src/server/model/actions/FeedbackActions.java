@@ -1,10 +1,10 @@
-package server.actions;
+package server.model.actions;
 
 import common.Feedbacks;
 import common.VoteRequest;
 import org.xml.sax.SAXException;
-import server.Server;
-import server.components.XMLHandler;
+import server.model.components.XMLHandler;
+import server.model.Server;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;

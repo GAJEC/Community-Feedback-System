@@ -1,8 +1,8 @@
-package server;
+package server.model;
 
 import common.BroadcastMessage;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
@@ -13,8 +13,9 @@ import java.util.List;
 import static common.Config.SOCKET_PORT;
 
 public class Server {
+    private static LogListener logListener;
+    private static File logFile;
 
-    public static ServerMain.ServerUi ui;
     private static int clientCounter = 0;
     private static final List<ClientHandler> activeClients = new ArrayList<>();
     private static ServerSocket serverSocket;
@@ -41,17 +42,47 @@ public class Server {
         }
     }
 
+    public static void setLogListener(LogListener listener) {
+        logListener = listener;
+    }
+
     public static void logEvent(String user, String transaction, String dataAffected) {
         String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-        System.out.println("[" + timestamp + "] " + user + " - " + transaction + " - " + dataAffected);
-        if (ui != null) {
-            ui.addLogEntry(timestamp, user, transaction, dataAffected);
+
+        String logLine = "[" + timestamp + "] " + user + " - " + transaction + " - " + dataAffected;
+
+        System.out.println(logLine);
+
+        try (FileWriter fw = new FileWriter(logFile, true);
+             BufferedWriter bw = new BufferedWriter(fw);
+             PrintWriter out = new PrintWriter(bw)) {
+
+            out.println(logLine);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (logListener != null) {
+            logListener.onLog(timestamp, user, transaction, dataAffected);
         }
     }
 
     public static void startServer() {
+        logFile = new File("src/server/data/server_logs.log");
+
+        try {
+            if (!logFile.exists()) {
+                logFile.createNewFile();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         try {
             serverSocket = new ServerSocket(SOCKET_PORT);
+
+            logEvent("System", "==========", "New Server Session ==========");
 
             while (!Thread.currentThread().isInterrupted()) {
                 try {

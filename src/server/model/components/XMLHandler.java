@@ -1,4 +1,4 @@
-package server.components;
+package server.model.components;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 
 public class XMLHandler<T> {
