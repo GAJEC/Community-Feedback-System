@@ -38,6 +38,7 @@ public class ResidentDashboard extends JFrame {
     private static final Color PRIMARY_TEAL = SUB_PRIMARY;
     private static final Color DANGER_RED = new Color(220, 53, 69);
     private static final Color USER_BOX_BG = new Color(248, 250, 252);
+    private final Color GRAY =Color.gray;
 
     private JPanel contentContainer;
     private boolean isViewMode;
@@ -971,6 +972,18 @@ public class ResidentDashboard extends JFrame {
                 Color textColor = new Color(70, 70, 70);
 
                 JButton editBtn = createMenuButton("Edit Feedback", menuFont, textColor);
+                editBtn.addActionListener(e -> {
+                    FeedbackEditDialog editDialog = new FeedbackEditDialog(ResidentDashboard.this);
+
+
+                    editDialog.setLocationRelativeTo(ResidentDashboard.this);
+
+
+                    editDialog.setVisible(true);
+
+
+                    refreshFeedbackList();
+                });
                 JButton deleteBtn = createMenuButton("Delete", menuFont, textColor);
                 deleteBtn.setForeground(Color.RED);
 
@@ -1231,6 +1244,193 @@ public class ResidentDashboard extends JFrame {
             add(bl);
         }
     }
+
+    class FeedbackEditDialog extends JDialog{
+        FeedbackEditDialog(Frame owner){
+            super(owner, "Edit Feedback", true);
+            this.setUndecorated(true);
+            setBackground(new Color(0, 0, 0, 0));
+            initComponents();
+            setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            setResizable(false);
+            pack();
+            setLocationRelativeTo(owner);
+        }
+        private void initComponents() {
+            // Main Wrapper mimicking your createSubmitFeedbackPanel wrapper
+            JPanel wrapper = new JPanel(new BorderLayout());
+            wrapper.setOpaque(false); // Do not draw the BG_COLOR
+            wrapper.setBackground(new Color(0, 0, 0, 0));
+            wrapper.setBorder(new EmptyBorder(15, 40, 15, 40));
+
+            // The White Card
+            CustomPanel card = new CustomPanel();
+            card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+            card.setPreferredSize(new Dimension(750, 780));
+            card.setBackgroundColor(BG_COLOR);
+            card.setOffsetShadow(new Color(0, 0, 0, 30), 4);
+            card.setRadius(20);
+            card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            // Title and Subtitle
+            JLabel title = new JLabel("Edit Community Feedback");
+            title.setFont(new Font("Segoe UI", Font.BOLD, 26));
+            title.setForeground(new Color(30, 30, 30));
+            title.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            JLabel subTitle = new JLabel("Help improve the community by reporting issues");
+            subTitle.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            subTitle.setForeground(GRAY);
+            subTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            // User Block (Hardcoded for UI demo)
+            String displayName = (user != null && user.getName() != null && !user.getName().trim().isEmpty())
+                    ? user.getName().trim()
+                    : (user != null && user.getUsername() != null && !user.getUsername().trim().isEmpty()
+                    ? user.getUsername().trim()
+                    : "Resident");
+            String displayId = (user != null) ? String.valueOf(user.getAttr_id()) : "N/A";
+            JPanel userBlock = createUserProfileBlock(displayName, displayId);
+
+            JSeparator separator = new JSeparator();
+            separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+            separator.setForeground(new Color(230, 230, 230));
+
+            // Fields
+            titleField = new ResidentDashboard.RoundedTextField(20);
+            JPanel titlePanel = createFieldPanel("Issue Title", titleField);
+
+            String[] categories = {"Event Suggestion", "Missing Person", "Noise Complaint", "Infrastructure", "Other"};
+            categoryBox = new JComboBox<>(categories);
+            categoryBox.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            categoryBox.setBackground(BG_COLOR);
+            categoryBox.setUI(new BasicComboBoxUI() {
+                @Override protected JButton createArrowButton() {
+                    JButton b = super.createArrowButton();
+                    b.setContentAreaFilled(false);
+                    b.setBorder(BorderFactory.createEmptyBorder());
+                    return b;
+                }
+            });
+
+            JPanel categoryWrapper = new JPanel(new BorderLayout());
+            categoryWrapper.setBackground(BG_COLOR);
+            categoryWrapper.setBorder(new RoundedBorder(10));
+
+            categoryWrapper.setPreferredSize(new Dimension(200, 40));
+            categoryBox.setBorder(new EmptyBorder(0, 5, 0, 0));
+            categoryWrapper.add(categoryBox, BorderLayout.CENTER);
+            JPanel categoryPanel = createFieldPanel("Category", categoryWrapper);
+
+            locationField = new ResidentDashboard.RoundedTextField(20);
+            JPanel locationPanel = createFieldPanel("Location / Landmark", locationField);
+
+            descArea = new JTextArea(8, 20);
+            descArea.setLineWrap(true);
+            descArea.setWrapStyleWord(true);
+            descArea.setBorder(new EmptyBorder(8, 8, 8, 8));
+            JScrollPane areaScroll = new JScrollPane(descArea);
+            areaScroll.setBorder(new RoundedBorder(10));
+            areaScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
+            JPanel descPanel = createFieldPanel("Detailed Description", areaScroll);
+
+            JLabel processingNote = new JLabel("Your feedback will be processed anonymously if preferred.");
+            processingNote.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+            processingNote.setForeground(new Color(100, 100, 100));
+            processingNote.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            // Buttons
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+            buttonPanel.setBackground(BG_COLOR);
+            buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            buttonPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+
+            Buttons cancelBtn = new Buttons("Cancel", 12, DANGER_RED, BG_COLOR, DANGER_RED.brighter(), new Font("Segoe UI", Font.BOLD, 13));
+            Buttons updateBtn = new Buttons("Update Feedback", 12, PRIMARY_TEAL, BG_COLOR, PRIMARY_TEAL.brighter(), new Font("Segoe UI", Font.BOLD, 13));
+
+            cancelBtn.setPreferredSize(new Dimension(120, 40));
+            updateBtn.setPreferredSize(new Dimension(180, 40));
+
+            buttonPanel.add(cancelBtn);
+            buttonPanel.add(updateBtn);
+
+            // Assembly
+            card.add(title);
+            card.add(Box.createVerticalStrut(5));
+            card.add(subTitle);
+            card.add(Box.createVerticalStrut(20));
+            card.add(userBlock);
+            card.add(Box.createVerticalStrut(20));
+            card.add(separator);
+            card.add(Box.createVerticalStrut(25));
+            card.add(titlePanel);
+            card.add(Box.createVerticalStrut(15));
+            card.add(categoryPanel);
+            card.add(Box.createVerticalStrut(15));
+            card.add(locationPanel);
+            card.add(Box.createVerticalStrut(15));
+            card.add(descPanel);
+            card.add(Box.createVerticalStrut(10));
+            card.add(processingNote);
+            card.add(Box.createVerticalStrut(30));
+            card.add(buttonPanel);
+
+            wrapper.add(card);
+            getContentPane().add(wrapper);
+        }
+
+
+
+
+        static class RoundedBorder extends AbstractBorder {
+            private final int radius;
+            public RoundedBorder(int radius) { this.radius = radius; }
+            @Override
+            public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.LIGHT_GRAY);
+                g2.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+                g2.dispose();
+            }
+            @Override public Insets getBorderInsets(Component c) { return new Insets(5, 10, 5, 10); }
+        }
+
+
+
+        
+        static class CustomPanel extends JPanel {
+            private int radius = 20;
+            private Color bgColor = Color.WHITE;
+            public void setRadius(int r) { this.radius = r; }
+            public void setBackgroundColor(Color c) { this.bgColor = c; }
+            public void setOffsetShadow(Color c, int s) {}
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(bgColor);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
+                g2.dispose();
+            }
+        }
+
+        static class Buttons extends JButton {
+            public Buttons(String text, int radius, Color bg, Color fg, Color hover, Font font) {
+                super(text);
+                setFont(font);
+                setForeground(fg);
+                setBackground(bg);
+                setFocusPainted(false);
+                setBorderPainted(false);
+                setContentAreaFilled(true);
+            }
+        }
+
+
+    }
+
+
+
 
     public interface ResidentDashboardListener {
         void onLoadFeedbacks();
