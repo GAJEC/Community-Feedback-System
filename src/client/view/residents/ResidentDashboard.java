@@ -1,4 +1,5 @@
 package client.view.residents;
+import client.controller.ResidentDashboardController;
 import client.view.common.Buttons;
 import client.view.common.CustomPanel;
 import client.view.common.InfoRow;
@@ -49,6 +50,7 @@ public class ResidentDashboard extends JFrame {
     private RoundedInputField feedbackSearchField;
     private JComboBox<String> categoryFilterBox;
     private JComboBox<String> statusFilterBox;
+    private static ResidentDashboardController residentDashboardController;
 
     private RoundedTextField titleField;
     private JComboBox<String> categoryBox;
@@ -923,9 +925,123 @@ public class ResidentDashboard extends JFrame {
                 }
             });
 
+            if (feedback.getIssued_by() == user.getAttr_id()) {
+                JButton functionOpt = new JButton("...");
+                functionOpt.setFont(new Font("Segoe UI", Font.BOLD, 18));
+                functionOpt.setForeground(new Color(100, 100, 100));
+                functionOpt.setContentAreaFilled(false);
+                functionOpt.setBorderPainted(false);
+                functionOpt.setFocusPainted(false);
+                functionOpt.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+                functionOpt.addActionListener(e -> {
+                    FeedbackOptionsPopup popup = new FeedbackOptionsPopup(
+                            SwingUtilities.getWindowAncestor(functionOpt),
+                            feedback
+                    );
+                    Point screenPos = functionOpt.getLocationOnScreen();
+
+                    popup.setLocation(screenPos.x - 120, screenPos.y + functionOpt.getHeight());
+                    popup.setVisible(true);
+                });
+                add(functionOpt);
+            }
+
+
             gbc.gridx = 1; gbc.gridy = 1;
             gbc.anchor = GridBagConstraints.SOUTHEAST;
-            add(detailsBtn, gbc);
+
+            JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+            actionPanel.setOpaque(false);
+            actionPanel.add(detailsBtn);
+
+            add(actionPanel, gbc);
+        }
+
+        class FeedbackOptionsPopup extends JWindow {
+            public FeedbackOptionsPopup(Window owner, Feedbacks feedback) {
+                super(owner);
+
+                JPanel container = new JPanel();
+                container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+                container.setBackground(Color.WHITE);
+                container.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+
+                Font menuFont = new Font("Segoe UI", Font.PLAIN, 14);
+                Color textColor = new Color(70, 70, 70);
+
+                JButton editBtn = createMenuButton("Edit Feedback", menuFont, textColor);
+                JButton deleteBtn = createMenuButton("Delete", menuFont, textColor);
+                deleteBtn.setForeground(Color.RED);
+
+                deleteBtn.addActionListener(e -> {
+                    int confirm = JOptionPane.showConfirmDialog(
+                            this,
+                            "Are you sure you want to delete this feedback?",
+                            "Confirm Delete",
+                            JOptionPane.YES_NO_OPTION
+
+                    );
+
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        Object[] response = residentDashboardController.deleteFeedback(feedback.getAttr_id());
+
+                        if ("200".equals(response[0])) {
+                            JOptionPane.showMessageDialog(this, "Feedback deleted successfully.");
+                            refreshFeedbackList();
+                            dispose();
+                        } else {
+                            JOptionPane.showMessageDialog(this, "Failed: " + response[1]);
+                        }
+                    }
+                });
+
+
+                JSeparator sep = new JSeparator();
+                sep.setForeground(new Color(200, 200, 200));
+                sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+
+                container.add(editBtn);
+                container.add(sep);
+                container.add(deleteBtn);
+
+                add(container);
+                pack();
+                setSize(150, getPreferredSize().height);
+
+                // Close the popup when focus is lost
+                this.addWindowFocusListener(new java.awt.event.WindowFocusListener() {
+                    public void windowGainedFocus(java.awt.event.WindowEvent e) {}
+                    public void windowLostFocus(java.awt.event.WindowEvent e) {
+                        dispose();
+                    }
+                });
+            }
+
+            private JButton createMenuButton(String text, Font font, Color color) {
+                JButton btn = new JButton(text);
+                btn.setFont(font);
+                btn.setForeground(color);
+                btn.setHorizontalAlignment(SwingConstants.LEFT);
+                btn.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+                btn.setContentAreaFilled(false);
+                btn.setFocusPainted(false);
+                btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                btn.setAlignmentX(Component.LEFT_ALIGNMENT);
+                btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+
+                // Hover effect
+                btn.addMouseListener(new java.awt.event.MouseAdapter() {
+                    public void mouseEntered(java.awt.event.MouseEvent e) {
+                        btn.setBackground(new Color(245, 245, 245));
+                        btn.setOpaque(true);
+                    }
+                    public void mouseExited(java.awt.event.MouseEvent e) {
+                        btn.setOpaque(false);
+                    }
+                });
+                return btn;
+            }
         }
 
         private Buttons createPriorityBadge(String priority) {

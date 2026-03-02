@@ -1,5 +1,6 @@
 package server.model;
 
+
 import common.Announcement;
 import common.BroadcastMessage;
 import common.DeleteUserRequest;
@@ -240,7 +241,34 @@ public class ClientHandler extends Thread {
                         }
                     }
                     case String s -> {
-                        if ("GET_FEEDBACKS".equals(s)) {
+                        if (s.startsWith("DELETE_FEEDBACK:")) {
+                            if (CONFIG_DEBUG) {
+                                System.out.println("Received DELETE_FEEDBACK request from Client " + clientId);
+                            }
+
+                            try {
+                                int feedbackId = Integer.parseInt(s.split(":")[1]);
+
+                                Object[] response = FeedbackActions.deleteFeedback(feedbackId);
+
+                                synchronized (out) {
+                                    out.writeObject(response);
+                                    out.flush();
+                                }
+
+                                if ("200".equals(response[0])) {
+                                    BroadcastMessage broadcast = new BroadcastMessage(
+                                            BroadcastMessage.BroadcastType.REFRESH_FEEDBACKS, feedbackId
+                                    );
+                                    Server.broadcast(broadcast, this);
+                                }
+                            } catch (Exception e) {
+                                synchronized (out) {
+                                    out.writeObject(new Object[]{"500", "Server Error: " + e.getMessage(), null});
+                                    out.flush();
+                                }
+                            }
+                        } else if ("GET_FEEDBACKS".equals(s)) {
                             if(CONFIG_DEBUG){
                                 System.out.println("Received GET_FEEDBACKS request from Client " + clientId);
                             }

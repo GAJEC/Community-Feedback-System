@@ -7,7 +7,7 @@ import client.model.BrgyOfficialFeedbackModel;
 import common.VoteRequest;
 
 public class FeedbackController {
-    private final FeedbackModel feedbackModel;
+    private static FeedbackModel feedbackModel;
     private final AdminFeedbackModel adminFeedbackModel;
     private final BrgyOfficialFeedbackModel brgyOfficialFeedbackModel;
     private final ClientConnection connection;
@@ -34,6 +34,10 @@ public class FeedbackController {
         }
 
         return feedbackModel.submitFeedback(userId, category, title, location, content);
+    }
+
+    public static Object[] deleteFeedback(int feedbackId) {
+        return feedbackModel.deleteFeedback(feedbackId);
     }
 
     public Object[] getAllFeedbacks() {

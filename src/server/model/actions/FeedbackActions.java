@@ -104,6 +104,27 @@ public class FeedbackActions {
         }
     }
 
+    public static Object[] deleteFeedback(int feedbackId) {
+        try {
+            XMLHandler<common.Feedbacks> feedbackHandler = new XMLHandler<>(
+                    common.Feedbacks.class,
+                    "src/server/data/database.xml",
+                    "feedback"
+            );
+
+            boolean success = feedbackHandler.Delete("id", feedbackId);
+
+            if (success) {
+                Server.logEvent("System", "Delete Feedback", "Feedback #" + feedbackId + " deleted");
+                return new Object[]{"200", "Feedback deleted successfully", null};
+            } else {
+                return new Object[]{"404", "Feedback not found", null};
+            }
+        } catch (Exception e) {
+            return new Object[]{"500", "Server error: " + e.getMessage(), null};
+        }
+    }
+
     public static Object[] handleVote(VoteRequest voteRequest, int clientId) {
         try {
             XMLHandler<Feedbacks> feedbackHandler = new XMLHandler<>(

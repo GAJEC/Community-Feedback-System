@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.function.IntFunction;
 
 public class ResidentDashboardController implements ResidentDashboard.ResidentDashboardListener, LogoutPopUp.LogoutListener {
+
+    private ResidentDashboardController feedbackController;
+
     public enum BroadcastUiAction {
         NONE,
         APPLY_FILTERS,
@@ -47,6 +50,7 @@ public class ResidentDashboardController implements ResidentDashboard.ResidentDa
         this.connection.setBroadcastListener(this::handleBroadcast);
     }
 
+
     public void show() {
         view.setVisible(true);
     }
@@ -71,6 +75,10 @@ public class ResidentDashboardController implements ResidentDashboard.ResidentDa
                 location.trim(),
                 description.trim()
         );
+    }
+
+    public Object[] deleteFeedback(int feedbackId) {
+        return feedbackController.deleteFeedback(feedbackId);
     }
 
     public void loadFeedbacks() {
@@ -289,6 +297,7 @@ public class ResidentDashboardController implements ResidentDashboard.ResidentDa
         }
         return fallback;
     }
+
 
     private void handleBroadcast(BroadcastMessage message) {
         SwingUtilities.invokeLater(() -> {

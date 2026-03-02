@@ -64,6 +64,27 @@ public class FeedbackModel {
         }
     }
 
+    public Object[] deleteFeedback(int feedbackId) {
+        if (!connection.isConnected()) {
+            return new Object[]{"400", "Not connected to server", null};
+        }
+
+        try {
+            connection.sendRequest("DELETE_FEEDBACK:" + feedbackId);
+            Object response = connection.receive();
+
+            if (response instanceof Object[]) {
+                return (Object[]) response;
+            }
+
+            System.out.println("DEBUG: Server sent " + (response == null ? "null" : response.getClass().getName()));
+            return new Object[]{"500", "Invalid server response", null};
+        } catch (Exception e) {
+            return new Object[]{"500", "Error deleting feedback: " + e.getMessage(), null};
+        }
+    }
+
+
     public Object[] getAllFeedbacks() {
         if (!connection.isConnected()) {
             return new Object[]{"400", "Not connected to server", null};

@@ -16,7 +16,8 @@ public class BroadcastMessage implements Serializable {
         PRIORITY_UPDATE,
         INTERNAL_NOTE_UPDATE,
         NEW_USER,
-        NEW_ANNOUNCEMENT
+        NEW_ANNOUNCEMENT,
+        REFRESH_FEEDBACKS
     }
 
     public BroadcastMessage(BroadcastType type, Object data) {
