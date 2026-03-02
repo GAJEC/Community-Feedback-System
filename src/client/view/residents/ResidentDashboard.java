@@ -1,8 +1,4 @@
 package client.view.residents;
-
-import client.controller.FeedbackController;
-import client.controller.ResidentDashboardController;
-import client.model.ClientConnection;
 import client.view.common.Buttons;
 import client.view.common.CustomPanel;
 import client.view.common.InfoRow;
@@ -14,7 +10,6 @@ import client.view.strings.Colors;
 import client.view.strings.Fonts;
 import client.view.strings.Images;
 import common.Announcement;
-import common.BroadcastMessage;
 import common.Feedbacks;
 import common.User;
 import common.VoteRequest;
@@ -46,7 +41,7 @@ public class ResidentDashboard extends JFrame {
     private JPanel contentContainer;
     private boolean isViewMode;
     private User user;
-    private ResidentDashboardController residentDashboardController;
+    private ResidentDashboardListener listener;
     private Map<Integer, User> userCache = new HashMap<>();
     private Map<Integer, FeedbackCard> feedbackCards = new HashMap<>();
     private JPanel feedbackListPanel;
@@ -60,15 +55,12 @@ public class ResidentDashboard extends JFrame {
     private RoundedTextField locationField;
     private JTextArea descArea;
 
-    public ResidentDashboard(boolean viewMode, User user, ClientConnection connection) {
-        FeedbackController feedbackController = new FeedbackController(connection);
-        this.residentDashboardController = new ResidentDashboardController(feedbackController, user);
+    public ResidentDashboard(boolean viewMode, User user, ResidentDashboardListener listener) {
+        this.listener = listener;
         // Cache the logged-in user
         userCache.put(user.getAttr_id(), user);
         this.isViewMode = viewMode;
         this.user = user;
-
-        connection.setBroadcastListener(this::handleBroadcast);
         setTitle("Community Feedback System");
 
         this.setIconImage(Images.ICON.getImage());
@@ -86,6 +78,24 @@ public class ResidentDashboard extends JFrame {
         ClientHeaderPanel header = new ClientHeaderPanel(user);
         header.setAlignmentX(Component.LEFT_ALIGNMENT);
         mainPanel.add(header, BorderLayout.NORTH);
+
+        header.setListener(new ClientHeaderPanel.HeaderListener() {
+            @Override
+            public void onProfileRequested(User user) {
+                if (listener != null) {
+                    Window window = SwingUtilities.getWindowAncestor(ResidentDashboard.this);
+                    listener.onProfileRequested(window instanceof JFrame ? (JFrame) window : null, user);
+                }
+            }
+
+            @Override
+            public void onLogoutRequested() {
+                if (listener != null) {
+                    Window window = SwingUtilities.getWindowAncestor(ResidentDashboard.this);
+                    listener.onLogoutRequested(window instanceof JFrame ? (JFrame) window : null);
+                }
+            }
+        });
 
         header.viewBtn.addActionListener(e -> switchToView());
         header.submitBtn.addActionListener(e -> switchToSubmit());
@@ -109,17 +119,20 @@ public class ResidentDashboard extends JFrame {
         setVisible(true);
     }
 
-    private void handleBroadcast(BroadcastMessage message) {
-        SwingUtilities.invokeLater(() -> {
-            ResidentDashboardController.BroadcastUiAction action = residentDashboardController.routeBroadcast(message, isViewMode);
-            switch (action) {
-                case APPLY_FILTERS -> applyFilters();
-                case REFRESH_FEEDBACKS -> refreshFeedbackList();
-                case REFRESH_ANNOUNCEMENTS -> refreshAnnouncementWidget();
-                default -> {
-                }
-            }
-        });
+    public boolean isViewMode() {
+        return isViewMode;
+    }
+
+    public void onApplyFiltersRequested() {
+        applyFilters();
+    }
+
+    public void onRefreshFeedbacksRequested() {
+        refreshFeedbackList();
+    }
+
+    public void onRefreshAnnouncementsRequested() {
+        refreshAnnouncementWidget();
     }
 
     private void refreshAnnouncementWidget() {
@@ -194,7 +207,9 @@ public class ResidentDashboard extends JFrame {
 
         listPanel.add(Box.createVerticalStrut(5));
 
-        residentDashboardController.loadFeedbacks();
+        if (listener != null) {
+            listener.onLoadFeedbacks();
+        }
         applyFilters();
 
         JScrollPane scroll = new JScrollPane(listPanel);
@@ -241,7 +256,7 @@ public class ResidentDashboard extends JFrame {
         if (targetPanel == null) return;
         targetPanel.removeAll();
 
-        Announcement[] announcements = residentDashboardController.getLatestAnnouncements(5);
+        Announcement[] announcements = listener != null ? listener.getLatestAnnouncements(5) : new Announcement[0];
         if (announcements.length == 0) {
             JLabel empty = new JLabel("No announcements yet.");
             empty.setFont(SegoeUi(Font.ITALIC, 12));
@@ -263,7 +278,7 @@ public class ResidentDashboard extends JFrame {
             String postedBy = ann.getPosted_by_name() != null && !ann.getPosted_by_name().trim().isEmpty()
                     ? ann.getPosted_by_name().trim()
                     : (ann.getPosted_by() > 0 ? "Official #" + ann.getPosted_by() : "Barangay Official");
-            String postedAt = residentDashboardController.formatTimeAgo(ann.getPosted_at());
+            String postedAt = listener != null ? listener.formatTimeAgo(ann.getPosted_at()) : "-";
 
             targetPanel.add(new AnnouncementCard(title, message, postedBy, postedAt));
             if (i < announcements.length - 1) {
@@ -543,7 +558,9 @@ public class ResidentDashboard extends JFrame {
         String location = locationField.getText().trim();
         String description = descArea.getText().trim();
 
-        Object[] response = residentDashboardController.submitFeedback(title, category, location, description);
+        Object[] response = listener != null
+            ? listener.submitFeedback(title, category, location, description)
+            : new Object[]{"500", "No handler available", null};
 
         String statusCode = (String) response[0];
         String message = (String) response[1];
@@ -584,7 +601,9 @@ public class ResidentDashboard extends JFrame {
         feedbackCards.clear();
         feedbackListPanel.add(Box.createVerticalStrut(5));
 
-        String feedbackLoadErrorMessage = residentDashboardController.getFeedbackLoadErrorMessage();
+        String feedbackLoadErrorMessage = listener != null
+            ? listener.getFeedbackLoadErrorMessage()
+            : "Unable to load feedbacks.";
         if (feedbackLoadErrorMessage != null) {
             JLabel errorLabel = new JLabel("Error loading feedbacks: " + feedbackLoadErrorMessage);
             errorLabel.setFont(SegoeUi(Font.PLAIN, 14));
@@ -596,7 +615,7 @@ public class ResidentDashboard extends JFrame {
             return;
         }
 
-        if (!residentDashboardController.hasFeedbacks()) {
+        if (listener == null || !listener.hasFeedbacks()) {
             JLabel noDataLabel = new JLabel("No feedbacks available yet. Be the first to submit!");
             noDataLabel.setFont(SegoeUi(Font.ITALIC, 14));
             noDataLabel.setForeground(Color.GRAY);
@@ -615,12 +634,14 @@ public class ResidentDashboard extends JFrame {
             : "All Status";
         String query = feedbackSearchField != null ? feedbackSearchField.getText() : "";
 
-        java.util.List<Feedbacks> filteredFeedbacks = residentDashboardController.getFilteredAndSortedFeedbacks(
+        java.util.List<Feedbacks> filteredFeedbacks = listener != null
+            ? listener.getFilteredAndSortedFeedbacks(
             selectedCategory,
             selectedStatus,
             query,
             this::getUserName
-        );
+        )
+            : new java.util.ArrayList<>();
 
         if (filteredFeedbacks.isEmpty()) {
             JLabel emptyFilterLabel = new JLabel("No feedbacks matched your filters.");
@@ -994,7 +1015,9 @@ public class ResidentDashboard extends JFrame {
 
             new Thread(() -> {
                 try {
-                    Object[] response = residentDashboardController.vote(feedback.getAttr_id(), user.getAttr_id(), voteType);
+                        Object[] response = listener != null
+                            ? listener.vote(feedback.getAttr_id(), user.getAttr_id(), voteType)
+                            : new Object[]{"500", "No handler available", null};
 
                     if (response == null) {
                         throw new IllegalStateException("No response from server");
@@ -1040,7 +1063,9 @@ public class ResidentDashboard extends JFrame {
             // Never block the Swing EDT with network I/O. UI will update via broadcast (VOTE_UPDATE).
             new Thread(() -> {
                 try {
-                    Object[] response = residentDashboardController.vote(feedback.getAttr_id(), user.getAttr_id(), voteType);
+                        Object[] response = listener != null
+                            ? listener.vote(feedback.getAttr_id(), user.getAttr_id(), voteType)
+                            : new Object[]{"500", "No handler available", null};
 
                     if (response == null) {
                         throw new IllegalStateException("No response from server");
@@ -1089,5 +1114,23 @@ public class ResidentDashboard extends JFrame {
             add(Box.createVerticalStrut(3));
             add(bl);
         }
+    }
+
+    public interface ResidentDashboardListener {
+        void onLoadFeedbacks();
+        Object[] submitFeedback(String title, String category, String location, String description);
+        Object[] vote(int feedbackId, int userId, VoteRequest.VoteType voteType);
+        Announcement[] getLatestAnnouncements(int limit);
+        String formatTimeAgo(Date date);
+        String getFeedbackLoadErrorMessage();
+        boolean hasFeedbacks();
+        java.util.List<Feedbacks> getFilteredAndSortedFeedbacks(
+                String selectedCategory,
+                String selectedStatus,
+                String query,
+                java.util.function.IntFunction<String> userNameProvider
+        );
+        void onLogoutRequested(JFrame parent);
+        void onProfileRequested(JFrame parent, User user);
     }
 }

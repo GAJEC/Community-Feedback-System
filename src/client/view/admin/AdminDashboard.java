@@ -1,12 +1,8 @@
 package client.view.admin;
 
-import client.controller.AdminDashboardController;
-import client.model.ClientConnection;
 import client.view.common.Buttons;
-import client.view.common.LogoutPopUp;
 import client.view.common.UserProfileDialog;
 import client.view.strings.Images;
-import common.BroadcastMessage;
 import common.Feedbacks;
 import common.User;
 
@@ -54,23 +50,12 @@ public class AdminDashboard extends JFrame {
     private AdminConsoleView usersView;
     private ManageFeedbackView manageFeedbackView;
     private String activeTab = "Summary";
-    private final ClientConnection connection;
-    private final AdminDashboardController adminDashboardController;
+    private final AdminDashboardListener listener;
     private User[] cachedUsers = new User[0];
     private Feedbacks[] cachedFeedbacks = new Feedbacks[0];
 
-    public AdminDashboard() {
-        this(new ClientConnection());
-    }
-
-    public AdminDashboard(ClientConnection connection) {
-        this.connection = connection;
-        this.adminDashboardController = new AdminDashboardController(connection);
-        if (!this.connection.isConnected()) {
-            this.connection.connect();
-        }
-        this.connection.setBroadcastListener(this::handleBroadcast);
-        refreshDataCaches();
+    public AdminDashboard(AdminDashboardListener listener) {
+        this.listener = listener;
 
         setTitle("Community Feedback System - Admin");
         setSize(1280, 900);
@@ -90,7 +75,7 @@ public class AdminDashboard extends JFrame {
         contentPanel = new JPanel(contentLayout);
 
         summaryPanel = createSummaryPanel();
-        usersPanel = new AdminConsoleView(adminDashboardController, this::refreshAllData);
+        usersPanel = new AdminConsoleView(listener, this::refreshAllData);
         manageFeedbackPanel = createManageFeedbackPanel();
         contentPanel.add(summaryPanel, "Summary");
         contentPanel.add(usersPanel, "Users");
@@ -154,9 +139,10 @@ public class AdminDashboard extends JFrame {
         JButton logoutButton = new RoundedButton("Logout", 20, LOGOUT_RED);
         logoutButton.setPreferredSize(new Dimension(110, 40));
         logoutButton.addActionListener(e -> {
-            LogoutPopUp logoutDialog =
-                    new LogoutPopUp((JFrame) SwingUtilities.getWindowAncestor(headerPanel));
-            logoutDialog.setVisible(true);
+            if (listener != null) {
+                Window window = SwingUtilities.getWindowAncestor(headerPanel);
+                listener.onLogoutRequested(window instanceof JFrame ? (JFrame) window : null);
+            }
         });
 
         gbcR.insets = new Insets(0, 0, 0, 20);
@@ -202,13 +188,15 @@ public class AdminDashboard extends JFrame {
     }
 
     private void refreshAllData() {
-        refreshDataCaches();
+        if (listener != null) {
+            listener.onRefreshRequested();
+        }
         rebuildSummaryPanel();
         if (contentPanel != null) {
             if (usersPanel != null) {
                 contentPanel.remove(usersPanel);
             }
-            usersPanel = new AdminConsoleView(adminDashboardController, this::refreshAllData);
+            usersPanel = new AdminConsoleView(listener, this::refreshAllData);
             contentPanel.add(usersPanel, "Users");
 
             if (manageFeedbackPanel != null) {
@@ -222,36 +210,6 @@ public class AdminDashboard extends JFrame {
         }
     }
 
-
-    private void handleBroadcast(BroadcastMessage message) {
-        SwingUtilities.invokeLater(() -> {
-            AdminDashboardController.BroadcastUiAction action = adminDashboardController.routeBroadcast(message);
-
-            if (action == AdminDashboardController.BroadcastUiAction.USERS_UPDATED && message.getData() instanceof User newUser) {
-                cachedUsers = adminDashboardController.applyUserBroadcast(cachedUsers, newUser);
-                if (usersView != null) {
-                    usersView.onUsersUpdated(cachedUsers);
-                }
-                rebuildSummaryPanel();
-                if ("Summary".equals(activeTab)) {
-                    contentLayout.show(contentPanel, "Summary");
-                }
-                return;
-            }
-
-            if (action == AdminDashboardController.BroadcastUiAction.FEEDBACKS_UPDATED && message.getData() instanceof Feedbacks updated) {
-                cachedFeedbacks = adminDashboardController.applyFeedbackBroadcast(cachedFeedbacks, updated);
-                if (manageFeedbackView != null) {
-                    manageFeedbackView.onFeedbacksUpdated();
-                }
-                rebuildSummaryPanel();
-                if ("Summary".equals(activeTab)) {
-                    contentLayout.show(contentPanel, "Summary");
-                }
-            }
-        });
-    }
-
     private void rebuildSummaryPanel() {
         if (contentPanel == null || summaryPanel == null) return;
         contentPanel.remove(summaryPanel);
@@ -259,9 +217,41 @@ public class AdminDashboard extends JFrame {
         contentPanel.add(summaryPanel, "Summary");
     }
 
-    private void refreshDataCaches() {
-        cachedUsers = adminDashboardController.fetchUsers();
-        cachedFeedbacks = adminDashboardController.fetchFeedbacks();
+    public void updateData(User[] users, Feedbacks[] feedbacks) {
+        cachedUsers = users != null ? users : new User[0];
+        cachedFeedbacks = feedbacks != null ? feedbacks : new Feedbacks[0];
+        if (usersView != null) {
+            usersView.onUsersUpdated(cachedUsers);
+        }
+        if (manageFeedbackView != null) {
+            manageFeedbackView.onFeedbacksUpdated();
+        }
+        rebuildSummaryPanel();
+        if (contentPanel != null) {
+            contentLayout.show(contentPanel, activeTab);
+        }
+    }
+
+    public void onUsersUpdated(User[] users) {
+        cachedUsers = users != null ? users : new User[0];
+        if (usersView != null) {
+            usersView.onUsersUpdated(cachedUsers);
+        }
+        rebuildSummaryPanel();
+        if (contentPanel != null) {
+            contentLayout.show(contentPanel, activeTab);
+        }
+    }
+
+    public void onFeedbacksUpdated(Feedbacks[] feedbacks) {
+        cachedFeedbacks = feedbacks != null ? feedbacks : new Feedbacks[0];
+        if (manageFeedbackView != null) {
+            manageFeedbackView.onFeedbacksUpdated();
+        }
+        rebuildSummaryPanel();
+        if (contentPanel != null) {
+            contentLayout.show(contentPanel, activeTab);
+        }
     }
 
     private void styleTab(JButton btn, boolean active) {
@@ -1252,7 +1242,10 @@ public class AdminDashboard extends JFrame {
             }
 
             private void applyStatus(String nextStatus) {
-                Object[] response = adminDashboardController.updateFeedbackStatus(feedbackId, nextStatus);
+                if (listener == null) {
+                    return;
+                }
+                Object[] response = listener.updateFeedbackStatus(feedbackId, nextStatus);
                 if (!"200".equals(response[0])) {
                     JOptionPane.showMessageDialog(AdminDashboard.this, String.valueOf(response[1]), "Update Failed", JOptionPane.WARNING_MESSAGE);
                     return;
@@ -1266,7 +1259,10 @@ public class AdminDashboard extends JFrame {
                 if (nextPriority.equalsIgnoreCase(currentPriority)) {
                     return;
                 }
-                Object[] response = adminDashboardController.updateFeedbackPriority(feedbackId, nextPriority);
+                if (listener == null) {
+                    return;
+                }
+                Object[] response = listener.updateFeedbackPriority(feedbackId, nextPriority);
                 if (!"200".equals(response[0])) {
                     JOptionPane.showMessageDialog(AdminDashboard.this, String.valueOf(response[1]), "Update Failed", JOptionPane.WARNING_MESSAGE);
                     return;
@@ -1323,7 +1319,10 @@ public class AdminDashboard extends JFrame {
 
                 saveButton.addActionListener(e -> {
                     String noteText = noteArea.getText().trim();
-                    Object[] response = adminDashboardController.updateFeedbackInternalNote(feedbackId, noteText);
+                    if (listener == null) {
+                        return;
+                    }
+                    Object[] response = listener.updateFeedbackInternalNote(feedbackId, noteText);
                     if (!"200".equals(response[0])) {
                         JOptionPane.showMessageDialog(FeedbackCard.this, String.valueOf(response[1]), "Warning", JOptionPane.WARNING_MESSAGE);
                         return;
@@ -1467,14 +1466,14 @@ public class AdminDashboard extends JFrame {
 
         private final java.util.List<UserRecord> users = new java.util.ArrayList<>();
         private final java.util.List<ConsoleUserCard> cards = new java.util.ArrayList<>();
-        private final AdminDashboardController adminDashboardController;
+        private final AdminDashboardListener listener;
         private final Runnable onDataChanged;
         private JPanel listPanel;
         private JTextField searchField;
         private UserRecord selectedUser;
 
-        public AdminConsoleView(AdminDashboardController adminDashboardController, Runnable onDataChanged) {
-            this.adminDashboardController = adminDashboardController;
+        public AdminConsoleView(AdminDashboardListener listener, Runnable onDataChanged) {
+            this.listener = listener;
             this.onDataChanged = onDataChanged;
             setLayout(new BorderLayout(0, 15));
             setBackground(BG_COLOR);
@@ -1491,7 +1490,6 @@ public class AdminDashboard extends JFrame {
 
             add(mainCard, BorderLayout.CENTER);
 
-            loadUsersFromServer();
         }
 
         private JPanel buildTitleSection() {
@@ -1573,14 +1571,15 @@ public class AdminDashboard extends JFrame {
                     JOptionPane.showMessageDialog(this, "Please select a user to delete.");
                     return;
                 }
-
-                Object[] response = adminDashboardController.deleteUser(selectedUser.numericId);
+                if (listener == null) {
+                    return;
+                }
+                Object[] response = listener.deleteUser(selectedUser.numericId);
                 if (!"200".equals(response[0])) {
                     JOptionPane.showMessageDialog(this, String.valueOf(response[1]), "Delete Failed", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
                 selectedUser = null;
-                loadUsersFromServer();
                 if (onDataChanged != null) onDataChanged.run();
             });
             rightGroup.add(deleteBtn);
@@ -1689,15 +1688,6 @@ public class AdminDashboard extends JFrame {
 
             listPanel.revalidate();
             listPanel.repaint();
-        }
-
-        private void loadUsersFromServer() {
-            users.clear();
-            Object[] response = new Object[]{"200", "OK", adminDashboardController.fetchUsers()};
-            if ("200".equals(response[0]) && response[2] instanceof User[] usersFromServer) {
-                mapUsers(usersFromServer);
-            }
-            refreshCards();
         }
 
         public void onUsersUpdated(User[] latestUsers) {
@@ -1861,7 +1851,10 @@ public class AdminDashboard extends JFrame {
                 if ("Pending".equalsIgnoreCase(user.status)) {
                     JButton approveBtn = createMiniAction("Approve", new Color(232, 245, 233), new Color(46, 125, 50));
                     approveBtn.addActionListener(e -> {
-                        Object[] response = adminDashboardController.updateUserStatus(user.numericId, "APPROVED");
+                        if (listener == null) {
+                            return;
+                        }
+                        Object[] response = listener.updateUserStatus(user.numericId, "APPROVED");
                         if (!"200".equals(response[0])) {
                             JOptionPane.showMessageDialog(this, String.valueOf(response[1]), "Approve Failed", JOptionPane.WARNING_MESSAGE);
                             return;
@@ -2123,5 +2116,15 @@ public class AdminDashboard extends JFrame {
             box.add(d, BorderLayout.CENTER);
             return box;
         }
+    }
+
+    public interface AdminDashboardListener {
+        void onRefreshRequested();
+        Object[] updateFeedbackStatus(int feedbackId, String status);
+        Object[] updateFeedbackPriority(int feedbackId, String priority);
+        Object[] updateFeedbackInternalNote(int feedbackId, String internalNote);
+        Object[] updateUserStatus(int userId, String status);
+        Object[] deleteUser(int userId);
+        void onLogoutRequested(JFrame parent);
     }
 }

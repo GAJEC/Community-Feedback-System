@@ -1,26 +1,16 @@
 package client.view.auth;
 
-import client.controller.LoginController;
-import client.model.ClientConnection;
-import client.model.CredentialManager;
-import client.view.admin.AdminDashboard;
-import client.view.brgyofficials.BrgyOfficialDashboard;
-import client.view.residents.ResidentDashboard;
-import common.User;
-
 import javax.swing.*;
 import java.awt.*;
-
-import static common.Config.CONFIG_DEBUG;
 
 public class Loading extends JWindow {
     private float alpha = 0f;
     private Image logoImage;
     private boolean fadingOut = false;
-    private ClientConnection connection;
+    private Timer timer;
+    private Runnable onFadeComplete;
 
-    public Loading(ClientConnection connection) {
-        this.connection = connection;
+    public Loading() {
         setBackground(new Color(0, 0, 0, 0));
         setSize(600, 600);
         setLocationRelativeTo(null);
@@ -32,7 +22,7 @@ public class Loading extends JWindow {
         }
 
         // fade in at fade out timer
-        Timer timer = new Timer(16, e -> {
+        timer = new Timer(16, e -> {
             if (!fadingOut) {
                 alpha += 0.03f;
                 if (alpha > 1.0f) alpha = 1.0f;
@@ -41,8 +31,15 @@ public class Loading extends JWindow {
                 if (alpha < 0.0f) alpha = 0.0f;
             }
             repaint();
+
+            if (fadingOut && alpha <= 0.0f) {
+                timer.stop();
+                dispose();
+                if (onFadeComplete != null) {
+                    onFadeComplete.run();
+                }
+            }
         });
-        timer.start();
     }
 
     @Override
@@ -69,104 +66,15 @@ public class Loading extends JWindow {
         g2.dispose();
     }
 
-    public void launch() {
+    public void showLoading() {
         setVisible(true);
-        new InitializationTask().execute();
+        if (!timer.isRunning()) {
+            timer.start();
+        }
     }
 
-    private class InitializationTask extends SwingWorker<Object[], Void> {
-        @Override
-        protected Object[] doInBackground() throws Exception {
-            String[] credentials = CredentialManager.loadCredentials();
-            User loggedInUser = null;
-
-            if (credentials != null && credentials.length == 2) {
-                try {
-                    LoginController controller = new LoginController(connection);
-                    Object[] loginResult = controller.handleLogin(credentials[0], credentials[1]);
-
-                    if (loginResult != null && loginResult.length >= 3) {
-                        String statusCode = (String) loginResult[0];
-                        if ("200".equals(statusCode) && loginResult[2] instanceof User) {
-                            loggedInUser = (User) loginResult[2];
-                            if (CONFIG_DEBUG) {
-                                System.out.println("[AUTO-LOGIN] Successfully logged in as: " + loggedInUser.getUsername());
-                            }
-                        } else {
-                            if (CONFIG_DEBUG) {
-                                System.out.println("[AUTO-LOGIN] Failed: " + loginResult[1]);
-                            }
-                            CredentialManager.deleteCredentials();
-                            credentials = null;
-                        }
-                    }
-                } catch (Exception e) {
-                    if (CONFIG_DEBUG) {
-                        System.err.println("[AUTO-LOGIN] Error: " + e.getMessage());
-                    }
-                    CredentialManager.deleteCredentials();
-                    credentials = null;
-                }
-            }
-
-            Thread.sleep(3200);
-
-            fadingOut = true;
-            Thread.sleep(500);
-
-            return new Object[]{credentials, loggedInUser};
-        }
-
-        @Override
-        protected void done() {
-            dispose();
-            EventQueue.invokeLater(() -> {
-                try {
-                    Object[] result = get();
-                    User loggedInUser = (User) result[1];
-
-                    if (loggedInUser != null) {
-                        if ("PENDING".equalsIgnoreCase(loggedInUser.getVerify_status())) {
-                            CredentialManager.deleteCredentials();
-                            JOptionPane.showMessageDialog(
-                                    null,
-                                    "Your account is still pending admin approval.",
-                                    "Account Pending",
-                                    JOptionPane.WARNING_MESSAGE
-                            );
-                            new AuthScreen(connection).setVisible(true);
-                            return;
-                        }
-
-                        int userType = loggedInUser.getAttr_type();
-
-                        switch (userType) {
-                            case 0:
-                                new AdminDashboard(connection).setVisible(true);
-                                break;
-                            case 1: // Barangay Official
-                                new BrgyOfficialDashboard(loggedInUser, connection).setVisible(true);
-                                break;
-                            case 2: // Resident
-                                new ResidentDashboard(true, loggedInUser, connection);
-                                break;
-                            default: // Other
-                                if (CONFIG_DEBUG) {
-                                    System.out.println("[AUTO-LOGIN] Unknown user type: " + userType);
-                                }
-                                new ResidentDashboard(true, loggedInUser, connection);
-                                break;
-                        }
-                    } else {
-                        new AuthScreen(connection).setVisible(true);
-                    }
-                } catch (Exception e) {
-                    if (CONFIG_DEBUG) {
-                        e.printStackTrace();
-                    }
-                    new AuthScreen(connection).setVisible(true);
-                }
-            });
-        }
+    public void startFadeOut(Runnable onComplete) {
+        this.onFadeComplete = onComplete;
+        fadingOut = true;
     }
 }

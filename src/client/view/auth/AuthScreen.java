@@ -1,17 +1,10 @@
 package client.view.auth;
 
-import client.controller.LoginController;
-import client.model.ClientConnection;
-import client.model.CredentialManager;
-import client.view.admin.AdminDashboard;
-import client.view.brgyofficials.BrgyOfficialDashboard;
 import client.view.common.Buttons;
 import client.view.common.CustomPanel;
 import client.view.common.RoundedInputField;
-import client.view.residents.ResidentDashboard;
 import client.view.strings.Colors;
 import client.view.strings.Images;
-import common.User;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -19,28 +12,24 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Base64;
 import java.util.Locale;
 
 import static client.view.strings.Colors.LIGHTEST_GRAY;
 import static client.view.strings.Fonts.SansSerif;
 import static client.view.strings.Images.*;
-import static common.Config.CONFIG_DEBUG;
 
 public class AuthScreen extends JFrame {
     private final CardLayout formLayout;
     private final JPanel formPanel;
+    private AuthScreenListener listener;
 
-    public AuthScreen(ClientConnection connection) {
+    public AuthScreen(AuthScreenListener listener) {
         setUndecorated(true);
         setSize(1200, 750);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         setIconImage(Images.ICON.getImage());
-
-        LoginController controller = new LoginController(connection);
         setTitle("Authentication");
         CustomPanel root = new CustomPanel();
         root.setDraggable(true);
@@ -69,8 +58,8 @@ public class AuthScreen extends JFrame {
         formLayout = new CardLayout();
         formPanel = new JPanel(formLayout);
 
-        LoginForm loginForm = new LoginForm(controller, connection);
-        RegisterForm registerForm = new RegisterForm(controller);
+        LoginForm loginForm = new LoginForm();
+        RegisterForm registerForm = new RegisterForm();
 
         formPanel.add(loginForm, "login");
         formPanel.add(registerForm, "register");
@@ -84,6 +73,20 @@ public class AuthScreen extends JFrame {
         root.add(formPanel, gbc);
 
         add(root);
+
+        this.listener = listener;
+    }
+
+    public void setListener(AuthScreenListener listener) {
+        this.listener = listener;
+    }
+
+    public void showMessage(String title, String message, int messageType) {
+        JOptionPane.showMessageDialog(this, message, title, messageType);
+    }
+
+    public void close() {
+        dispose();
     }
 
     public void showLoginPanel() {
@@ -134,7 +137,7 @@ public class AuthScreen extends JFrame {
     }
 
     public class LoginForm extends JPanel {
-        public LoginForm(LoginController controller, ClientConnection connection) {
+        public LoginForm() {
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setBackground(Color.WHITE);
             setBorder(new EmptyBorder(40, 50, 50, 50));
@@ -177,39 +180,10 @@ public class AuthScreen extends JFrame {
             btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
             Buttons.applyClick(btnLogin, () -> {
-                Object[] result = controller.handleLogin(username.getText(), password.getText());
-
-                boolean success = Integer.parseInt((String) result[0]) == 200;
-                User loggedInUser = (User) result[2];
-
-                if (success && loggedInUser != null) {
-                    if ("PENDING".equalsIgnoreCase(loggedInUser.getVerify_status())) {
-                        CredentialManager.deleteCredentials();
-                        JOptionPane.showMessageDialog(
-                                this,
-                                "Your account is still pending admin approval.",
-                                "Account Pending",
-                                JOptionPane.WARNING_MESSAGE
-                        );
-                        return;
-                    }
-
-                    if (rememberMe.isSelected()) {
-                        CredentialManager.saveCredentials(username.getText(), password.getText());
-                    } else {
-                        CredentialManager.deleteCredentials();
-                    }
-                    SwingUtilities.getWindowAncestor(this).dispose();
-                    if (loggedInUser.getAttr_type() == 0) {
-                        new AdminDashboard(connection).setVisible(true);
-                    } else if (loggedInUser.getAttr_type() == 1) {
-                        new BrgyOfficialDashboard(loggedInUser, connection).setVisible(true);
-                    } else {
-                        new ResidentDashboard(true, loggedInUser, connection);
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(this, "Login failed: " + result[1], "Login Error", JOptionPane.ERROR_MESSAGE);
+                if (listener == null) {
+                    return;
                 }
+                listener.onLogin(new LoginData(username.getText(), password.getText(), rememberMe.isSelected()));
             });
 
             add(btnLogin);
@@ -219,7 +193,11 @@ public class AuthScreen extends JFrame {
             goRegister.setMaximumSize(new Dimension(250, 30));
             goRegister.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            Buttons.applyClick(goRegister, AuthScreen.this::showRegisterPanel);
+            Buttons.applyClick(goRegister, () -> {
+                if (listener != null) {
+                    listener.onRequestShowRegister();
+                }
+            });
 
             add(Box.createVerticalStrut(5));
             add(goRegister);
@@ -227,7 +205,7 @@ public class AuthScreen extends JFrame {
     }
 
     public class RegisterForm extends JPanel {
-        public RegisterForm(LoginController controller) {
+        public RegisterForm() {
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setBackground(Color.WHITE);
             setBorder(new EmptyBorder(40, 50, 50, 50));
@@ -330,60 +308,19 @@ public class AuthScreen extends JFrame {
             createAccountBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
 
             Buttons.applyClick(createAccountBtn, () -> {
-                if (fullName.getText().trim().isEmpty() ||
-                        location.getText().trim().isEmpty() ||
-                        phone.getText().trim().isEmpty() ||
-                        username.getText().trim().isEmpty() ||
-                        password.getText().trim().isEmpty() ||
-                        confirmPassword.getText().trim().isEmpty() ||
-                        selectedIdFile[0] == null) {
-                    JOptionPane.showMessageDialog(this,
-                            "Please complete all fields and upload a valid ID.",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE);
+                if (listener == null) {
                     return;
                 }
-
-                if (!password.getText().equals(confirmPassword.getText())) {
-                    JOptionPane.showMessageDialog(this,
-                            "Password and Confirm Password do not match.",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-
-                String idBase64 = encodeFileToBase64(selectedIdFile[0]);
-                if (idBase64.isEmpty()) {
-                    JOptionPane.showMessageDialog(this,
-                        "Failed to read the selected ID image.",
-                        "File Error",
-                        JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                Object[] result = controller.handleRegister(
+                RegisterData data = new RegisterData(
                         fullName.getText(),
                         location.getText(),
                         phone.getText(),
                         username.getText(),
                         password.getText(),
-                        selectedIdFile[0].getName(),
-                        idBase64
+                        confirmPassword.getText(),
+                        selectedIdFile[0]
                 );
-
-                if (result != null && "200".equals(String.valueOf(result[0]))) {
-                    JOptionPane.showMessageDialog(this,
-                            String.valueOf(result[1]),
-                            "Registration Complete",
-                            JOptionPane.INFORMATION_MESSAGE);
-                    AuthScreen.this.showLoginPanel();
-                } else {
-                    String msg = (result != null && result.length > 1) ? String.valueOf(result[1]) : "Registration failed.";
-                    JOptionPane.showMessageDialog(this,
-                            msg,
-                            "Registration Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
+                listener.onRegister(data);
             });
 
             add(createAccountBtn);
@@ -393,7 +330,11 @@ public class AuthScreen extends JFrame {
             backToLogin.setMaximumSize(new Dimension(250, 30));
             backToLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            Buttons.applyClick(backToLogin, AuthScreen.this::showLoginPanel);
+            Buttons.applyClick(backToLogin, () -> {
+                if (listener != null) {
+                    listener.onRequestShowLogin();
+                }
+            });
 
             add(backToLogin);
             add(Box.createVerticalGlue());
@@ -419,17 +360,84 @@ public class AuthScreen extends JFrame {
                 return false;
             }
         }
+    }
 
-        private String encodeFileToBase64(File file) {
-            try {
-                if (file == null || !file.exists() || !file.isFile()) {
-                    return "";
-                }
-                byte[] bytes = Files.readAllBytes(file.toPath());
-                return Base64.getEncoder().encodeToString(bytes);
-            } catch (IOException e) {
-                return "";
-            }
+    public interface AuthScreenListener {
+        void onLogin(LoginData data);
+        void onRegister(RegisterData data);
+        void onRequestShowRegister();
+        void onRequestShowLogin();
+    }
+
+    public static class LoginData {
+        private final String username;
+        private final String password;
+        private final boolean rememberMe;
+
+        public LoginData(String username, String password, boolean rememberMe) {
+            this.username = username;
+            this.password = password;
+            this.rememberMe = rememberMe;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public boolean isRememberMe() {
+            return rememberMe;
+        }
+    }
+
+    public static class RegisterData {
+        private final String fullName;
+        private final String location;
+        private final String phone;
+        private final String username;
+        private final String password;
+        private final String confirmPassword;
+        private final File idFile;
+
+        public RegisterData(String fullName, String location, String phone, String username, String password, String confirmPassword, File idFile) {
+            this.fullName = fullName;
+            this.location = location;
+            this.phone = phone;
+            this.username = username;
+            this.password = password;
+            this.confirmPassword = confirmPassword;
+            this.idFile = idFile;
+        }
+
+        public String getFullName() {
+            return fullName;
+        }
+
+        public String getLocation() {
+            return location;
+        }
+
+        public String getPhone() {
+            return phone;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public String getConfirmPassword() {
+            return confirmPassword;
+        }
+
+        public File getIdFile() {
+            return idFile;
         }
     }
 }

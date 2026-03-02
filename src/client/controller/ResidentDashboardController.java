@@ -1,10 +1,17 @@
 package client.controller;
 
+import client.model.ClientConnection;
+import client.model.ResidentDashboardModel;
+import client.view.common.LogoutPopUp;
+import client.view.common.UserProfileDialog;
+import client.view.residents.ResidentDashboard;
 import common.Feedbacks;
 import common.User;
 import common.VoteRequest;
 import common.Announcement;
 import common.BroadcastMessage;
+
+import javax.swing.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,7 +19,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.IntFunction;
 
-public class ResidentDashboardController {
+public class ResidentDashboardController implements ResidentDashboard.ResidentDashboardListener, LogoutPopUp.LogoutListener {
     public enum BroadcastUiAction {
         NONE,
         APPLY_FILTERS,
@@ -20,15 +27,28 @@ public class ResidentDashboardController {
         REFRESH_ANNOUNCEMENTS
     }
 
-    private final FeedbackController feedbackController;
+    private final ResidentDashboardModel model;
     private final User user;
+    private final ResidentDashboard view;
+    private final ClientConnection connection;
 
     private Feedbacks[] allFeedbacks = new Feedbacks[0];
     private String feedbackLoadErrorMessage;
 
-    public ResidentDashboardController(FeedbackController feedbackController, User user) {
-        this.feedbackController = feedbackController;
+    public ResidentDashboardController(ClientConnection connection, User user, boolean viewMode) {
+        this.connection = connection;
+        this.model = new ResidentDashboardModel(connection);
         this.user = user;
+        this.view = new ResidentDashboard(viewMode, user, this);
+
+        if (!this.connection.isConnected()) {
+            this.connection.connect();
+        }
+        this.connection.setBroadcastListener(this::handleBroadcast);
+    }
+
+    public void show() {
+        view.setVisible(true);
     }
 
     public Object[] submitFeedback(String title, String category, String location, String description) {
@@ -44,7 +64,7 @@ public class ResidentDashboardController {
             return new Object[]{"400", "Please provide a detailed description.", null};
         }
 
-        return feedbackController.submitFeedback(
+        return model.submitFeedback(
                 user.getAttr_id(),
                 category,
                 title.trim(),
@@ -54,7 +74,7 @@ public class ResidentDashboardController {
     }
 
     public void loadFeedbacks() {
-        Object[] response = feedbackController.getAllFeedbacks();
+        Object[] response = model.getAllFeedbacks();
         String statusCode = (String) response[0];
         String message = (String) response[1];
 
@@ -65,6 +85,11 @@ public class ResidentDashboardController {
             allFeedbacks = new Feedbacks[0];
             feedbackLoadErrorMessage = message;
         }
+    }
+
+    @Override
+    public void onLoadFeedbacks() {
+        loadFeedbacks();
     }
 
     public void updateFeedbackVotes(Feedbacks updatedFeedback) {
@@ -82,7 +107,7 @@ public class ResidentDashboardController {
     }
 
     public Object[] vote(int feedbackId, int userId, VoteRequest.VoteType voteType) {
-        return feedbackController.vote(feedbackId, userId, voteType);
+        return model.vote(feedbackId, userId, voteType);
     }
 
     public BroadcastUiAction routeBroadcast(BroadcastMessage message, boolean isViewMode) {
@@ -110,7 +135,7 @@ public class ResidentDashboardController {
     }
 
     public Announcement[] getLatestAnnouncements(int limit) {
-        Object[] response = feedbackController.getAnnouncements();
+        Object[] response = model.getAnnouncements();
         if (response == null || response.length < 3 || !"200".equals(String.valueOf(response[0])) || !(response[2] instanceof Announcement[] announcements)) {
             return new Announcement[0];
         }
@@ -188,6 +213,31 @@ public class ResidentDashboardController {
         return allFeedbacks != null && allFeedbacks.length > 0;
     }
 
+    @Override
+    public void onLogoutRequested(JFrame parent) {
+        LogoutPopUp dialog = new LogoutPopUp(parent, this);
+        dialog.setVisible(true);
+    }
+
+    @Override
+    public void onProfileRequested(JFrame parent, User user) {
+        UserProfileDialog dialog = new UserProfileDialog(parent, user);
+        dialog.setVisible(true);
+    }
+
+    @Override
+    public void onConfirm(JFrame parent) {
+        if (parent != null) {
+            parent.dispose();
+        }
+        new AuthScreenController(connection).show();
+    }
+
+    @Override
+    public void onCancel() {
+        // No-op
+    }
+
     private boolean matchesFilters(
             Feedbacks feedback,
             String selectedCategory,
@@ -238,5 +288,18 @@ public class ResidentDashboardController {
             }
         }
         return fallback;
+    }
+
+    private void handleBroadcast(BroadcastMessage message) {
+        SwingUtilities.invokeLater(() -> {
+            BroadcastUiAction action = routeBroadcast(message, view.isViewMode());
+            switch (action) {
+                case APPLY_FILTERS -> view.onApplyFiltersRequested();
+                case REFRESH_FEEDBACKS -> view.onRefreshFeedbacksRequested();
+                case REFRESH_ANNOUNCEMENTS -> view.onRefreshAnnouncementsRequested();
+                default -> {
+                }
+            }
+        });
     }
 }

@@ -1,132 +1,150 @@
 package client.controller;
 
+import client.model.BrgyOfficialDashboardModel;
 import client.model.ClientConnection;
+import client.view.admin.AdminDashboard;
+import client.view.brgyofficials.BrgyOfficialDashboard;
+import client.view.common.LogoutPopUp;
+import client.view.common.UserProfileDialog;
 import common.BroadcastMessage;
-import common.FeedbackInternalNoteUpdateRequest;
-import common.FeedbackPriorityUpdateRequest;
-import common.FeedbackStatusUpdateRequest;
 import common.Feedbacks;
 import common.User;
 
-public class BrgyOfficialDashboardController {
-    public enum BroadcastUiAction {
-        NONE,
-        USERS_UPDATED,
-        FEEDBACKS_UPDATED
-    }
+import javax.swing.*;
+
+public class BrgyOfficialDashboardController implements BrgyOfficialDashboard.BrgyOfficialDashboardListener,
+    AdminDashboard.AdminDashboardListener, LogoutPopUp.LogoutListener {
 
     private final ClientConnection connection;
+    private final BrgyOfficialDashboardModel model;
+    private final BrgyOfficialDashboard view;
+    private User[] cachedUsers = new User[0];
+    private Feedbacks[] cachedFeedbacks = new Feedbacks[0];
+    private PostAnnouncementController postAnnouncementController;
 
-    public BrgyOfficialDashboardController(ClientConnection connection) {
+    public BrgyOfficialDashboardController(ClientConnection connection, User user) {
         this.connection = connection;
-    }
+        this.model = new BrgyOfficialDashboardModel(connection);
+        this.view = new BrgyOfficialDashboard(user, this);
 
-    public Feedbacks[] fetchFeedbacks() {
-        ensureConnected();
-        connection.sendRequest("GET_FEEDBACKS");
-        Object response = connection.receive();
-        if (response instanceof Object[] arr && arr.length >= 3 && "200".equals(arr[0]) && arr[2] instanceof Feedbacks[]) {
-            return (Feedbacks[]) arr[2];
+        if (!this.connection.isConnected()) {
+            this.connection.connect();
         }
-        return new Feedbacks[0];
+        this.connection.setBroadcastListener(this::handleBroadcast);
+
+        refreshData();
     }
 
-    public User[] fetchUsers() {
-        ensureConnected();
-        connection.sendRequest("GET_USERS");
-        Object response = connection.receive();
-        if (response instanceof Object[] arr && arr.length >= 3 && "200".equals(arr[0]) && arr[2] instanceof User[]) {
-            return (User[]) arr[2];
-        }
-        return new User[0];
+    public void show() {
+        view.setVisible(true);
     }
 
+    @Override
+    public void onRefreshRequested() {
+        refreshData();
+    }
+
+    @Override
     public Object[] updateFeedbackStatus(int feedbackId, String status) {
-        ensureConnected();
-        connection.sendRequest(new FeedbackStatusUpdateRequest(feedbackId, status));
-        return normalizeResponse(connection.receive());
+        Object[] response = model.updateFeedbackStatus(feedbackId, status);
+        if ("200".equals(String.valueOf(response[0]))) {
+            refreshData();
+        }
+        return response;
     }
 
+    @Override
     public Object[] updateFeedbackPriority(int feedbackId, String priority) {
-        ensureConnected();
-        connection.sendRequest(new FeedbackPriorityUpdateRequest(feedbackId, priority));
-        return normalizeResponse(connection.receive());
+        Object[] response = model.updateFeedbackPriority(feedbackId, priority);
+        if ("200".equals(String.valueOf(response[0]))) {
+            refreshData();
+        }
+        return response;
     }
 
+    @Override
     public Object[] updateFeedbackInternalNote(int feedbackId, String internalNote) {
-        ensureConnected();
-        connection.sendRequest(new FeedbackInternalNoteUpdateRequest(feedbackId, internalNote));
-        return normalizeResponse(connection.receive());
-    }
-
-    public BroadcastUiAction routeBroadcast(BroadcastMessage message) {
-        if (message == null || message.getType() == null) {
-            return BroadcastUiAction.NONE;
+        Object[] response = model.updateFeedbackInternalNote(feedbackId, internalNote);
+        if ("200".equals(String.valueOf(response[0]))) {
+            refreshData();
         }
-
-        return switch (message.getType()) {
-            case NEW_USER -> BroadcastUiAction.USERS_UPDATED;
-            case NEW_FEEDBACK, VOTE_UPDATE, STATUS_UPDATE, PRIORITY_UPDATE, INTERNAL_NOTE_UPDATE -> BroadcastUiAction.FEEDBACKS_UPDATED;
-            default -> BroadcastUiAction.NONE;
-        };
+        return response;
     }
 
-    public User[] applyUserBroadcast(User[] cachedUsers, User incoming) {
-        if (incoming == null) {
-            return cachedUsers != null ? cachedUsers : new User[0];
+    @Override
+    public Object[] updateUserStatus(int userId, String status) {
+        Object[] response = model.updateUserStatus(userId, status);
+        if ("200".equals(String.valueOf(response[0]))) {
+            refreshData();
         }
-        return upsertUser(cachedUsers, incoming);
+        return response;
     }
 
-    public Feedbacks[] applyFeedbackBroadcast(Feedbacks[] cachedFeedbacks, Feedbacks incoming) {
-        if (incoming == null) {
-            return cachedFeedbacks != null ? cachedFeedbacks : new Feedbacks[0];
+    @Override
+    public Object[] deleteUser(int userId) {
+        Object[] response = model.deleteUser(userId);
+        if ("200".equals(String.valueOf(response[0]))) {
+            refreshData();
         }
-        return upsertFeedback(cachedFeedbacks, incoming);
+        return response;
     }
 
-    private Object[] normalizeResponse(Object response) {
-        if (response instanceof Object[]) {
-            return (Object[]) response;
+    @Override
+    public void onLogoutRequested(JFrame parent) {
+        LogoutPopUp dialog = new LogoutPopUp(parent, this);
+        dialog.setVisible(true);
+    }
+
+    @Override
+    public void onPostAnnouncementRequested(JFrame parent, String userName, int userId) {
+        postAnnouncementController = new PostAnnouncementController(connection, parent, userName, userId);
+        postAnnouncementController.show();
+    }
+
+    @Override
+    public void onProfileRequested(JFrame parent, User user) {
+        UserProfileDialog dialog = new UserProfileDialog(parent, user);
+        dialog.setVisible(true);
+    }
+
+    @Override
+    public AdminDashboard.AdminConsoleView createUsersPanel(Runnable onDataChanged) {
+        return new AdminDashboard.AdminConsoleView(this, onDataChanged);
+    }
+
+    @Override
+    public void onConfirm(JFrame parent) {
+        if (parent != null) {
+            parent.dispose();
         }
-        return new Object[]{"500", "Invalid server response", null};
+        new AuthScreenController(connection).show();
     }
 
-    private void ensureConnected() {
-        if (!connection.isConnected()) {
-            connection.connect();
-        }
+    @Override
+    public void onCancel() {
+        // No-op
     }
 
-    private User[] upsertUser(User[] cachedUsers, User incoming) {
-        User[] base = cachedUsers != null ? cachedUsers : new User[0];
-        for (int i = 0; i < base.length; i++) {
-            User existing = base[i];
-            if (existing != null && existing.getAttr_id() == incoming.getAttr_id()) {
-                base[i] = incoming;
-                return base;
+    private void refreshData() {
+        cachedFeedbacks = model.fetchFeedbacks();
+        cachedUsers = model.fetchUsers();
+        view.updateData(cachedFeedbacks, cachedUsers);
+    }
+
+    private void handleBroadcast(BroadcastMessage message) {
+        SwingUtilities.invokeLater(() -> {
+            BrgyOfficialDashboardModel.BroadcastUiAction action = model.routeBroadcast(message);
+
+            if (action == BrgyOfficialDashboardModel.BroadcastUiAction.FEEDBACKS_UPDATED && message.getData() instanceof Feedbacks feedback) {
+                cachedFeedbacks = model.applyFeedbackBroadcast(cachedFeedbacks, feedback);
+                view.onFeedbacksUpdated(cachedFeedbacks);
+                return;
             }
-        }
 
-        User[] expanded = new User[base.length + 1];
-        System.arraycopy(base, 0, expanded, 0, base.length);
-        expanded[base.length] = incoming;
-        return expanded;
-    }
-
-    private Feedbacks[] upsertFeedback(Feedbacks[] cachedFeedbacks, Feedbacks incoming) {
-        Feedbacks[] base = cachedFeedbacks != null ? cachedFeedbacks : new Feedbacks[0];
-        for (int i = 0; i < base.length; i++) {
-            Feedbacks existing = base[i];
-            if (existing != null && existing.getAttr_id() == incoming.getAttr_id()) {
-                base[i] = incoming;
-                return base;
+            if (action == BrgyOfficialDashboardModel.BroadcastUiAction.USERS_UPDATED && message.getData() instanceof User newUser) {
+                cachedUsers = model.applyUserBroadcast(cachedUsers, newUser);
+                view.onUsersUpdated(cachedUsers);
             }
-        }
-
-        Feedbacks[] expanded = new Feedbacks[base.length + 1];
-        System.arraycopy(base, 0, expanded, 0, base.length);
-        expanded[base.length] = incoming;
-        return expanded;
+        });
     }
 }

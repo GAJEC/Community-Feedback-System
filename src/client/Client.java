@@ -1,8 +1,8 @@
 package client;
 
+import client.controller.LoadingController;
 import client.model.ClientConnection;
 import client.model.ConnectionListener;
-import client.view.auth.Loading;
 
 import javax.swing.*;
 
@@ -33,8 +33,8 @@ public class Client {
         connection.connectAsync();
         
         SwingUtilities.invokeLater(() -> {
-            Loading loadingView = new Loading(connection);
-            loadingView.launch();
+            LoadingController controller = new LoadingController(connection);
+            controller.show();
         });
     }
 

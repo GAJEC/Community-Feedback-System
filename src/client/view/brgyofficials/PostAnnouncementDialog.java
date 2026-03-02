@@ -1,7 +1,5 @@
 package client.view.brgyofficials;
 
-import client.controller.PostAnnouncementController;
-import client.model.ClientConnection;
 import client.view.common.Buttons;
 import client.view.common.RoundedInputField;
 
@@ -20,23 +18,17 @@ public class PostAnnouncementDialog extends JDialog {
     private static final Color INPUT_BG = new Color(248, 249, 250);
 
     private final String userName;
-    private final ClientConnection connection;
     private final int userId;
-    private final PostAnnouncementController postAnnouncementController;
+    private PostAnnouncementListener listener;
     private RoundedInputField txtSubject;
     private JTextArea txtDetails;
     private Buttons btnPost;
 
-    public PostAnnouncementDialog(JFrame parent, String userName) {
-        this(parent, userName, new ClientConnection(), 0);
-    }
-
-    public PostAnnouncementDialog(JFrame parent, String userName, ClientConnection connection, int userId) {
+    public PostAnnouncementDialog(JFrame parent, String userName, int userId, PostAnnouncementListener listener) {
         super(parent, "Create Announcement", true);
         this.userName = userName;
-        this.connection = connection;
         this.userId = userId;
-        this.postAnnouncementController = new PostAnnouncementController();
+        this.listener = listener;
 
         setResizable(true);
         setUndecorated(true);
@@ -54,6 +46,32 @@ public class PostAnnouncementDialog extends JDialog {
 
         add(createFooter(), BorderLayout.SOUTH);
 
+    }
+
+    public void setListener(PostAnnouncementListener listener) {
+        this.listener = listener;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setBusy(boolean busy) {
+        if (btnPost != null) {
+            btnPost.setEnabled(!busy);
+        }
+    }
+
+    public void showMessage(String title, String message, int messageType) {
+        JOptionPane.showMessageDialog(this, message, title, messageType);
+    }
+
+    public void closeDialog() {
+        dispose();
     }
 
     private JPanel createHeader() {
@@ -199,7 +217,12 @@ public class PostAnnouncementDialog extends JDialog {
         );
         btnCancel.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
         btnCancel.setPreferredSize(new Dimension(100, 40));
-        btnCancel.addActionListener(e -> dispose());
+        btnCancel.addActionListener(e -> {
+            dispose();
+            if (listener != null) {
+                listener.onCancel();
+            }
+        });
 
         btnPost = new Buttons(
                 "Post Now",
@@ -220,48 +243,14 @@ public class PostAnnouncementDialog extends JDialog {
     private void postAnnouncement() {
         String subject = txtSubject != null ? txtSubject.getText().trim() : "";
         String details = txtDetails != null ? txtDetails.getText().trim() : "";
-
-        if (subject.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter an announcement subject.", "Validation", JOptionPane.WARNING_MESSAGE);
-            return;
+        if (listener != null) {
+            listener.onSubmit(userId, userName, subject, details);
         }
-        if (details.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter announcement details.", "Validation", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+    }
 
-        btnPost.setEnabled(false);
-
-        SwingWorker<Object[], Void> worker = new SwingWorker<>() {
-            @Override
-            protected Object[] doInBackground() {
-                return postAnnouncementController.postAnnouncementWithFallback(connection, userId, userName, subject, details);
-            }
-
-            @Override
-            protected void done() {
-                btnPost.setEnabled(true);
-                try {
-                    Object[] result = get();
-                    if (result != null && result.length >= 2 && "200".equals(String.valueOf(result[0]))) {
-                        JOptionPane.showMessageDialog(PostAnnouncementDialog.this, "Announcement posted.", "Success", JOptionPane.INFORMATION_MESSAGE);
-                        dispose();
-                        return;
-                    }
-
-                    String message = (result != null && result.length > 1 && result[1] != null)
-                            ? String.valueOf(result[1])
-                            : "Failed to post announcement.";
-                    JOptionPane.showMessageDialog(PostAnnouncementDialog.this, message, "Post Failed", JOptionPane.WARNING_MESSAGE);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(PostAnnouncementDialog.this,
-                            "Failed to post announcement: " + ex.getMessage(),
-                            "Post Failed",
-                            JOptionPane.WARNING_MESSAGE);
-                }
-            }
-        };
-        worker.execute();
+    public interface PostAnnouncementListener {
+        void onSubmit(int userId, String userName, String subject, String details);
+        void onCancel();
     }
 
     static class LocalShadowBorder extends AbstractBorder {

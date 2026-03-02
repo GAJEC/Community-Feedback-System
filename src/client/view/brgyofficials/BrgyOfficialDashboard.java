@@ -1,16 +1,10 @@
 package client.view.brgyofficials;
 
-import client.controller.AdminDashboardController;
-import client.controller.BrgyOfficialDashboardController;
-import client.model.ClientConnection;
 import client.view.admin.AdminDashboard;
 import client.view.common.Buttons;
-import client.view.common.LogoutPopUp;
 import client.view.common.RoundedInputField;
-import client.view.common.UserProfileDialog;
 import client.view.strings.Colors;
 import client.view.strings.Images;
-import common.BroadcastMessage;
 import common.Feedbacks;
 import common.User;
 
@@ -36,26 +30,15 @@ public class BrgyOfficialDashboard extends JFrame {
     private final JPanel contentContainer;
     private User user;
     private BrgyOfficialHeaderPanel header;
-    private final ClientConnection connection;
-    private final BrgyOfficialDashboardController brgyOfficialDashboardController;
+    private final BrgyOfficialDashboardListener listener;
     private Feedbacks[] cachedFeedbacks = new Feedbacks[0];
     private User[] cachedUsers = new User[0];
     private AdminDashboard.AdminConsoleView usersView;
     private String activeTab = "View Feedbacks";
 
-    public BrgyOfficialDashboard(User user){
-        this(user, new ClientConnection());
-    }
-
-    public BrgyOfficialDashboard(User user, ClientConnection connection){
+    public BrgyOfficialDashboard(User user, BrgyOfficialDashboardListener listener){
         this.user = user;
-        this.connection = connection;
-        this.brgyOfficialDashboardController = new BrgyOfficialDashboardController(connection);
-        if (!this.connection.isConnected()) {
-            this.connection.connect();
-        }
-        this.connection.setBroadcastListener(this::handleBroadcast);
-        refreshDataCaches();
+        this.listener = listener;
 
         setTitle("Barangay Official Dashboard");
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
@@ -86,8 +69,9 @@ public class BrgyOfficialDashboard extends JFrame {
         header.postAnnouncementBtn.addActionListener(e -> {
             String displayName = (user != null && user.getName() != null) ? user.getName() : "Barangay Official";
             int userId = user != null ? user.getAttr_id() : 0;
-            PostAnnouncementDialog dialog = new PostAnnouncementDialog(this, displayName, this.connection, userId);
-            dialog.setVisible(true);
+            if (listener != null) {
+                listener.onPostAnnouncementRequested(this, displayName, userId);
+            }
         });
 
         contentContainer = new JPanel(new BorderLayout());
@@ -97,25 +81,6 @@ public class BrgyOfficialDashboard extends JFrame {
         setContentPane(mainPanel);
         loadDashboard();
         setVisible(true);
-    }
-
-    private void handleBroadcast(BroadcastMessage message) {
-        SwingUtilities.invokeLater(() -> {
-            BrgyOfficialDashboardController.BroadcastUiAction action = brgyOfficialDashboardController.routeBroadcast(message);
-
-            if (action == BrgyOfficialDashboardController.BroadcastUiAction.FEEDBACKS_UPDATED && message.getData() instanceof Feedbacks feedback) {
-                cachedFeedbacks = brgyOfficialDashboardController.applyFeedbackBroadcast(cachedFeedbacks, feedback);
-                reloadActiveTab();
-                return;
-            }
-
-            if (action == BrgyOfficialDashboardController.BroadcastUiAction.USERS_UPDATED && message.getData() instanceof User newUser) {
-                cachedUsers = brgyOfficialDashboardController.applyUserBroadcast(cachedUsers, newUser);
-                if (usersView != null) {
-                    usersView.onUsersUpdated(cachedUsers);
-                }
-            }
-        });
     }
 
     private void reloadActiveTab() {
@@ -128,9 +93,24 @@ public class BrgyOfficialDashboard extends JFrame {
         }
     }
 
-    private void refreshDataCaches() {
-        cachedFeedbacks = brgyOfficialDashboardController.fetchFeedbacks();
-        cachedUsers = brgyOfficialDashboardController.fetchUsers();
+    public void updateData(Feedbacks[] feedbacks, User[] users) {
+        cachedFeedbacks = feedbacks != null ? feedbacks : new Feedbacks[0];
+        cachedUsers = users != null ? users : new User[0];
+        if (usersView != null) {
+            usersView.onUsersUpdated(cachedUsers);
+        }
+    }
+
+    public void onFeedbacksUpdated(Feedbacks[] feedbacks) {
+        cachedFeedbacks = feedbacks != null ? feedbacks : new Feedbacks[0];
+        reloadActiveTab();
+    }
+
+    public void onUsersUpdated(User[] users) {
+        cachedUsers = users != null ? users : new User[0];
+        if (usersView != null) {
+            usersView.onUsersUpdated(cachedUsers);
+        }
     }
 
     private String getFeedbackStatus(Feedbacks feedback) {
@@ -148,7 +128,9 @@ public class BrgyOfficialDashboard extends JFrame {
     }
 
     private void loadDashboard() {
-        refreshDataCaches();
+        if (listener != null) {
+            listener.onRefreshRequested();
+        }
         contentContainer.removeAll();
         JPanel wrapper = new JPanel(new BorderLayout(0, 20));
         wrapper.setOpaque(false);
@@ -179,7 +161,9 @@ public class BrgyOfficialDashboard extends JFrame {
     }
 
     private void loadManageFeedbackView() {
-        refreshDataCaches();
+        if (listener != null) {
+            listener.onRefreshRequested();
+        }
         contentContainer.removeAll();
 
         JPanel wrapper = new JPanel(new BorderLayout(0, 15));
@@ -207,7 +191,9 @@ public class BrgyOfficialDashboard extends JFrame {
     }
 
     private void loadStatisticsView() {
-        refreshDataCaches();
+        if (listener != null) {
+            listener.onRefreshRequested();
+        }
         contentContainer.removeAll();
 
         JPanel wrapper = new JPanel(new BorderLayout(0, 20));
@@ -244,13 +230,18 @@ public class BrgyOfficialDashboard extends JFrame {
     }
 
     private void loadUsersView() {
-        refreshDataCaches();
+        if (listener != null) {
+            listener.onRefreshRequested();
+        }
         contentContainer.removeAll();
 
-        usersView = new AdminDashboard.AdminConsoleView(new AdminDashboardController(connection), this::refreshDataCaches);
-        usersView.onUsersUpdated(cachedUsers);
-
-        contentContainer.add(usersView, BorderLayout.CENTER);
+        if (listener != null) {
+            usersView = listener.createUsersPanel(this::reloadActiveTab);
+            if (usersView != null) {
+                usersView.onUsersUpdated(cachedUsers);
+                contentContainer.add(usersView, BorderLayout.CENTER);
+            }
+        }
         contentContainer.revalidate();
         contentContainer.repaint();
     }
@@ -446,7 +437,7 @@ public class BrgyOfficialDashboard extends JFrame {
         return ""+userId;
     }
 
-    static class BrgyOfficialHeaderPanel extends JPanel {
+    class BrgyOfficialHeaderPanel extends JPanel {
 
         private static final Color HEADER_COLOR = new Color(34, 153, 84);
         private static final Color NAV_COLOR = Colors.WHITE;
@@ -505,9 +496,10 @@ public class BrgyOfficialDashboard extends JFrame {
             profileButton.setButtonIcon(Images.scaled(Images.PROFILE, 25, 25), 2);
 
             Buttons.applyClick(profileButton, () -> {
-                UserProfileDialog userProfileDialog =
-                        new UserProfileDialog((JFrame) SwingUtilities.getWindowAncestor(headerPanel), user);
-                userProfileDialog.setVisible(true);
+                if (listener != null) {
+                    Window window = SwingUtilities.getWindowAncestor(headerPanel);
+                    listener.onProfileRequested(window instanceof JFrame ? (JFrame) window : null, user);
+                }
             });
 
             logoutButton = new Buttons("Logout", 20, Colors.DARK_BUTTON, Colors.WHITE, Colors.RED, SegoeUi(1, 12));
@@ -515,9 +507,10 @@ public class BrgyOfficialDashboard extends JFrame {
             logoutButton.setButtonIcon(Images.scaled(Images.LOGOUT, 18, 18), 8);
 
             Buttons.applyClick(logoutButton, () -> {
-                LogoutPopUp logoutDialog =
-                        new LogoutPopUp((JFrame) SwingUtilities.getWindowAncestor(headerPanel));
-                logoutDialog.setVisible(true);
+                if (listener != null) {
+                    Window window = SwingUtilities.getWindowAncestor(headerPanel);
+                    listener.onLogoutRequested(window instanceof JFrame ? (JFrame) window : null);
+                }
             });
 
             rightPnl.add(profileButton);
@@ -923,7 +916,10 @@ public class BrgyOfficialDashboard extends JFrame {
         }
 
         private void applyStatus(String nextStatus) {
-            Object[] response = brgyOfficialDashboardController.updateFeedbackStatus(feedbackId, nextStatus);
+            if (listener == null) {
+                return;
+            }
+            Object[] response = listener.updateFeedbackStatus(feedbackId, nextStatus);
             if (!"200".equals(response[0])) {
                 JOptionPane.showMessageDialog(BrgyOfficialDashboard.this,
                         String.valueOf(response[1]),
@@ -931,7 +927,7 @@ public class BrgyOfficialDashboard extends JFrame {
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            refreshDataCaches();
+            listener.onRefreshRequested();
             reloadActiveTab();
         }
 
@@ -939,7 +935,10 @@ public class BrgyOfficialDashboard extends JFrame {
             if (nextPriority.equalsIgnoreCase(currentPriority)) {
                 return;
             }
-            Object[] response = brgyOfficialDashboardController.updateFeedbackPriority(feedbackId, nextPriority);
+            if (listener == null) {
+                return;
+            }
+            Object[] response = listener.updateFeedbackPriority(feedbackId, nextPriority);
             if (!"200".equals(response[0])) {
                 JOptionPane.showMessageDialog(BrgyOfficialDashboard.this,
                         String.valueOf(response[1]),
@@ -948,7 +947,7 @@ public class BrgyOfficialDashboard extends JFrame {
                 return;
             }
             currentPriority = nextPriority;
-            refreshDataCaches();
+            listener.onRefreshRequested();
             reloadActiveTab();
         }
 
@@ -996,7 +995,10 @@ public class BrgyOfficialDashboard extends JFrame {
 
             saveButton.addActionListener(e -> {
                 String text = noteArea.getText().trim();
-                Object[] response = brgyOfficialDashboardController.updateFeedbackInternalNote(feedbackId, text);
+                if (listener == null) {
+                    return;
+                }
+                Object[] response = listener.updateFeedbackInternalNote(feedbackId, text);
                 if (!"200".equals(response[0])) {
                     JOptionPane.showMessageDialog(FeedbackCard.this,
                             String.valueOf(response[1]), "Warning", JOptionPane.WARNING_MESSAGE);
@@ -1005,7 +1007,7 @@ public class BrgyOfficialDashboard extends JFrame {
                 currentInternalNote = text;
                 JOptionPane.showMessageDialog(FeedbackCard.this,
                         "Internal note saved successfully.", "Saved", JOptionPane.INFORMATION_MESSAGE);
-                refreshDataCaches();
+                listener.onRefreshRequested();
                 reloadActiveTab();
             });
 
@@ -1042,5 +1044,16 @@ public class BrgyOfficialDashboard extends JFrame {
             g2.drawRoundRect(x, y, w - 1, h - 1, radius, radius);
             g2.dispose();
         }
+    }
+
+    public interface BrgyOfficialDashboardListener {
+        void onRefreshRequested();
+        Object[] updateFeedbackStatus(int feedbackId, String status);
+        Object[] updateFeedbackPriority(int feedbackId, String priority);
+        Object[] updateFeedbackInternalNote(int feedbackId, String internalNote);
+        void onLogoutRequested(JFrame parent);
+        void onPostAnnouncementRequested(JFrame parent, String userName, int userId);
+        AdminDashboard.AdminConsoleView createUsersPanel(Runnable onDataChanged);
+        void onProfileRequested(JFrame parent, User user);
     }
 }

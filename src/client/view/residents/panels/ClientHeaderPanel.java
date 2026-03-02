@@ -1,7 +1,5 @@
 package client.view.residents.panels;
 
-import client.view.common.LogoutPopUp;
-import client.view.common.UserProfileDialog;
 import client.view.common.Buttons;
 import client.view.strings.Colors;
 import client.view.strings.Images;
@@ -21,6 +19,7 @@ public class ClientHeaderPanel extends JPanel {
     public static final Color ACTIVE_TEXT = Colors.SECONDARY;
 
     private User user;
+    private HeaderListener listener;
 
     public ClientHeaderPanel(User user) {
         this.user = user;
@@ -72,9 +71,9 @@ public class ClientHeaderPanel extends JPanel {
         profileButton.setButtonIcon(Images.scaled(PROFILE, 25, 25), 2);
 
         Buttons.applyClick(profileButton, () -> {
-            UserProfileDialog UserProfileDialog =
-                    new UserProfileDialog((JFrame) SwingUtilities.getWindowAncestor(headerPanel), user);
-            UserProfileDialog.setVisible(true);
+            if (listener != null) {
+                listener.onProfileRequested(user);
+            }
         });
 
         Buttons logoutButton = new Buttons("Logout", 20, DARK_BUTTON, WHITE, RED, SegoeUi(1, 12));
@@ -82,9 +81,9 @@ public class ClientHeaderPanel extends JPanel {
         logoutButton.setButtonIcon(Images.scaled(Images.LOGOUT, 18, 18), 8);
 
         Buttons.applyClick(logoutButton, () -> {
-            LogoutPopUp logoutDialog =
-                    new LogoutPopUp((JFrame) SwingUtilities.getWindowAncestor(headerPanel));
-            logoutDialog.setVisible(true);
+            if (listener != null) {
+                listener.onLogoutRequested();
+            }
         });
 
         rightPnl.add(profileButton);
@@ -132,5 +131,14 @@ public class ClientHeaderPanel extends JPanel {
         } else {
             btn.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, new Color(0,0,0,0)));
         }
+    }
+
+    public void setListener(HeaderListener listener) {
+        this.listener = listener;
+    }
+
+    public interface HeaderListener {
+        void onProfileRequested(User user);
+        void onLogoutRequested();
     }
 }

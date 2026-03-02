@@ -1,6 +1,5 @@
 package client.view.common;
 
-import client.view.auth.AuthScreen;
 import client.view.strings.Colors;
 
 import javax.swing.*;
@@ -10,8 +9,11 @@ import java.awt.*;
 import static client.view.strings.Fonts.Inter;
 
 public class LogoutPopUp extends JDialog {
-    public LogoutPopUp(JFrame parent) {
+    private final LogoutListener listener;
+
+    public LogoutPopUp(JFrame parent, LogoutListener listener) {
         super(parent, true);
+        this.listener = listener;
         setUndecorated(true);
         setBackground(Colors.TRANSPARENT);
 
@@ -37,17 +39,17 @@ public class LogoutPopUp extends JDialog {
         Buttons.applyClick(yesBtn, () -> {
             // 1. Close Logout Dialog
             dispose();
-
-            // Close the dashboard
-            if (parent != null) {
-                parent.dispose();
+            if (listener != null) {
+                listener.onConfirm(parent);
             }
-            // Open Login Screen
-            client.model.ClientConnection connection = new client.model.ClientConnection();
-            new AuthScreen(connection).setVisible(true);
         });
 
-        Buttons.applyClick(noBtn, this::dispose);
+        Buttons.applyClick(noBtn, () -> {
+            dispose();
+            if (listener != null) {
+                listener.onCancel();
+            }
+        });
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         buttonPanel.setOpaque(false);
@@ -58,5 +60,10 @@ public class LogoutPopUp extends JDialog {
         container.add(buttonPanel, BorderLayout.SOUTH);
 
         add(container);
+    }
+
+    public interface LogoutListener {
+        void onConfirm(JFrame parent);
+        void onCancel();
     }
 }
